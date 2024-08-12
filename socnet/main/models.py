@@ -3,11 +3,27 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group, Permission
 
 
 class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class User(AbstractUser):
+        created_at = models.DateTimeField(auto_now_add=True)
+
+        groups = models.ManyToManyField(
+            Group,
+            related_name='custom_user_groups',
+            blank=True
+        )
+
+        user_permissions = models.ManyToManyField(
+            Permission,
+            related_name='custom_user_permissions',
+            blank=True
+        )
+
 
 
 class PrivacyLevel(models.Model):
@@ -49,8 +65,8 @@ class Friendship(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='sent',)
     description = models.TextField(blank=True, null=True)
-    profile_one = models.ForeignKey(Profile, related_name='friendship_one', on_delete=models.CASCADE)
-    profile_two = models.ForeignKey(Profile, related_name='friendship_two', on_delete=models.CASCADE)
+    profile_one = models.IntegerField()
+    profile_two = models.IntegerField()
 
 
 class Mail(models.Model):
@@ -77,7 +93,7 @@ class Group(models.Model):
     description = models.TextField()
     photo = models.ImageField(upload_to='group_photos/', blank=True, null=True)
     group_type = models.CharField(max_length=10, choices=GROUP_TYPES, default=PUBLIC)
-    creator = models.ForeignKey(Profile)
+    creator = models.ForeignKey(Profile, on_delete=models.CASCADE)
     rules = models.TextField(blank=True)
 
 
