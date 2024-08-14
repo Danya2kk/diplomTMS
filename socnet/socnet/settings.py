@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'channels',
     'rest_framework',
-    'rest_framework.authtoken',
+
     'djoser',
 ]
 
@@ -107,15 +107,21 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-}
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
 
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ]
+}
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -149,22 +155,11 @@ CHANNEL_LAYERS = {
 
 AUTH_USER_MODEL = 'main.User'
 
-DJOSER = {
-    'LOGIN_FIELD': 'email',  # Поле для входа. Можно изменить на 'username', если нужно
-    'SEND_ACTIVATION_EMAIL': False,  # Включите, если нужно отправлять email для активации
-    'USER_CREATE_PASSWORD_RETYPE': True,  # Требовать повторного ввода пароля при регистрации
-    'HIDE_USERS': False,  # Если True, пользователи скрыты от списка пользователей
-    'ACTIVATION_URL': 'http://example.com/activate/{uid}/{token}/',  # URL активации (если включен email)
-    'SERIALIZERS': {
-        'user_create': 'djoser.serializers.UserCreateSerializer',
-        'user': 'djoser.serializers.UserSerializer',
-        'current_user': 'djoser.serializers.UserSerializer',
-        'user_delete': 'djoser.serializers.UserDeleteSerializer',
-        'token_create': 'djoser.serializers.TokenCreateSerializer',
-        'token_delete': 'djoser.serializers.TokenDeleteSerializer',
-        'token': 'djoser.serializers.TokenSerializer',
-        'password_reset': 'djoser.serializers.PasswordResetSerializer',
-        'password_reset_confirm': 'djoser.serializers.PasswordResetConfirmSerializer',
-    },
-    'TOKEN_MODEL': None,  # Оставьте None, если используете стандартный Token модели
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Время жизни access-токена
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Время жизни refresh-токена
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }

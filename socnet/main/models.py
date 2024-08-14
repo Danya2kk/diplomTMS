@@ -33,7 +33,7 @@ class Interest(models.Model):
 class Profile(models.Model):
     firstname = models.CharField(max_length=255)
     lastname = models.TextField()
-    age = models.IntegerField()
+    age = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=50)
     location = models.CharField(max_length=255)
     link = models.TextField()
