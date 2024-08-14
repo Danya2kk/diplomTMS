@@ -1,9 +1,22 @@
 {% extends 'main/layout.html' %}
 {% load static %}
 
-{% block title %} Домашняя страница {% endblock %}
+{% block title %}  {% endblock %}
 {% block content %}
 
 
+<h2> Мы в чате </h2>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const appElement = document.getElementById('app');
+        if (appElement) {
+            console.log('Setting data-is-chat-page to true');
+            appElement.dataset.isChatPage = "true";
+            console.log('Current data-is-chat-page:', appElement.dataset.isChatPage);
+        } else {
+            console.error('Element with id "app" not found');
+        }
+    });
+</script>
 
 {% endblock %}

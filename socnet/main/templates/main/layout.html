@@ -6,7 +6,17 @@
 </head>
 <body>
    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="app"></div>
+     <div id="app"
+       data-user="{{ user.username }}"
+       data-is-authenticated="{{ user.is_authenticated }}"
+       data-is-chat-page="false">>
+   </div>
+
+   <!-- Здесь будет вставляться контент из дочерних шаблонов -->
+   {% block content %}
+   {% endblock %}
+
+
     <!-- Подключаем React-приложение с локального сервера разработки -->
     <script src="http://localhost:3000/static/js/bundle.js"></script>
 </body>

@@ -14,7 +14,7 @@ def chat(request):
 
 
     context = {
-        'key': 112,
-        'message': 'Всем приввет',
+        'is_chat_page': 'true'
     }
     return render(request, 'main/chat.html', context)
+
