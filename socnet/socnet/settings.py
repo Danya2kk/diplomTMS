@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'main',
     'corsheaders',
     'channels',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'djoser',
 ]
 
 MIDDLEWARE = [
@@ -103,7 +106,15 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -138,3 +149,22 @@ CHANNEL_LAYERS = {
 
 AUTH_USER_MODEL = 'main.User'
 
+DJOSER = {
+    'LOGIN_FIELD': 'email',  # Поле для входа. Можно изменить на 'username', если нужно
+    'SEND_ACTIVATION_EMAIL': False,  # Включите, если нужно отправлять email для активации
+    'USER_CREATE_PASSWORD_RETYPE': True,  # Требовать повторного ввода пароля при регистрации
+    'HIDE_USERS': False,  # Если True, пользователи скрыты от списка пользователей
+    'ACTIVATION_URL': 'http://example.com/activate/{uid}/{token}/',  # URL активации (если включен email)
+    'SERIALIZERS': {
+        'user_create': 'djoser.serializers.UserCreateSerializer',
+        'user': 'djoser.serializers.UserSerializer',
+        'current_user': 'djoser.serializers.UserSerializer',
+        'user_delete': 'djoser.serializers.UserDeleteSerializer',
+        'token_create': 'djoser.serializers.TokenCreateSerializer',
+        'token_delete': 'djoser.serializers.TokenDeleteSerializer',
+        'token': 'djoser.serializers.TokenSerializer',
+        'password_reset': 'djoser.serializers.PasswordResetSerializer',
+        'password_reset_confirm': 'djoser.serializers.PasswordResetConfirmSerializer',
+    },
+    'TOKEN_MODEL': None,  # Оставьте None, если используете стандартный Token модели
+}
