@@ -2,14 +2,10 @@ from django.shortcuts import render
 
 # Create your views here.
 def index(request):
-    if request.user.is_authenticated:
-        user_role = request.user.role
-    else:
-        user_role = 'гость'
 
     context = {
         'title': 'Домашняя страница',
-        'user_role': user_role,
+
     }
     return render(request, 'main/index.html', context)
 
