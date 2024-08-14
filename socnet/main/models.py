@@ -2,7 +2,6 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-
 from django.contrib.auth.models import AbstractUser, Group, Permission
 
 
@@ -20,8 +19,6 @@ class User(AbstractUser):
         related_name='custom_user_permissions',
         blank=True
     )
-
-
 
 
 class PrivacyLevel(models.Model):
@@ -61,7 +58,7 @@ class Friendship(models.Model):
         ('blocked', 'Заблокирован'),
     ]
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='sent',)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='sent', )
     description = models.TextField(blank=True, null=True)
     profile_one = models.IntegerField()
     profile_two = models.IntegerField()
