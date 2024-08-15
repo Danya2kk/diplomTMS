@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+
+from .models import Profile
+
 
 # Create your views here.
 def index(request):
@@ -18,3 +21,11 @@ def chat(request):
     }
     return render(request, 'main/chat.html', context)
 
+
+def profile_view(request, username):
+    profile = get_object_or_404(Profile, user__username=username)
+
+    context = {
+        'profile': profile,
+    }
+    return render(request, 'main/profile.html', context)
