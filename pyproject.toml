@@ -90,7 +90,7 @@ django-celery-beat = "^2.6.0"
 pillow = "^10.4.0"
 django-cors-headers = "^4.4.0"
 channels = "^4.1.0"
-uvicorn = "^0.30.6"
+uvicorn = {extras = ["standard"], version = "^0.30.6"}
 websockets = "^12.0"
 wsproto = "^1.2.0"
 
