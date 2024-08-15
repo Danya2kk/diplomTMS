@@ -1,0 +1,46 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block content %}
+
+<h1>Редактирование профиля</h1>
+    {% if user_form.errors %}
+                {% for key, value in user_form.errors.items %}
+                    <strong>{{ value }}</strong>
+                {% endfor %}
+    {% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label>Login:</label>
+        {{ user_form.username }}
+    <p><label>Имя:</label>
+        {{ profile_form.firstname }}</p>
+    <p><label>Фамилия:</label>
+        {{ profile_form.lastname }}</p>
+    <p><label>Возраст:</label>
+        {{ profile_form.age }}</p>
+    <p><label>Пол:</label>
+        {{ profile_form.gender }}</p>
+    <p><label>Местоположение:</label>
+        {{ profile_form.location }}</p>
+    <p><label>Ссылки:</label>
+        {{ profile_form.link }}</p>
+    <p><label>Настройки:</label>
+        {{ profile_form.settings }}</p>
+    <p><label>Конфиденциальность:</label>
+        {{ profile_form.privacy }}</p>
+    <p><label>Интересы:</label>
+        {{ profile_form.interests }}</p>
+
+    <button type="submit">Сохранить изменения</button>
+    <button type="reset">Сбросить</button>
+    <form action="{% url 'profile' username=profile.user.username %}">
+        {% csrf_token %}
+        <button>Назад</button>
+    </form>
+
+</form>
+
+
+{% endblock %}

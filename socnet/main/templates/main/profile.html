@@ -19,4 +19,5 @@
 
     <h2>Уровень приватности</h2>
     <p>{{ profile.privacy.name }}: {{ profile.privacy.description }}</p>
+    <p><a href="{% url 'update-profile' username=profile.user.username %}">Редактировать профиль</a></p>
 {% endblock %}
