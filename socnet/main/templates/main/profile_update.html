@@ -35,7 +35,7 @@
 
     <button type="submit">Сохранить изменения</button>
     <button type="reset">Сбросить</button>
-    <form action="{% url 'profile' username=profile.user.username %}">
+    <form action="{% url 'my_profile' %}">
         {% csrf_token %}
         <button>Назад</button>
     </form>

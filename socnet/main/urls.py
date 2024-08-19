@@ -8,5 +8,5 @@ urlpatterns = [
     path('chat', views.chat, name='chat'),
     path('profile/', views.my_profile_view, name='my_profile'),
     path('profile/<str:username>', views.profile_view, name='profile'),
-    path('profile/<str:username>/update', views.update_profile, name='update-profile'),
+    path('update', views.update_profile, name='update-profile'),
 ]

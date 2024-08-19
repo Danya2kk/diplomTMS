@@ -10,7 +10,6 @@ class UpdateUserForm(forms.ModelForm):
         fields = ['username']
 
 
-
 class UpdateProfileForm(forms.ModelForm):
 
     class Meta:
