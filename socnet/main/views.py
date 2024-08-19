@@ -54,9 +54,9 @@ def profile_view(request, username):
             'profile': {
                 'firstname': profile.firstname,
                 'lastname': profile.lastname,
-                'is_owner': profile.user == request.user,
             },
-            'restricted_view': True  # Указываем, что вид ограничен
+            'restricted_view': True,  # Указываем, что вид ограничен
+            'is_owner': profile.user == request.user,
         }
     elif privacy_level.name == "Только друзья" and profile.user not in request.user.friends:
         '''Надо разобраться с моделью Friendship'''
@@ -65,9 +65,10 @@ def profile_view(request, username):
             'profile': {
                 'firstname': profile.firstname,
                 'lastname': profile.lastname,
-                'is_owner': profile.user == request.user,
             },
+            'is_owner': profile.user == request.user,
             'restricted_view': True
+
         }
     else:
 
@@ -82,6 +83,7 @@ def profile_view(request, username):
 @login_required
 def update_profile(request):
     '''Редактирование профиля'''
+
     profile = get_object_or_404(Profile, user=request.user)
 
     if request.method == 'POST':
@@ -101,7 +103,7 @@ def update_profile(request):
     context = {
         'user_form': user_form,
         'profile_form': profile_form,
-        'profile': profile
+        'profile': profile,
     }
 
     return render(request, 'main/profile_update.html', context)
