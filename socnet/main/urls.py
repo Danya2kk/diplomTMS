@@ -1,9 +1,11 @@
 from django.urls import path
 from main import views
-
+from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     path('', views.index, name='home'),
+    path('login', views.LoginUser.as_view(), name='login'),     # для
+    path('logout', LogoutView.as_view(), name='logout'),
     path('chat', views.chat, name='chat'),
     path('<int:pk>/', views.news_detail, name='news_detail'),
     path('<int:pk>/edit/', views.news_edit, name='news_edit'),

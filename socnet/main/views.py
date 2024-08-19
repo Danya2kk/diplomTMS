@@ -4,6 +4,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from .models import News, Tag, Comment, Reaction
 from .forms import NewsForm, TagForm, CommentForm , ReactionForm
+from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView
+from django.http import HttpResponse, HttpResponseRedirect, request
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, UpdateView, DeleteView
+
+from .forms import LoginUserForm
 
 # Create your views here.
 def index(request):
@@ -23,6 +34,10 @@ def chat(request):
     }
     return render(request, 'main/chat.html', context)
 
+class LoginUser(LoginView):  # логин через класс - проверка на валидность сразу встроена
+    form_class = LoginUserForm
+    template_name = 'user/login.html'
+    extra_context = {'title': 'Авторизация'}
 
 
 @login_required

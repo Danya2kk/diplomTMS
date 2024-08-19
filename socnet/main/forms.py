@@ -1,11 +1,12 @@
 from django import forms
 from .models import News, Tag, Comment, Reaction
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 class NewsForm(forms.ModelForm):
     class Meta:
         model = News
-        fields = ['title', 'content', 'tags', 'is_published']
+        fields = ['title', 'content', 'tags']
         widgets = {
             'tags': forms.CheckboxSelectMultiple,
         }
@@ -33,3 +34,14 @@ class ReactionForm(forms.ModelForm):
         widgets = {
             'reaction_type': forms.RadioSelect,
         }
+
+class LoginUserForm(AuthenticationForm):
+    username = forms.CharField(label='Логин',
+                               widget=forms.TextInput(attrs={'class': 'form-input'}))
+    password = forms.CharField(label='Пароль',
+                               widget=forms.PasswordInput(attrs={'class': 'form-input'}))
+
+    class Meta:
+        # так делать правильнее чем через поля формы т.к страхует при изменения модели юзера
+        model = get_user_model()
+        fields = ['username', 'password']
