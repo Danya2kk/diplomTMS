@@ -1,10 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import PasswordChangeView
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy
 from django.views.generic import DetailView
 
-from .forms import UpdateUserForm, UpdateProfileForm
+from .forms import UpdateUserForm, UpdateProfileForm, AvatarUploadForm, UserPasswordChangeForm
 from .models import Profile
 
 
@@ -71,7 +73,6 @@ def profile_view(request, username):
 
         }
     else:
-
         context = {
             'profile': profile,
             'is_owner': profile.user == request.user,
@@ -89,21 +90,40 @@ def update_profile(request):
     if request.method == 'POST':
         user_form = UpdateUserForm(request.POST, instance=request.user)
         profile_form = UpdateProfileForm(request.POST, request.FILES, instance=profile)
+        avatar_form = AvatarUploadForm(request.POST, request.FILES)
 
-        if user_form.is_valid() and profile_form.is_valid():
+        if user_form.is_valid() and profile_form.is_valid() and avatar_form.is_valid():
             user_form.save()
             profile_form.save()
+
+            avatar = avatar_form.save(commit=False)
+            avatar.profile = profile
+            avatar.file_type = 'image'
+            avatar.save()
+
             messages.success(request, 'Ваш профиль успешно изменен!')
             return redirect('my_profile')
 
     else:
         user_form = UpdateUserForm(instance=request.user)
         profile_form = UpdateProfileForm(instance=profile)
+        avatar_form = AvatarUploadForm()
+
+    # Получаем последний загруженный аватар
+    avatar = profile.media_files.filter(file_type='image').last()
 
     context = {
         'user_form': user_form,
         'profile_form': profile_form,
         'profile': profile,
+        'avatar': avatar,
+        'avatar_form': avatar_form,
     }
 
     return render(request, 'main/profile_update.html', context)
+
+
+class UserPasswordChange(PasswordChangeView):
+    form_class = UserPasswordChangeForm
+    success_url = reverse_lazy("password_change_done")
+    template_name = "main/password_change_form.html"

@@ -14,24 +14,30 @@
     {% csrf_token %}
     <label>Login:</label>
         {{ user_form.username }}
-    <p><label>Имя:</label>
-        {{ profile_form.firstname }}</p>
-    <p><label>Фамилия:</label>
-        {{ profile_form.lastname }}</p>
-    <p><label>Возраст:</label>
-        {{ profile_form.age }}</p>
-    <p><label>Пол:</label>
-        {{ profile_form.gender }}</p>
-    <p><label>Местоположение:</label>
-        {{ profile_form.location }}</p>
-    <p><label>Ссылки:</label>
-        {{ profile_form.link }}</p>
-    <p><label>Настройки:</label>
-        {{ profile_form.settings }}</p>
-    <p><label>Конфиденциальность:</label>
-        {{ profile_form.privacy }}</p>
-    <p><label>Интересы:</label>
-        {{ profile_form.interests }}</p>
+
+    <h2>Загрузить новый аватар</h2>
+        {{ avatar_form.as_p }}
+        {{ profile_form.as_p }}
+<!--    <p><label>:</label>-->
+<!--        {{ profile_form.firstname }}</p>-->
+<!--    <p><label>Фамилия:</label>-->
+<!--        {{ profile_form.lastname }}</p>-->
+<!--    <p><label>Возраст:</label>-->
+<!--        {{ profile_form.age }}</p>-->
+<!--    <p><label>Пол:</label>-->
+<!--        {{ profile_form.gender }}</p>-->
+<!--    <p><label>Местоположение:</label>-->
+<!--        {{ profile_form.location }}</p>-->
+<!--    <p><label>Ссылки:</label>-->
+<!--        {{ profile_form.link }}</p>-->
+<!--    <p><label>Настройки:</label>-->
+<!--        {{ profile_form.settings }}</p>-->
+<!--    <p><label>Конфиденциальность:</label>-->
+<!--        {{ profile_form.privacy }}</p>-->
+<!--    <p><label>Интересы:</label>-->
+<!--        {{ profile_form.interests }}</p>-->
+
+    <p><a href="{% url 'password_change' %}">Сменить пароль</a></p>
 
     <button type="submit">Сохранить изменения</button>
     <button type="reset">Сбросить</button>

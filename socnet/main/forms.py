@@ -1,5 +1,7 @@
 from django import forms
-from .models import Profile, User
+from django.contrib.auth.forms import PasswordChangeForm
+
+from .models import Profile, User, Mediafile
 
 
 class UpdateUserForm(forms.ModelForm):
@@ -39,3 +41,17 @@ class UpdateProfileForm(forms.ModelForm):
         'privacy': forms.TextInput(attrs={'class': 'form-input'}),
         'interests': forms.TextInput(attrs={'class': 'form-input'}),
     }
+
+
+class AvatarUploadForm(forms.ModelForm):
+    file = forms.FileField(required=False)
+
+    class Meta:
+        model = Mediafile
+        fields = ['file']
+
+
+class UserPasswordChangeForm(PasswordChangeForm):
+    old_password = forms.CharField(label='Старый пароль', widget=forms.PasswordInput(attrs={'class': 'form-input'}))
+    new_password1 = forms.CharField(label='Новый пароль', widget=forms.PasswordInput(attrs={'class': 'form-input'}))
+    new_password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput(attrs={'class': 'form-input'}))

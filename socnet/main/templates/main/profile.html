@@ -3,7 +3,15 @@
 
 {% block content %}
     <h1>Профиль пользователя {{ profile.user.username }}</h1>
+
+    <h2>Текущий аватар</h2>
+    {% if avatar %}
+        <img src="{{ avatar.file.url }}" alt="Avatar" width="200">
+    {% else %}
+        <p>Аватар не загружен.</p>
+    {% endif %}
     <h2>{{ profile.firstname }} {{ profile.lastname }}</h2>
+
     {% if restricted_view %}
         <p>Пользователь скрыл информаицию о себе</p>
     {% else %}
