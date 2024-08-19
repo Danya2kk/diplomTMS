@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from .models import News, Tag, Comment, Reaction
-from .forms import NewsForm, TagForm, CommentForm , ReactionForm
+from .forms import NewsForm, CommentForm , ReactionForm
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
@@ -13,6 +13,7 @@ from django.http import HttpResponse, HttpResponseRedirect, request
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
+from django.views.decorators.http import require_GET
 
 from .forms import LoginUserForm
 
@@ -36,8 +37,11 @@ def chat(request):
 
 class LoginUser(LoginView):  # логин через класс - проверка на валидность сразу встроена
     form_class = LoginUserForm
-    template_name = 'user/login.html'
+    template_name = 'main/login.html'
     extra_context = {'title': 'Авторизация'}
+
+    def get_success_url(self):
+        return reverse_lazy('home')
 
 
 @login_required
@@ -46,7 +50,40 @@ def news_list(request):
     context = {
         'news_items': news_items,
     }
-    return render(request, 'news_list.html', context)
+    return render(request, 'main/news_list.html', context)
+
+
+
+@require_GET
+@login_required
+def news_list_api(request):
+    user = request.user.profile  # Получаем профиль текущего авторизованного пользователя
+    filter_type = request.GET.get('filter', 'all')
+
+    if filter_type == 'mine':
+        news_items = News.objects.filter(profile=user).order_by('-created_at')
+    elif filter_type == 'friends':
+        friend_ids = set()
+        friendships_as_one = Friendship.objects.filter(profile_one=user.id, status='friends')
+        for friendship in friendships_as_one:
+            friend_ids.add(friendship.profile_two)
+        friendships_as_two = Friendship.objects.filter(profile_two=user.id, status='friends')
+        for friendship in friendships_as_two:
+            friend_ids.add(friendship.profile_one)
+        news_items = News.objects.filter(profile_id__in=friend_ids).order_by('-created_at')
+    else:  # filter_type == 'all'
+        news_items = News.objects.all().order_by('-created_at')
+
+    # Преобразуем данные в формат JSON, добавляя полный путь к изображению
+    data = [
+        {
+            'id': item.id,
+            'title': item.title,
+            'image': request.build_absolute_uri(item.image.url) if item.image else ''
+        }
+        for item in news_items
+    ]
+    return JsonResponse(data, safe=False)
 
 
 @login_required
@@ -55,7 +92,7 @@ def news_detail(request, pk):
     context = {
         'news_item': news_item,
     }
-    return render(request, 'news_detail.html', context)
+    return render(request, 'main/news_detail.html', context)
 
 
 @login_required
@@ -112,44 +149,7 @@ def tag_list(request):
     return render(request, 'tag_list.html', context)
 
 
-def tag_detail(request, pk):
-    tag = Tag.objects.get(pk=pk)
-    context = {'tag': tag}
-    return render(request, 'tag_detail.html', context)
 
-
-def create_tag(request):
-    if request.method == 'POST':
-        form = TagForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('tag_list')
-    else:
-        form = TagForm()
-    context = {'form': form}
-    return render(request, 'create_tag.html', context)
-
-
-def edit_tag(request, pk):
-    tag = Tag.objects.get(pk=pk)
-    if request.method == 'POST':
-        form = TagForm(request.POST, instance=tag)
-        if form.is_valid():
-            form.save()
-            return redirect('tag_detail', pk=tag.pk)
-    else:
-        form = TagForm(instance=tag)
-    context = {'form': form, 'tag': tag}
-    return render(request, 'edit_tag.html', context)
-
-
-def delete_tag(request, pk):
-    tag = Tag.objects.get(pk=pk)
-    if request.method == 'POST':
-        tag.delete()
-        return redirect('tag_list')
-    context = {'tag': tag}
-    return render(request, 'delete_tag.html', context)
 
 
 @login_required

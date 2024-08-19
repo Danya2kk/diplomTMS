@@ -1,21 +1,21 @@
 {% extends 'main/layout.html' %}
 {% load static %}
 
-
 {% block content %}
 
-<h1>Авторизация</h1>
 <div>
 <div>{{ from.non_field_errors }}</div>
 <form method="post">
 {% csrf_token %}
 <div>
+    <h2 class="Auth_title"> Авторизация </h2>
     <p >{{ form.username.label_tag}}</p>
-    <p>{{ form.password.label_tag}}</p>
+    <p>{{ form.username}}</p>
 </div>
 <div>
-<p>{{ form.username}}</p>
+<p>{{ form.password.label_tag}}</p>
 <p>{{ form.password}}</p>
+
 </div>
 
 <p><button type="submit">Войти</button></p>
