@@ -1,0 +1,20 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="news-detail-container">
+        <section class="news-detail-content">
+            <img src="{{ news_item.image.url }}" alt="Описание фото" class="news-inner-image">
+            <div class="news-detail-text">
+                <p>{{ news_item.title }}</p>
+                <p>Содержание: {{ news_item.content }}</p>
+                <p>Тэги:</p>
+                {% for tag in news_item.tags.all %}
+                    <p>{{ tag.name }}</p>
+                {% endfor %}
+                <p>Автор: {{ news_item.profile.firstname }} {{ news_item.profile.lastname }}</p>
+                <p>Дата создания: {{ news_item.created_at }}</p>
+            </div>
+        </section>
+    </div>
+{% endblock %}

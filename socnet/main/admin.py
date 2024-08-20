@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from .models import User, Profile, PrivacyLevel, Interest, Mediafile
+from .models import User, Profile, News, Tag, PrivacyLevel, Interest
+
 
 # Register your models here.
 
@@ -23,3 +25,13 @@ class InterestAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Mediafile)
+
+admin.site.register(Profile)
+
+
+admin.site.register(News)
+admin.site.register(Tag)
+
+admin.site.register(PrivacyLevel)
+admin.site.register(Interest)
+

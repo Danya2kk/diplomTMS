@@ -12,10 +12,10 @@
        data-is-chat-page="false">>
    </div>
 
-   <!-- Здесь будет вставляться контент из дочерних шаблонов -->
-   {% block content %}
-   {% endblock %}
-
+<div id="django-content">
+        {% block content %}
+        {% endblock %}
+    </div>
 
     <!-- Подключаем React-приложение с локального сервера разработки -->
     <script src="http://localhost:3000/static/js/bundle.js"></script>
