@@ -358,3 +358,4 @@ def reaction_count(request, content_type_id, object_id):
         for reaction_type in REACTION_CHOICES
     }
     return JsonResponse(reaction_counts)
+
