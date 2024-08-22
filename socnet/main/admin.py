@@ -26,12 +26,8 @@ class InterestAdmin(admin.ModelAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.register(Mediafile)
 
-admin.site.register(Profile)
-
-
 admin.site.register(News)
 admin.site.register(Tag)
 
-admin.site.register(PrivacyLevel)
-admin.site.register(Interest)
+
 

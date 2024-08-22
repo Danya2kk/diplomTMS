@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.contenttypes.models import ContentType
 from .models import News, Tag, Comment, Reaction
-from .forms import NewsForm, CommentForm , ReactionForm
+from .forms import NewsForm, CommentForm, ReactionForm
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
@@ -23,6 +23,7 @@ from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.decorators.http import require_GET
 
 from .forms import LoginUserForm
+
 
 # Create your views here.
 def index(request):
@@ -142,6 +143,7 @@ class UserPasswordChange(PasswordChangeView):
     success_url = reverse_lazy("password_change_done")
     template_name = "main/password_change_form.html"
 
+
 class LoginUser(LoginView):  # логин через класс - проверка на валидность сразу встроена
     form_class = LoginUserForm
     template_name = 'main/login.html'
@@ -158,7 +160,6 @@ def news_list(request):
         'news_items': news_items,
     }
     return render(request, 'main/news_list.html', context)
-
 
 
 @require_GET
@@ -212,11 +213,13 @@ def news_create(request):
             news_item.save()
             return redirect('news_detail')
     else:
+
         form = NewsForm()
+
     context = {
         'form': form,
     }
-    return render(request, 'create_news.html', context)
+    return render(request, 'main/create_news.html', context)
 
 
 @login_required
@@ -254,9 +257,6 @@ def tag_list(request):
         'tags': tags,
     }
     return render(request, 'tag_list.html', context)
-
-
-
 
 
 @login_required
@@ -302,6 +302,7 @@ REACTION_CHOICES = [
     (HEART, 'Heart'),
 ]
 
+
 @login_required
 def reaction_create(request, content_type_id, object_id, reaction_type):
     content_type = ContentType.objects.get(pk=content_type_id)
@@ -329,6 +330,7 @@ def reaction_create(request, content_type_id, object_id, reaction_type):
         form = ReactionForm(initial={'reaction_type': reaction_type})
         context = {'form': form, 'obj': obj}
         return render(request, 'reactions/reaction_form.html', context)
+
 
 @login_required
 def reaction_count(request, content_type_id, object_id):

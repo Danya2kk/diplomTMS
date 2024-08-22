@@ -60,12 +60,25 @@ class UserPasswordChangeForm(PasswordChangeForm):
 
 
 class NewsForm(forms.ModelForm):
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tag.objects.all(),
+        widget=forms.SelectMultiple,  # Выпадающий список для множественного выбора
+        required=False
+    )
+
     class Meta:
         model = News
-        fields = ['title', 'content', 'tags']
-        widgets = {
-            'tags': forms.CheckboxSelectMultiple,
-        }
+        fields = ['title', 'content', 'image', 'tags']  # Добавьте все нужные поля
+
+    def __init__(self, *args, **kwargs):
+        # Инициализируем форму
+        super().__init__(*args, **kwargs)
+
+        # Устанавливаем значение по умолчанию для поля `tags`
+        if not self.instance.pk:  # Если объект ещё не сохранен (новый объект)
+            first_tag = Tag.objects.first()
+            if first_tag:
+                self.fields['tags'].initial = [first_tag]  # Список значений по умолчанию
 
 
 class CommentForm(forms.ModelForm):

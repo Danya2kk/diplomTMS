@@ -1,0 +1,35 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block content %}
+
+<div>
+<div>{{ from.non_field_errors }}</div>
+<form method="post">
+{% csrf_token %}
+<div>
+    <h2 class="Auth_title"> Добавить Новость </h2>
+    <p >{{ form.title.label_tag}}</p>
+    <p>{{ form.title}}</p>
+</div>
+<div>
+<p>{{ form.content.label_tag}}</p>
+<p>{{ form.content}}</p>
+</div>
+<div>
+<p>{{ form.image.label_tag}}</p>
+<p>{{ form.image}}</p>
+</div>
+    <div>
+<p>{{ form.tags.label_tag}}</p>
+<p>{{ form.tags}}</p>
+</div>
+
+<p><button type="submit">Добавить</button></p>
+
+
+</form>
+</div>
+
+
+{% endblock %}
