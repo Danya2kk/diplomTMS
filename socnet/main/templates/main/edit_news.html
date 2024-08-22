@@ -6,7 +6,7 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div>
-            <h2 class="Auth_title">Добавить Новость</h2>
+            <h2 class="Auth_title">Редактировать Новость</h2>
             <div>
                 <p>{{ form.title.label_tag }}</p>
                 <p>{{ form.title }}</p>
@@ -26,7 +26,7 @@
                     <span class="tooltiptext">Удерживайте Ctrl (или Command на Mac), чтобы выбрать несколько тегов.</span>
                 </div>
             </div>
-            <p><button type="submit">Добавить</button></p>
+            <p><button type="submit">Сохранить</button></p>
         </div>
     </form>
 </div>

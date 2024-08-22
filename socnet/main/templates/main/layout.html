@@ -5,19 +5,48 @@
     <title>Дипломная работа</title>
 </head>
 <body>
-   <noscript>You need to enable JavaScript to run this app.</noscript>
-     <div id="app"
-       data-user="{{ user.username }}"
-       data-is-authenticated="{{ user.is_authenticated }}"
-       data-is-chat-page="false">>
-   </div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
 
-<div id="django-content">
+    <!-- Сообщения Django -->
+    {% if messages %}
+        <div id="success-popup" class="popup">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div id="app"
+         data-user="{{ user.username }}"
+         data-is-authenticated="{{ user.is_authenticated }}"
+         data-is-chat-page="false">
+    </div>
+
+    <div id="django-content">
         {% block content %}
         {% endblock %}
     </div>
 
     <!-- Подключаем React-приложение с локального сервера разработки -->
     <script src="http://localhost:3000/static/js/bundle.js"></script>
+
+    <!-- Скрипт для управления всплывающим окном -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const popup = document.getElementById('success-popup');
+        if (popup && popup.textContent.trim().length > 0) {
+            popup.classList.add('fade-in');
+            popup.style.display = 'block';  // Показываем всплывающее окно
+
+            setTimeout(() => {
+                popup.classList.remove('fade-in');
+                popup.classList.add('fade-out');
+                setTimeout(() => {
+                    popup.style.display = 'none';  // Скрываем окно
+                }, 500); // Время завершения анимации fade-out
+            }, 3000); // Время показа всплывающего окна
+        }
+    });
+    </script>
 </body>
 </html>

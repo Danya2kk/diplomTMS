@@ -60,9 +60,23 @@ class UserPasswordChangeForm(PasswordChangeForm):
 
 
 class NewsForm(forms.ModelForm):
+    title = forms.CharField(
+        label='Название',  # Метка для поля title
+        widget=forms.TextInput(attrs={'placeholder': 'Введите название новости'})
+    )
+    content = forms.CharField(
+        label='Содержание',  # Метка для поля content
+        widget=forms.Textarea(attrs={'placeholder': 'Введите содержание новости'})
+    )
+    image = forms.ImageField(
+        label='Изображение',  # Метка для поля image
+        required=False  # Поле не обязательно
+    )
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        widget=forms.SelectMultiple,  # Выпадающий список для множественного выбора
+        label='Тэги',  # Метка для поля tags
+        # widget=forms.SelectMultiple(attrs={'class': 'form-control'}),  # Можно добавить класс или другие атрибуты
+        widget=forms.SelectMultiple(),
         required=False
     )
 
@@ -70,15 +84,14 @@ class NewsForm(forms.ModelForm):
         model = News
         fields = ['title', 'content', 'image', 'tags']  # Добавьте все нужные поля
 
-    def __init__(self, *args, **kwargs):
-        # Инициализируем форму
-        super().__init__(*args, **kwargs)
-
-        # Устанавливаем значение по умолчанию для поля `tags`
-        if not self.instance.pk:  # Если объект ещё не сохранен (новый объект)
-            first_tag = Tag.objects.first()
-            if first_tag:
-                self.fields['tags'].initial = [first_tag]  # Список значений по умолчанию
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #
+    #     # Устанавливаем значение по умолчанию для поля `tags`
+    #     if not self.instance.pk:  # Если объект ещё не сохранен (новый объект)
+    #         first_tag = Tag.objects.first()
+    #         if first_tag:
+    #             self.fields['tags'].initial = [first_tag]  # Список значений по умолчанию
 
 
 class CommentForm(forms.ModelForm):

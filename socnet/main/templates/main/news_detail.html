@@ -6,14 +6,16 @@
         <section class="news-detail-content">
             <img src="{{ news_item.image.url }}" alt="Описание фото" class="news-inner-image">
             <div class="news-detail-text">
-                <p>{{ news_item.title }}</p>
-                <p>Содержание: {{ news_item.content }}</p>
-                <p>Тэги:</p>
-                {% for tag in news_item.tags.all %}
-                    <p>{{ tag.name }}</p>
-                {% endfor %}
+                <p>{{ news_item.content }}</p>
+                 <p>Тэги: {{ news_item.tags.all|join:", " }}</p> <!-- Теги через запятую -->
                 <p>Автор: {{ news_item.profile.firstname }} {{ news_item.profile.lastname }}</p>
                 <p>Дата создания: {{ news_item.created_at }}</p>
+            </div>
+            <div class="news-detail-text">
+                <a class="btn-news" href="{% url 'news_create' %}">Добавить новость</a>
+            {% if is_owner %}
+                <a class="btn-news" href="{% url 'news_edit' news_item.pk %}">Редактировать</a>
+            {% endif %}
             </div>
         </section>
     </div>

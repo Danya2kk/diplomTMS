@@ -5,7 +5,7 @@ from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from .forms import UpdateUserForm, UpdateProfileForm, AvatarUploadForm, UserPasswordChangeForm
-from .models import Profile
+from .models import Profile, Friendship
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.contenttypes.models import ContentType
@@ -150,6 +150,7 @@ class LoginUser(LoginView):  # логин через класс - проверк
     extra_context = {'title': 'Авторизация'}
 
     def get_success_url(self):
+        messages.success(self.request, 'Вы успешно авторизовались!')
         return reverse_lazy('home')
 
 
@@ -196,10 +197,17 @@ def news_list_api(request):
 
 @login_required
 def news_detail(request, pk):
-    news_item = News.objects.get(pk=pk)
+    # Получение объекта новости или выдача 404 ошибки, если объект не найден
+    news_item = get_object_or_404(News, pk=pk)
+
+    # Проверка, что текущий пользователь является владельцем новости
+    is_owner = news_item.profile.user == request.user
+
     context = {
         'news_item': news_item,
+        'is_owner': is_owner,  # Используем более понятное имя переменной
     }
+
     return render(request, 'main/news_detail.html', context)
 
 
@@ -209,11 +217,21 @@ def news_create(request):
         form = NewsForm(request.POST, request.FILES)
         if form.is_valid():
             news_item = form.save(commit=False)
-            news_item.profile = request.user.profile
-            news_item.save()
-            return redirect('news_detail')
-    else:
+            # Получаем профиль текущего пользователя
+            try:
+                profile = Profile.objects.get(user=request.user)
+                news_item.profile = profile
+            except Profile.DoesNotExist:
+                # Обработка случая, если профиль не найден
+                return redirect('home')  # Убедитесь, что `some_error_page` определена в вашем маршруте
 
+            news_item.save()
+
+            # Сохраняем теги, если они были выбраны
+            form.save_m2m()  # Сохранение ManyToMany полей
+            messages.success(request, 'Новость успешно добавлена!')
+            return redirect('home')
+    else:
         form = NewsForm()
 
     context = {
@@ -229,14 +247,17 @@ def news_edit(request, pk):
         form = NewsForm(request.POST, request.FILES, instance=news_item)
         if form.is_valid():
             form.save()
+            form.save_m2m()  # Сохранение ManyToMany полей
+            messages.success(request, 'Новость успешно отредактирована!')
             return redirect('news_detail', pk=news_item.pk)
     else:
         form = NewsForm(instance=news_item)
+        print(form.initial['tags'])
     context = {
         'form': form,
         'news_item': news_item,
     }
-    return render(request, 'edit_news.html', context)
+    return render(request, 'main/edit_news.html', context)
 
 
 @login_required
@@ -248,15 +269,7 @@ def news_delete(request, pk):
     context = {
         'news_item': news_item,
     }
-    return render(request, 'delete_news.html', context)
-
-
-def tag_list(request):
-    tags = Tag.objects.all()
-    context = {
-        'tags': tags,
-    }
-    return render(request, 'tag_list.html', context)
+    return render(request, 'main/delete_news.html', context)
 
 
 @login_required
