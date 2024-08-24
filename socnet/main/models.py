@@ -142,12 +142,10 @@ class Comment(models.Model):
 class Reaction(models.Model):
     LIKE = 'like'
     DISLIKE = 'dislike'
-    HEART = 'heart'
 
     REACTION_CHOICES = [
         (LIKE, 'Like'),
         (DISLIKE, 'Dislike'),
-        (HEART, 'Heart'),
     ]
 
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)

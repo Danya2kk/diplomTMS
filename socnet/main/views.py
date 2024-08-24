@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
 from .forms import UpdateUserForm, UpdateProfileForm, AvatarUploadForm, UserPasswordChangeForm
 from .models import Profile, Friendship
@@ -20,7 +21,8 @@ from django.http import HttpResponse, HttpResponseRedirect, request
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
+from django.db.models import Case, When, IntegerField, Sum
 
 from .forms import LoginUserForm
 
@@ -197,19 +199,37 @@ def news_list_api(request):
 
 @login_required
 def news_detail(request, pk):
-    # Получение объекта новости или выдача 404 ошибки, если объект не найден
     news_item = get_object_or_404(News, pk=pk)
 
-    # Проверка, что текущий пользователь является владельцем новости
-    is_owner = news_item.profile.user == request.user
+    # Получаем состояние реакции пользователя
+    content_type = ContentType.objects.get_for_model(news_item)
+    try:
+        reaction = Reaction.objects.get(profile=request.user.profile, content_type=content_type, object_id=news_item.id)
+        user_reaction = reaction.reaction_type
+    except Reaction.DoesNotExist:
+        user_reaction = None
+
+    # Рассчитываем рейтинг
+    reactions = Reaction.objects.filter(content_type=content_type, object_id=news_item.id)
+    total_reactions = reactions.aggregate(
+        total_score=Sum(
+            Case(
+                When(reaction_type='like', then=1),
+                When(reaction_type='dislike', then=-1),
+                output_field=IntegerField()
+            )
+        )
+    )
+    total_score = total_reactions['total_score'] or 0
 
     context = {
         'news_item': news_item,
-        'is_owner': is_owner,  # Используем более понятное имя переменной
+        'is_owner': request.user == news_item.profile.user,  # Пример проверки владельца
+        'user_reaction': user_reaction,
+        'total_score': total_score,
     }
 
     return render(request, 'main/news_detail.html', context)
-
 
 @login_required
 def news_create(request):
@@ -242,17 +262,21 @@ def news_create(request):
 
 @login_required
 def news_edit(request, pk):
-    news_item = News.objects.get(pk=pk)
+    news_item = get_object_or_404(News, pk=pk)
+
+    # Очистка существующих тегов перед началом редактирования
+    news_item.tags.clear()
+
     if request.method == 'POST':
         form = NewsForm(request.POST, request.FILES, instance=news_item)
         if form.is_valid():
             form.save()
-            form.save_m2m()  # Сохранение ManyToMany полей
+            # form.save_m2m() больше не нужен, так как form.save() уже сохраняет m2m поля при наличии instance
             messages.success(request, 'Новость успешно отредактирована!')
             return redirect('news_detail', pk=news_item.pk)
     else:
         form = NewsForm(instance=news_item)
-        print(form.initial['tags'])
+
     context = {
         'form': form,
         'news_item': news_item,
@@ -263,13 +287,10 @@ def news_edit(request, pk):
 @login_required
 def news_delete(request, pk):
     news_item = News.objects.get(pk=pk)
-    if request.method == 'POST':
-        news_item.delete()
-        return redirect('news_list')
-    context = {
-        'news_item': news_item,
-    }
-    return render(request, 'main/delete_news.html', context)
+    news_item.delete()
+    messages.success(request, 'Новость успешно удалена!')
+    return redirect('home')
+
 
 
 @login_required
@@ -305,56 +326,65 @@ def comment_edit(request, comment_pk):
         return render(request, 'comment_edit.html', context)
 
 
-LIKE = 'like'
-DISLIKE = 'dislike'
-HEART = 'heart'
-
-REACTION_CHOICES = [
-    (LIKE, 'Like'),
-    (DISLIKE, 'Dislike'),
-    (HEART, 'Heart'),
-]
-
-
+@csrf_exempt
 @login_required
-def reaction_create(request, content_type_id, object_id, reaction_type):
-    content_type = ContentType.objects.get(pk=content_type_id)
-    obj = content_type.get_object_for_this_type(pk=object_id)
+def reaction_toggle(request):
     if request.method == 'POST':
+        object_id = request.POST.get('object_id')
+        reaction_type = request.POST.get('reaction_type')
+        user = request.user
+
         try:
-            reaction = Reaction.objects.get(
-                profile=request.user.profile,
-                content_type=content_type,
-                object_id=object_id,
-                reaction_type=reaction_type
-            )
-            reaction.delete()
-            response_data = {'status': 'removed'}
-        except Reaction.DoesNotExist:
-            Reaction.objects.create(
-                profile=request.user.profile,
-                content_type=content_type,
-                object_id=object_id,
-                reaction_type=reaction_type
-            )
-            response_data = {'status': 'added'}
-        return JsonResponse(response_data)
-    else:
-        form = ReactionForm(initial={'reaction_type': reaction_type})
-        context = {'form': form, 'obj': obj}
-        return render(request, 'reactions/reaction_form.html', context)
+            news_item = News.objects.get(pk=object_id)
+            content_type = ContentType.objects.get_for_model(news_item)
 
+            # Получаем существующую реакцию пользователя, если она есть
+            reaction, created = Reaction.objects.get_or_create(
+                profile=user.profile,
+                content_type=content_type,
+                object_id=news_item.id,
+                defaults={'reaction_type': reaction_type}
+            )
 
-@login_required
-def reaction_count(request, content_type_id, object_id):
-    content_type = ContentType.objects.get_for_id(content_type_id)
-    obj = content_type.get_object_for_this_type(pk=object_id)
-    reaction_counts = {
-        reaction_type: Reaction.objects.filter(
-            content_type=content_type,
-            object_id=object_id,
-            reaction_type=reaction_type
-        ).count()
-        for reaction_type in REACTION_CHOICES
-    }
-    return JsonResponse(reaction_counts)
+            if not created:
+                # Если реакция уже есть, проверяем ее тип
+                if reaction.reaction_type == reaction_type:
+                    # Удаляем реакцию, если пользователь нажал на ту же кнопку
+                    reaction.delete()
+                    action = 'removed'
+                    reaction_type = None
+                else:
+                    # Обновляем тип реакции
+                    reaction.reaction_type = reaction_type
+                    reaction.save()
+                    action = 'updated'
+                # Пересчитываем рейтинг
+                total_reactions = Reaction.objects.filter(content_type=content_type, object_id=news_item.id).aggregate(
+                    total_score=Sum(
+                        Case(
+                            When(reaction_type='like', then=1),
+                            When(reaction_type='dislike', then=-1),
+                            output_field=IntegerField()
+                        )
+                    )
+                )
+                total_score = total_reactions['total_score'] or 0
+                return JsonResponse({'action': action, 'reaction_type': reaction_type, 'total_score': total_score})
+            else:
+                # Реакция была создана
+                total_reactions = Reaction.objects.filter(content_type=content_type, object_id=news_item.id).aggregate(
+                    total_score=Sum(
+                        Case(
+                            When(reaction_type='like', then=1),
+                            When(reaction_type='dislike', then=-1),
+                            output_field=IntegerField()
+                        )
+                    )
+                )
+                total_score = total_reactions['total_score'] or 0
+                return JsonResponse({'action': 'created', 'reaction_type': reaction_type, 'total_score': total_score})
+
+        except News.DoesNotExist:
+            return JsonResponse({'error': 'Новость не найдена.'}, status=404)
+
+    return JsonResponse({'error': 'Неверный запрос.'}, status=400)
