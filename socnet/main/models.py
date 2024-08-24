@@ -42,6 +42,9 @@ class Profile(models.Model):
     privacy = models.ForeignKey(PrivacyLevel, on_delete=models.SET_NULL, null=True)
     interests = models.ManyToManyField(Interest)
 
+    def __str__(self):
+        return self.firstname
+
 
 class Mediafile(models.Model):
     profile = models.ForeignKey(Profile, related_name='media_files', on_delete=models.CASCADE)

@@ -293,38 +293,6 @@ def news_delete(request, pk):
 
 
 
-@login_required
-def comment_create(request, news_pk):
-    news_item = get_object_or_404(News, pk=news_pk)
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.author = request.user.profile
-            comment.news = news_item
-            comment.save()
-            return redirect('news_detail', pk=news_item.pk)
-        else:
-            form = CommentForm()
-        context = {'form': form, 'news_item': news_item}
-        return render(request, 'comment_create.html', context)
-
-
-@login_required
-def comment_edit(request, comment_pk):
-    comment = get_object_or_404(Comment, pk=comment_pk)
-    if request.user.profile != comment.author:
-        return redirect('news_detail', pk=comment.news.pk)
-    if request.method == 'POST':
-        form = CommentForm(request.POST, instance=comment)
-        if form.is_valid():
-            form.save()
-            return redirect('news_detail', pk=comment.news.pk)
-        else:
-            form = CommentForm(instance=comment)
-        context = {'form': form, 'comment': comment}
-        return render(request, 'comment_edit.html', context)
-
 
 @csrf_exempt
 @login_required
@@ -388,3 +356,24 @@ def reaction_toggle(request):
             return JsonResponse({'error': 'Новость не найдена.'}, status=404)
 
     return JsonResponse({'error': 'Неверный запрос.'}, status=400)
+
+
+
+
+@login_required
+def comment_create(request, news_pk):
+    news_item = get_object_or_404(News, pk=news_pk)
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.author = request.user.profile
+            comment.news = news_item
+            comment.save()
+            return redirect('news_detail', pk=news_item.pk)
+        else:
+            form = CommentForm()
+        context = {'form': form, 'news_item': news_item}
+        return render(request, 'comment_create.html', context)
+
+

@@ -20,7 +20,6 @@ urlpatterns = [
     path('news/create/', views.news_create, name='news_create'),
     path('news/<int:pk>/delete/', views.news_delete, name='news_delete'),
     path('<int:news_pk>/comment/create/', views.comment_create, name='comment_create'),
-    path('<int:comment_pk>/edit/', views.comment_edit, name='comment_edit'),
     # path('<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
