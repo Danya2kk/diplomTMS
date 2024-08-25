@@ -2,16 +2,17 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView
-from .forms import UpdateUserForm, UpdateProfileForm, AvatarUploadForm, UserPasswordChangeForm
-from .models import Profile, Friendship
+from .forms import UpdateUserForm, UpdateProfileForm, AvatarUploadForm, UserPasswordChangeForm, CommentForm
+from .models import Profile, Friendship, Comment
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.contenttypes.models import ContentType
-from .models import News, Tag, Comment, Reaction
-from .forms import NewsForm, CommentForm, ReactionForm
+from .models import News, Tag, Reaction
+from .forms import NewsForm, ReactionForm
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
@@ -23,6 +24,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Case, When, IntegerField, Sum
+from django.shortcuts import render
 
 from .forms import LoginUserForm
 
@@ -203,6 +205,9 @@ def news_detail(request, pk):
 
     # Получаем состояние реакции пользователя
     content_type = ContentType.objects.get_for_model(news_item)
+    # Получение корневых комментариев (комментариев, у которых нет родителя)
+    root_comments = Comment.objects.filter(news=news_item, parent__isnull=True).select_related('author')
+
     try:
         reaction = Reaction.objects.get(profile=request.user.profile, content_type=content_type, object_id=news_item.id)
         user_reaction = reaction.reaction_type
@@ -224,6 +229,7 @@ def news_detail(request, pk):
 
     context = {
         'news_item': news_item,
+        'root_comments': root_comments,
         'is_owner': request.user == news_item.profile.user,  # Пример проверки владельца
         'user_reaction': user_reaction,
         'total_score': total_score,
@@ -360,20 +366,47 @@ def reaction_toggle(request):
 
 
 
-@login_required
-def comment_create(request, news_pk):
-    news_item = get_object_or_404(News, pk=news_pk)
+# def add_comment(request, news_id):
+#     if request.method == 'POST':
+        # text = request.POST.get('text')
+#         parent_id = request.POST.get('parent_id')
+#         news_item = News.objects.get(pk=news_id)
+#
+#         # Логика добавления комментария
+#         Comment.objects.create(
+#             news=news_item,
+#             text=text,
+#             parent_id=parent_id,
+#             author=request.user.profile
+#         )
+# #
+#         # Получаем обновленные комментарии
+#         root_comments = Comment.objects.filter(news=news_item, parent__isnull=True).order_by('-created_at')
+#
+#         # Рендерим только часть HTML для комментариев
+#         comments_html = render_to_string('partial_comments.html', {'root_comments': root_comments}, request=request)
+#
+#         return JsonResponse({'comments_html': comments_html})
+#     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def add_comment(request, news_id):
     if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.author = request.user.profile
-            comment.news = news_item
-            comment.save()
-            return redirect('news_detail', pk=news_item.pk)
-        else:
-            form = CommentForm()
-        context = {'form': form, 'news_item': news_item}
-        return render(request, 'comment_create.html', context)
+        text = request.POST.get('text')
+        parent_id = request.POST.get('parent_id')
+        news_item = News.objects.get(pk=news_id)
 
+        # Логика добавления комментария
+        Comment.objects.create(
+            news=news_item,
+            text=text,
+            parent_id=parent_id,
+            author=request.user.profile
+        )
 
+        # Рендеринг обновленного списка комментариев
+        comments_html = render_to_string('main/partial_comments.html', {
+            'root_comments': news_item.comments.filter(parent=None)
+        })
+
+        return JsonResponse({'comments_html': comments_html})

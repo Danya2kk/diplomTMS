@@ -19,7 +19,6 @@
                 <a class="btn-news" href="{% url 'news_delete' news_item.pk %}">Удалить</a>
             {% endif %}
             <div class="separator-line"></div>
-            <!-- Новый блок под линией -->
             {% if is_owner %}
                 <div class="news-reaction-block">
                     <p>Реакция на новость</p>
@@ -44,53 +43,23 @@
 
     <!-- Область комментариев -->
     <div id="comments-section" class="comments-section">
-        {% for comment in news_item.comments.all %}
-            <div class="comment">
-                <p><strong>{{ comment.author.firstname }} {{ comment.author.lastname }}:</strong> {{ comment.text }}</p>
-                <p class="comment-date">{{ comment.created_at }}</p>
-            </div>
-        {% empty %}
-            <p>Комментариев пока нет.</p>
-        {% endfor %}
+        <a class="btn-comment" href="javascript:void(0);" onclick="toggleCommentForm('new-comment-form');">Добавить комментарий</a>
+
+        <div id="new-comment-form" class="comment-form" style="display:none;">
+            <textarea id="new-comment-text" placeholder="Введите ваш комментарий"></textarea>
+            <button onclick="submitComment()">Отправить</button>
+        </div>
+
+        <!-- Включение HTML комментариев из partial_comments.html -->
+        {% include 'main/partial_comments.html' %}
     </div>
 </div>
-
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('.reaction-btn').click(function(event) {
-        event.preventDefault();
 
-        var button = $(this);
-        var objectId = button.data('object-id');
-        var reactionType = button.data('reaction-type');
-        var url = "{% url 'reaction_toggle' %}"; // URL эндпоинта для обработки реакции
-
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: {
-                'object_id': objectId,
-                'reaction_type': reactionType,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                // Обновление UI на основе реакции пользователя
-                $('.reaction-btn[data-object-id="' + objectId + '"]').removeClass('active');
-                if (response.reaction_type === reactionType) {
-                    button.addClass('active');
-                }
-                // Обновление рейтинга на странице
-                $('#total-score').text(response.total_score);
-            },
-            error: function(xhr, status, error) {
-                console.error('Ошибка при отправке запроса: ', error);
-            }
-        });
-    });
-
-    // Функция для установки ширины comments-wrapper и кнопки
+      // Функция для установки ширины comments-wrapper и кнопки
     function adjustContentWidth() {
         // Получаем ширину контейнера .news-detail-content
         var contentWidth = $('.news-detail-content').outerWidth();
@@ -110,13 +79,103 @@ $(document).ready(function() {
         adjustContentWidth();
     });
 
+
+    // Реакции на новости
+    $('.reaction-btn').click(function(event) {
+        event.preventDefault();
+        var button = $(this);
+        var objectId = button.data('object-id');
+        var reactionType = button.data('reaction-type');
+        var url = "{% url 'reaction_toggle' %}";
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: {
+                'object_id': objectId,
+                'reaction_type': reactionType,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                $('.reaction-btn[data-object-id="' + objectId + '"]').removeClass('active');
+                if (response.reaction_type === reactionType) {
+                    button.addClass('active');
+                }
+                $('#total-score').text(response.total_score);
+            },
+            error: function(xhr, status, error) {
+                console.error('Ошибка при отправке запроса: ', error);
+            }
+        });
+    });
+
+
+
     // Скрипт для аккордеона комментариев
     $('#toggle-comments-btn').click(function() {
-        console.log('Button clicked');
-        $('#comments-section').slideToggle();  // Показываем или скрываем комментарии
+        $('#comments-section').slideToggle();
         var isVisible = $('#comments-section').is(':visible');
         $(this).text(isVisible ? 'Скрыть комментарии' : 'Показать комментарии');
     });
+
+    // Функция для переключения видимости формы добавления комментария
+    window.toggleCommentForm = function(formId) {
+        console.log('toggleCommentForm called with:', formId);
+        var form = $('#' + formId);
+        if (form.length) {
+            form.slideToggle();
+        } else {
+            console.warn('Элемент с ID ' + formId + ' не найден.');
+        }
+    };
+
+    // Функция для отправки комментария
+    window.submitComment = function(parentId) {
+        console.log('submitComment called with parentId:', parentId);
+        var commentText;
+        if (parentId) {
+            commentText = $('#reply-text-' + parentId).val();
+        } else {
+            commentText = $('#new-comment-text').val();
+        }
+
+        if (!commentText.trim()) {
+            alert("Пожалуйста, введите текст комментария.");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'add_comment' news_item.id %}",
+            method: 'POST',
+            data: {
+                'text': commentText,
+                'parent_id': parentId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                $('#comments-section').html(response.comments_html);
+
+                // Скрыть форму комментария после добавления
+                if (parentId) {
+                    toggleCommentForm('reply-form-' + parentId);
+                } else {
+                    toggleCommentForm('new-comment-form');
+                }
+
+                // Сбросить текстовое поле
+                if (parentId) {
+                    $('#reply-text-' + parentId).val('');
+                } else {
+                    $('#new-comment-text').val('');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Ошибка при отправке комментария: ', error);
+            }
+        });
+    };
 });
 </script>
+
+
 {% endblock %}

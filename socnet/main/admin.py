@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User, Profile, PrivacyLevel, Interest, Mediafile, Comment
+from .models import Mediafile, Comment
 from .models import User, Profile, News, Tag, PrivacyLevel, Interest
 
 

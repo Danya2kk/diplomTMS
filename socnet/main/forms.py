@@ -1,8 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 
-from .models import Profile, User, Mediafile
-from .models import News, Tag, Comment, Reaction
+from .models import Profile, User, Mediafile, Comment
+from .models import News, Tag, Reaction
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
@@ -97,7 +97,11 @@ class NewsForm(forms.ModelForm):
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ['text']
+        fields = ['text', 'parent']  # Включить поле 'parent' для поддержки ответов
+        widgets = {
+            'text': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
+            'parent': forms.HiddenInput()  # Скрыть поле 'parent' в форме
+        }
 
 
 class ReactionForm(forms.ModelForm):
