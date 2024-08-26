@@ -66,42 +66,51 @@ def my_profile_view(request):
 
 @login_required
 def profile_view(request, username):
-    '''Просмотр публичного профиля'''
+    '''Просмотр профиля пользователя'''
 
-    # Если текущий пользователь пытается получить доступ к своему же профилю
-    if request.user.username == username:
-        return redirect('my_profile')
-
+    # Получение профиля пользователя
     profile = get_object_or_404(Profile, user__username=username)
+
+    # Проверяем, является ли текущий пользователь владельцем профиля
+    is_owner = request.user.username == username
+
+    # Проверка уровня конфиденциальности профиля
     privacy_level = profile.privacy
 
-    if privacy_level.name == "Никто" and profile.user != request.user:
+    # Определяем, есть ли дружба между текущим пользователем и владельцем профиля
+    friendship = Friendship.objects.filter(
+        profile_one__user=request.user, profile_two=profile
+    ).filter(status='friends').exists() or Friendship.objects.filter(
+        profile_one=profile, profile_two__user=request.user
+    ).filter(status='friends').exists()
+
+    # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
+    if privacy_level.name == "Никто" and not is_owner:
         context = {
             'profile': {
                 'firstname': profile.firstname,
                 'lastname': profile.lastname,
             },
-            'restricted_view': True,  # Указываем, что вид ограничен
-            'is_owner': profile.user == request.user,
+            'restricted_view': True,  # Вид ограничен
+            'is_owner': is_owner,
         }
-    elif privacy_level.name == "Только друзья" and profile.user not in request.user.friends:
-        '''Надо разобраться с моделью Friendship'''
-
+    elif privacy_level.name == "Только друзья" and not friendship and not is_owner:
         context = {
             'profile': {
                 'firstname': profile.firstname,
                 'lastname': profile.lastname,
             },
-            'is_owner': profile.user == request.user,
-            'restricted_view': True
-
+            'is_owner': is_owner,
+            'restricted_view': True  # Вид ограничен для друзей
         }
     else:
+        # Полный доступ к профилю
         context = {
             'profile': profile,
-            'is_owner': profile.user == request.user,
-            'restricted_view': False
+            'is_owner': is_owner,
+            'restricted_view': False  # Полный доступ к профилю
         }
+
     return render(request, 'main/profile.html', context)
 
 
@@ -235,7 +244,7 @@ def news_detail(request, pk):
     context = {
         'news_item': news_item,
         'root_comments': root_comments,
-        'is_owner': request.user == news_item.profile.user,  # Пример проверки владельца
+        'is_owner': request.user == news_item.profile.user,
         'user_reaction': user_reaction,
         'total_score': total_score,
     }
@@ -368,31 +377,6 @@ def reaction_toggle(request):
 
     return JsonResponse({'error': 'Неверный запрос.'}, status=400)
 
-
-
-
-# def add_comment(request, news_id):
-#     if request.method == 'POST':
-        # text = request.POST.get('text')
-#         parent_id = request.POST.get('parent_id')
-#         news_item = News.objects.get(pk=news_id)
-#
-#         # Логика добавления комментария
-#         Comment.objects.create(
-#             news=news_item,
-#             text=text,
-#             parent_id=parent_id,
-#             author=request.user.profile
-#         )
-# #
-#         # Получаем обновленные комментарии
-#         root_comments = Comment.objects.filter(news=news_item, parent__isnull=True).order_by('-created_at')
-#
-#         # Рендерим только часть HTML для комментариев
-#         comments_html = render_to_string('partial_comments.html', {'root_comments': root_comments}, request=request)
-#
-#         return JsonResponse({'comments_html': comments_html})
-#     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 def add_comment(request, news_id):

@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.db.models import Q
 
 
 class User(AbstractUser):
@@ -25,9 +26,15 @@ class PrivacyLevel(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
 
+    def __str__(self):
+        return self.name
+
 
 class Interest(models.Model):
     name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
 
 
 class Profile(models.Model):
@@ -41,6 +48,13 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     privacy = models.ForeignKey(PrivacyLevel, on_delete=models.SET_NULL, null=True)
     interests = models.ManyToManyField(Interest)
+
+    def is_friend_with(self, other_profile):
+        return Friendship.objects.filter(
+            (Q(profile_one=self, profile_two=other_profile) |
+             Q(profile_one=other_profile, profile_two=self)),
+            status='friends'
+        ).exists()
 
     def __str__(self):
         return self.firstname
@@ -61,10 +75,10 @@ class Friendship(models.Model):
         ('blocked', 'Заблокирован'),
     ]
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='sent', )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='sent')
     description = models.TextField(blank=True, null=True)
-    profile_one = models.IntegerField()
-    profile_two = models.IntegerField()
+    profile_one = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='friendships_initiated')
+    profile_two = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='friendships_received')
 
 
 class Mail(models.Model):
