@@ -2,36 +2,41 @@
 {% load static %}
 
 {% block content %}
-    <h1>Профиль пользователя {{ profile.user.username }}</h1>
+<div class="news-detail-container">
+    <section class="news-detail-content">
+        <!-- Содержимое профиля: изображение, описание,  -->
+        {% if avatar and avatar.file %}
+                <img src="{{ avatar.file.url }}" alt="Avatar" class="news-inner-image">
+            {% else %}
+                <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
+            {% endif %}
+        <div class="news-detail-text">
+            <p>{{ profile.firstname }} {{ profile.lastname }}</p>
+            {% if restricted_view %}
+                <p>Пользователь скрыл информаицию о себе</p>
+            {% else %}
+                <p>Возраст: {{ profile.age }}</p>
+                <p>Пол: {{ profile.gender }}</p>
+                <p>Местоположение: {{ profile.location }}</p>
+                <p>Ссылка: <a href="{{ profile.link }}">{{ profile.link }}</a></p>
+                <p>Настройки: {{ profile.settings }}</p>
 
-    <h2>Текущий аватар</h2>
-    {% if avatar %}
-        <img src="{{ avatar.file.url }}" alt="Avatar" width="200">
-    {% else %}
-        <p>Аватар не загружен.</p>
-    {% endif %}
-    <h2>{{ profile.firstname }} {{ profile.lastname }}</h2>
+                <p>Интересы: {{ profile.interests.all|join:", " }}</p>
+            {% endif %}
+        </div>
+        <div class="news-detail-text">
+            {% if is_owner %}
+                <p>Уровень приватности:</p> <p>{{ profile.privacy.name }}: {{ profile.privacy.description }}</p>
 
-    {% if restricted_view %}
-        <p>Пользователь скрыл информаицию о себе</p>
-    {% else %}
-        <p>Возраст: {{ profile.age }}</p>
-        <p>Пол: {{ profile.gender }}</p>
-        <p>Местоположение: {{ profile.location }}</p>
-        <p>Ссылка: <a href="{{ profile.link }}">{{ profile.link }}</a></p>
-        <p>Настройки: {{ profile.settings }}</p>
+            {% endif %}
+            <div class="separator-line"></div>
+            {% if is_owner %}
+                <div class="news-reaction-block">
+                     <a class="btn-news" href="{% url 'update-profile' %}">Редактировать</a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
 
-        <h2>Интересы</h2>
-        <ul>
-            {% for interest in profile.interests.all %}
-                <li>{{ interest.name }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if is_owner %}
-    <h2>Уровень приватности</h2>
-    <p>{{ profile.privacy.name }}: {{ profile.privacy.description }}</p>
-    <p><a href="{% url 'update-profile' %}">Редактировать профиль</a></p>
-    {% endif %}
 {% endblock %}
