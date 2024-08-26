@@ -540,3 +540,4 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.read = True
         notification.save()
         return Response({'detail': 'Уведомление помечено как прочитанное'}, status=status.HTTP_200_OK)
+
