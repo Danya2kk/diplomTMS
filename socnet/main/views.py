@@ -456,6 +456,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
         except Profile.DoesNotExist:
             return Response({'detail': 'Профиль пользователя не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+
 class ActivityLogViewSet(viewsets.ModelViewSet):
     queryset = ActivityLog.objects.all().order_by('-timestamp')
     serializer_class = ActivityLogSerializer

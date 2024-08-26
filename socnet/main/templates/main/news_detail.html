@@ -30,7 +30,7 @@
                     </button>
                 </div>
                 <div class="news-reaction-block">
-                    <p>Средний рейтинг: {{ total_score }}</p>
+                    <p>Средний рейтинг: <span id="total-score">{{ total_score }}</span></p>
                 </div>
             {% endif %}
         </div>
@@ -86,27 +86,26 @@ $(document).ready(function() {
         var button = $(this);
         var objectId = button.data('object-id');
         var reactionType = button.data('reaction-type');
-        var url = "{% url 'reaction_toggle' %}";
-
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: {
-                'object_id': objectId,
-                'reaction_type': reactionType,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                $('.reaction-btn[data-object-id="' + objectId + '"]').removeClass('active');
-                if (response.reaction_type === reactionType) {
-                    button.addClass('active');
+        var url = "{% url 'reaction_toggle' %}"; // Проверьте, что этот URL правильный
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    'object_id': objectId,
+                    'reaction_type': reactionType,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    $('.reaction-btn[data-object-id="' + objectId + '"]').removeClass('active');
+                    if (response.reaction_type === reactionType) {
+                        button.addClass('active');
+                    }
+                    $('#total-score').text(response.total_score); // Убедитесь, что элемент с ID 'total-score' существует в HTML
+                },
+                error: function(xhr, status, error) {
+                    console.error('Ошибка при отправке запроса: ', error);
                 }
-                $('#total-score').text(response.total_score);
-            },
-            error: function(xhr, status, error) {
-                console.error('Ошибка при отправке запроса: ', error);
-            }
-        });
+            });
     });
 
 
