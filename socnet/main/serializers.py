@@ -44,3 +44,18 @@ class NewsSerializer(serializers.ModelSerializer):
         model = News
         fields = '__all__'
 
+class ActivityLogSerializer(serializers.ModelSerializer):
+    action_type_display = serializers.CharField(source='get_action_type_display', read_only=True)
+
+    class Meta:
+        model = ActivityLog
+        fields = ['id', 'profile', 'action_type', 'action_type_display', 'description', 'timestamp']
+        read_only_fields = ['timestamp', 'profile']
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = ['id', 'profile', 'notification_type', 'content', 'timestamp', 'read']

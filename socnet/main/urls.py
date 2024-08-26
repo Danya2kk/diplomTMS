@@ -1,7 +1,16 @@
 from django.contrib.auth.views import PasswordChangeDoneView
-from django.urls import path
+from django.urls import path, include
 from main import views
+from rest_framework.routers import DefaultRouter
 from django.contrib.auth.views import LogoutView
+
+router = DefaultRouter()
+router.register(r'profiles', views.ProfileViewSet)
+router.register(r'activities', views.ActivityLogViewSet)
+router.register(r'groups', views.GroupViewSet)
+router.register(r'friendships', views.FriendshipViewSet)
+router.register(r'notifications', views.NotificationViewSet)
+
 
 urlpatterns = [
     path('', views.index, name='home'),
@@ -25,5 +34,5 @@ urlpatterns = [
     path('<int:content_type_id>/<int:object_id>/<str:reaction_type>/create/', views.reaction_create,
          name='reaction_create'),
     path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
-
+    path('', include(router.urls)),
 ]
