@@ -111,11 +111,12 @@ $(document).ready(function() {
 
 
     // Скрипт для аккордеона комментариев
-    $('#toggle-comments-btn').click(function() {
-        $('#comments-section').slideToggle();
-        var isVisible = $('#comments-section').is(':visible');
-        $(this).text(isVisible ? 'Скрыть комментарии' : 'Показать комментарии');
-    });
+        $('#toggle-comments-btn').click(function() {
+            $('#comments-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
+                var isVisible = $('#comments-section').is(':visible');
+                $('#toggle-comments-btn').text(isVisible ? 'Скрыть комментарии' : 'Показать комментарии');
+            });
+        });
 
     // Функция для переключения видимости формы добавления комментария
     window.toggleCommentForm = function(formId) {
