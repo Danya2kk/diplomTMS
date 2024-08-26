@@ -34,5 +34,5 @@ urlpatterns = [
     path('<int:content_type_id>/<int:object_id>/<str:reaction_type>/create/', views.reaction_create,
          name='reaction_create'),
     path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
 ]
