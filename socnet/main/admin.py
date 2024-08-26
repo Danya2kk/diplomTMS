@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User, Profile, PrivacyLevel, Interest, Mediafile
+from .models import Mediafile, Comment
 from .models import User, Profile, News, Tag, PrivacyLevel, Interest
 
 
@@ -28,6 +28,8 @@ admin.site.register(Mediafile)
 
 admin.site.register(News)
 admin.site.register(Tag)
+
+admin.site.register(Comment)
 
 
 

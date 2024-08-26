@@ -42,6 +42,9 @@ class Profile(models.Model):
     privacy = models.ForeignKey(PrivacyLevel, on_delete=models.SET_NULL, null=True)
     interests = models.ManyToManyField(Interest)
 
+    def __str__(self):
+        return self.firstname
+
 
 class Mediafile(models.Model):
     profile = models.ForeignKey(Profile, related_name='media_files', on_delete=models.CASCADE)
@@ -136,18 +139,31 @@ class Comment(models.Model):
     text = models.TextField()
     author = models.ForeignKey(Profile, related_name='comments', on_delete=models.CASCADE)
     news = models.ForeignKey(News, related_name='comments', on_delete=models.CASCADE)
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.author} on {self.news} - {self.text[:20]}"
+
+    class Meta:
+        ordering = ['created_at']  # Сортировка комментариев по дате создания
+
+    def is_parent(self):
+        """ Проверяет, является ли комментарий родительским. """
+        return self.parent is None
+
+    def get_replies(self):
+        """ Возвращает все ответы на комментарий. """
+        return Comment.objects.filter(parent=self)
 
 
 class Reaction(models.Model):
     LIKE = 'like'
     DISLIKE = 'dislike'
-    HEART = 'heart'
 
     REACTION_CHOICES = [
         (LIKE, 'Like'),
         (DISLIKE, 'Dislike'),
-        (HEART, 'Heart'),
     ]
 
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
