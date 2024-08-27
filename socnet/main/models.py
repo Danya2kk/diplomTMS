@@ -68,14 +68,17 @@ class Mediafile(models.Model):
     description = models.TextField()
 
 
+class FriendshipStatus(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
 class Friendship(models.Model):
-    STATUS_CHOICES = [
-        ('sent', 'Отправлен запрос'),
-        ('friends', 'Друзья'),
-        ('blocked', 'Заблокирован'),
-    ]
+
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='sent')
+    status = models.ForeignKey(FriendshipStatus, on_delete=models.CASCADE)
     description = models.TextField(blank=True, null=True)
     profile_one = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='friendships_initiated')
     profile_two = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='friendships_received')
@@ -200,8 +203,11 @@ class StatusProfile(models.Model):
 
 class Chat(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    profile = models.ForeignKey(Profile, related_name='news_message', on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, related_name='chat_message', on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, related_name='chat_members', on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"Сообщение от {self.profile} от {self.created_at} "
 
 class Notification(models.Model):
     FRIEND_REQUEST = 'FR'

@@ -77,12 +77,13 @@ def profile_view(request, username):
     # Проверка уровня конфиденциальности профиля
     privacy_level = profile.privacy
 
+
     # Определяем, есть ли дружба между текущим пользователем и владельцем профиля
-    friendship = Friendship.objects.filter(
-        profile_one__user=request.user, profile_two=profile
-    ).filter(status='friends').exists() or Friendship.objects.filter(
-        profile_one=profile, profile_two__user=request.user
-    ).filter(status='friends').exists()
+    friendship_exists = Friendship.objects.filter(
+        profile_one__user=request.user, profile_two=profile, status__name='friends'
+    ).exists() or Friendship.objects.filter(
+        profile_one=profile, profile_two__user=request.user, status__name='friends'
+    ).exists()
 
     # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
     if privacy_level.name == "Никто" and not is_owner:
