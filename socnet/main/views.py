@@ -77,14 +77,16 @@ def profile_view(request, username):
     # Проверка уровня конфиденциальности профиля
     privacy_level = profile.privacy
 
-
+    avatar = profile.media_files.filter(file_type='avatar').last()
     # Определяем, есть ли дружба между текущим пользователем и владельцем профиля
-    friendship_exists = Friendship.objects.filter(
-        profile_one__user=request.user, profile_two=profile, status__name='friends'
-    ).exists() or Friendship.objects.filter(
-        profile_one=profile, profile_two__user=request.user, status__name='friends'
-    ).exists()
-
+    friendship_exists = (
+            Friendship.objects.filter(
+                profile_one__user=request.user, profile_two=profile, status__name='friends'
+            ).exists() or
+            Friendship.objects.filter(
+                profile_one=profile, profile_two__user=request.user, status__name='friends'
+            ).exists()
+    )
     # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
     if privacy_level.name == "Никто" and not is_owner:
         context = {
@@ -94,22 +96,25 @@ def profile_view(request, username):
             },
             'restricted_view': True,  # Вид ограничен
             'is_owner': is_owner,
+            'avatar':avatar,
         }
-    elif privacy_level.name == "Только друзья" and not friendship and not is_owner:
+    elif privacy_level.name == "Только друзья" and not friendship_exists and not is_owner:
         context = {
             'profile': {
                 'firstname': profile.firstname,
                 'lastname': profile.lastname,
             },
             'is_owner': is_owner,
-            'restricted_view': True  # Вид ограничен для друзей
+            'restricted_view': True,  # Вид ограничен для друзей
+            'avatar': avatar,
         }
     else:
         # Полный доступ к профилю
         context = {
             'profile': profile,
             'is_owner': is_owner,
-            'restricted_view': False  # Полный доступ к профилю
+            'restricted_view': False,  # Полный доступ к профилю
+            'avatar': avatar,
         }
 
     return render(request, 'main/profile.html', context)
@@ -126,17 +131,26 @@ def update_profile(request):
         profile_form = UpdateProfileForm(request.POST, request.FILES, instance=profile)
         avatar_form = AvatarUploadForm(request.POST, request.FILES)
 
-        if user_form.is_valid() and profile_form.is_valid() and avatar_form.is_valid():
+        if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
 
-            avatar = avatar_form.save(commit=False)
-            avatar.profile = profile
-            avatar.file_type = 'image'
-            avatar.save()
+            # Проверка, был ли загружен новый файл
+            if request.FILES.get('file'):  # 'file' - имя поля в форме AvatarUploadForm
+                if avatar_form.is_valid():
+                    # Удалить предыдущий аватар
+                    previous_avatar = profile.media_files.filter(file_type='avatar').last()
+                    if previous_avatar:
+                        previous_avatar.delete()
+
+                    # Сохранить новый аватар
+                    avatar = avatar_form.save(commit=False)
+                    avatar.profile = profile
+                    avatar.file_type = 'avatar'
+                    avatar.save()
 
             messages.success(request, 'Ваш профиль успешно изменен!')
-            return redirect('my_profile')
+            return redirect('profile', username=request.user.username)
 
     else:
         user_form = UpdateUserForm(instance=request.user)

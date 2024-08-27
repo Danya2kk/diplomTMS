@@ -36,18 +36,23 @@ class Interest(models.Model):
     def __str__(self):
         return self.name
 
+def get_default_privacy_level():
+    return PrivacyLevel.objects.get(id=1)
 
 class Profile(models.Model):
     firstname = models.CharField(max_length=255)
     lastname = models.TextField()
-    age = models.IntegerField()
-    gender = models.CharField(max_length=50)
-    location = models.CharField(max_length=255)
-    link = models.TextField()
-    settings = models.CharField(max_length=255)
+    age = models.IntegerField(blank=True, null=True)  # Необязательное поле
+    gender = models.CharField(max_length=50, blank=True, null=True)  # Необязательное поле
+    location = models.CharField(max_length=255, blank=True, null=True)  # Необязательное поле
+    link = models.TextField(blank=True, null=True)  # Необязательное поле
+    settings = models.CharField(max_length=255, blank=True, null=True)  # Необязательное поле
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    privacy = models.ForeignKey(PrivacyLevel, on_delete=models.SET_NULL, null=True)
-    interests = models.ManyToManyField(Interest)
+    privacy = models.ForeignKey(PrivacyLevel, on_delete=models.SET_NULL, null=True, default=get_default_privacy_level)
+    interests = models.ManyToManyField(Interest, blank=True)  # Необязательное поле
+
+    def __str__(self):
+        return f'{self.firstname} {self.lastname}'
 
     def is_friend_with(self, other_profile):
         return Friendship.objects.filter(
@@ -56,15 +61,13 @@ class Profile(models.Model):
             status='friends'
         ).exists()
 
-    def __str__(self):
-        return self.firstname
 
 
 class Mediafile(models.Model):
     profile = models.ForeignKey(Profile, related_name='media_files', on_delete=models.CASCADE)
     file = models.FileField(upload_to='media/')
     upload_date = models.DateTimeField(auto_now_add=True)
-    file_type = models.CharField(max_length=50, choices=[('image', 'Image'), ('video', 'Video'), ('other', 'Other')])
+    file_type = models.CharField(max_length=50, choices=[('avatar', 'Avatar'), ('video', 'Video'), ('other', 'Other'), ('image', 'Image')])
     description = models.TextField()
 
 

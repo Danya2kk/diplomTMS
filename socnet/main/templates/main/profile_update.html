@@ -2,51 +2,90 @@
 {% load static %}
 
 {% block content %}
+<h2 class="Auth_title"> Редактирование профиля </h2>
+<div class="news-detail-container">
 
-<h1>Редактирование профиля</h1>
-    {% if user_form.errors %}
-                {% for key, value in user_form.errors.items %}
-                    <strong>{{ value }}</strong>
-                {% endfor %}
-    {% endif %}
-
-<form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <label>Login:</label>
-        {{ user_form.username }}
+    <section class="news-detail-content2">
 
-    <h2>Загрузить новый аватар</h2>
-        {{ avatar_form.as_p }}
-        {{ profile_form.as_p }}
-<!--    <p><label>:</label>-->
-<!--        {{ profile_form.firstname }}</p>-->
-<!--    <p><label>Фамилия:</label>-->
-<!--        {{ profile_form.lastname }}</p>-->
-<!--    <p><label>Возраст:</label>-->
-<!--        {{ profile_form.age }}</p>-->
-<!--    <p><label>Пол:</label>-->
-<!--        {{ profile_form.gender }}</p>-->
-<!--    <p><label>Местоположение:</label>-->
-<!--        {{ profile_form.location }}</p>-->
-<!--    <p><label>Ссылки:</label>-->
-<!--        {{ profile_form.link }}</p>-->
-<!--    <p><label>Настройки:</label>-->
-<!--        {{ profile_form.settings }}</p>-->
-<!--    <p><label>Конфиденциальность:</label>-->
-<!--        {{ profile_form.privacy }}</p>-->
-<!--    <p><label>Интересы:</label>-->
-<!--        {{ profile_form.interests }}</p>-->
+        {% if user_form.errors %}
+            {% for key, value in user_form.errors.items %}
+                <strong class="error-message">{{ value }}</strong>
+            {% endfor %}
+        {% endif %}
+        <!-- Содержимое профиля: изображение, описание,  -->
+        <div class="form-group">
+                <p>{{ avatar_form.file.label_tag }}</p>
+                <p>{{ avatar_form.file }}</p>
+            </div>
+        <div class="news-detail-text">
+             <div class="form-group">
+                <p>{{ user_form.username.label_tag }}</p>
+                <p> {{ user_form.username }}</p>
+            </div>
+            <div class="form-group">
+                <p>{{ profile_form.firstname.label_tag }}</p>
+                <p>{{ profile_form.firstname }}</p>
+            </div>
 
-    <p><a href="{% url 'password_change' %}">Сменить пароль</a></p>
+            <div class="form-group">
+                <p>{{ profile_form.lastname.label_tag }}</p>
+                <p>{{ profile_form.lastname }}</p>
+            </div>
 
-    <button type="submit">Сохранить изменения</button>
-    <button type="reset">Сбросить</button>
-    <form action="{% url 'my_profile' %}">
-        {% csrf_token %}
-        <button>Назад</button>
-    </form>
+            <div class="form-group">
+                <p>{{ profile_form.age.label_tag }}</p>
+                <p>{{ profile_form.age }}</p>
+            </div>
 
-</form>
+            <div class="form-group">
+                <p>{{ profile_form.gender.label_tag }}</p>
+                <p>{{ profile_form.gender }}</p>
+            </div>
 
+            <div class="form-group">
+                <p>{{ profile_form.location.label_tag }}</p>
+                <p>{{ profile_form.location }}</p>
+            </div>
+
+            <div class="form-group">
+                <p>{{ profile_form.link.label_tag }}</p>
+                <p>{{ profile_form.link }}</p>
+            </div>
+
+            <div class="form-group">
+                <p>{{ profile_form.settings.label_tag }}</p>
+                <p>{{ profile_form.settings }}</p>
+            </div>
+
+                <div class="tooltip">
+                    {{ profile_form.interests.label_tag }}
+                    {{ profile_form.interests }}
+
+                </div>
+                <div class="form-group">
+                    <p>>{{ profile_form.privacy.label_tag }}</p>
+                    <p>{{ profile_form.privacy}}</p>
+                </div>
+
+        </div>
+        <div class="news-detail-text">
+            <button type="submit">Сохранить изменения</button>
+            <button type="reset">Сбросить</button>
+
+            <div class="separator-line"></div>
+                <div class="news-reaction-block">
+                     <p><a href="{% url 'password_change' %}">Сменить пароль</a></p>
+                </div>
+                 <form action="{% url 'my_profile' %}">
+                    {% csrf_token %}
+                    <button>Назад</button>
+                </form>
+
+        </div>
+    </section>
+     </form>
+</div>
 
 {% endblock %}

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 
-from .models import Profile, User, Mediafile, Comment
+from .models import Profile, User, Mediafile, Comment, Interest, PrivacyLevel
 from .models import News, Tag, Reaction
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
@@ -15,38 +15,64 @@ class UpdateUserForm(forms.ModelForm):
 
 
 class UpdateProfileForm(forms.ModelForm):
+    firstname = forms.CharField(
+        label='Имя',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите имя', 'class': 'form-input'})
+    )
+    lastname = forms.CharField(
+        label='Фамилия',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите фамилию', 'class': 'form-input'})
+    )
+    age = forms.IntegerField(
+        label='Возраст',
+        widget=forms.NumberInput(attrs={'placeholder': 'Введите возраст', 'class': 'form-input'}),
+        required=False,
+    )
+    gender = forms.CharField(
+        label='Пол',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите пол', 'class': 'form-input'}),
+        required=False,
+    )
+    location = forms.CharField(
+        label='Местонахождение',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите местонахождение', 'class': 'form-input'}),
+        required=False,
+    )
+    link = forms.CharField(
+        label='Ссылка на другие профили',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите ссылку на другие профили', 'class': 'form-input'}),
+        required=False,
+    )
+    settings = forms.CharField(
+        label='Настройки',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите настройки', 'class': 'form-input'}),
+        required=False,
+    )
+    interests = forms.ModelMultipleChoiceField(
+        queryset=Interest.objects.all(),
+        label='Интересы',
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),  # Чекбоксы для множественного выбора
+        required=False
+    )
+    privacy = forms.ModelChoiceField(
+        queryset=PrivacyLevel.objects.all(),
+        label='Уровень приватности',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False
+    )
 
     class Meta:
         model = Profile
         fields = ['firstname', 'lastname', 'age', 'gender', 'location', 'link', 'settings', 'privacy', 'interests']
 
-    labels = {
-        'firstname': 'Имя',
-        'lastname': 'Фамилия',
-        'age': 'Возраст',
-        'gender': 'Пол',
-        'location': 'Местоположение',
-        'link': 'Ссылки',
-        'settings': 'Настройки',
-        'privacy': 'Конфиденциальность',
-        'interests': 'Интересы'
-    }
-
-    widgets = {
-        'firstname': forms.TextInput(attrs={'class': 'form-input'}),
-        'lastname': forms.TextInput(attrs={'class': 'form-input'}),
-        'age': forms.TextInput(attrs={'class': 'form-input'}),
-        'gender': forms.TextInput(attrs={'class': 'form-input'}),
-        'location': forms.TextInput(attrs={'class': 'form-input'}),
-        'link': forms.TextInput(attrs={'class': 'form-input'}),
-        'settings': forms.TextInput(attrs={'class': 'form-input'}),
-        'privacy': forms.TextInput(attrs={'class': 'form-input'}),
-        'interests': forms.TextInput(attrs={'class': 'form-input'}),
-    }
-
 
 class AvatarUploadForm(forms.ModelForm):
-    file = forms.FileField(required=False)
+
+    file = forms.ImageField(
+        label='Аватар',  # Метка для поля file
+        required=False  # Поле не обязательно
+    )
+    # file = forms.FileField(required=False)
 
     class Meta:
         model = Mediafile
@@ -72,11 +98,18 @@ class NewsForm(forms.ModelForm):
         label='Изображение',  # Метка для поля image
         required=False  # Поле не обязательно
     )
+    # tags = forms.ModelMultipleChoiceField(
+    #     queryset=Tag.objects.all(),
+    #     label='Тэги',  # Метка для поля tags
+    #     # widget=forms.SelectMultiple(attrs={'class': 'form-control'}),  # Можно добавить класс или другие атрибуты
+    #     widget=forms.SelectMultiple(),
+    #     required=False
+    # )
+
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        label='Тэги',  # Метка для поля tags
-        # widget=forms.SelectMultiple(attrs={'class': 'form-control'}),  # Можно добавить класс или другие атрибуты
-        widget=forms.SelectMultiple(),
+        label='Тэги',
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),  # Чекбоксы для множественного выбора
         required=False
     )
 

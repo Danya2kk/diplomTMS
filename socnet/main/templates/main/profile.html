@@ -7,13 +7,14 @@
         <!-- Содержимое профиля: изображение, описание,  -->
         {% if avatar and avatar.file %}
                 <img src="{{ avatar.file.url }}" alt="Avatar" class="news-inner-image">
+
             {% else %}
                 <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
             {% endif %}
         <div class="news-detail-text">
             <p>{{ profile.firstname }} {{ profile.lastname }}</p>
             {% if restricted_view %}
-                <p>Пользователь скрыл информаицию о себе</p>
+                <p>Пользователь скрыл информацию о себе</p>
             {% else %}
                 <p>Возраст: {{ profile.age }}</p>
                 <p>Пол: {{ profile.gender }}</p>
