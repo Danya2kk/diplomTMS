@@ -36,8 +36,10 @@ class Interest(models.Model):
     def __str__(self):
         return self.name
 
+
 def get_default_privacy_level():
     return PrivacyLevel.objects.get(id=1)
+
 
 class Profile(models.Model):
     firstname = models.CharField(max_length=255)
@@ -62,12 +64,12 @@ class Profile(models.Model):
         ).exists()
 
 
-
 class Mediafile(models.Model):
     profile = models.ForeignKey(Profile, related_name='media_files', on_delete=models.CASCADE)
     file = models.FileField(upload_to='media/')
     upload_date = models.DateTimeField(auto_now_add=True)
-    file_type = models.CharField(max_length=50, choices=[('avatar', 'Avatar'), ('video', 'Video'), ('other', 'Other'), ('image', 'Image')])
+    file_type = models.CharField(max_length=50, choices=[('avatar', 'Avatar'), ('video', 'Video'), ('other', 'Other'),
+                                                         ('image', 'Image')])
     description = models.TextField()
 
 
@@ -78,8 +80,8 @@ class FriendshipStatus(models.Model):
     def __str__(self):
         return self.name
 
-class Friendship(models.Model):
 
+class Friendship(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.ForeignKey(FriendshipStatus, on_delete=models.CASCADE)
     description = models.TextField(blank=True, null=True)
@@ -211,6 +213,7 @@ class Chat(models.Model):
 
     def __str__(self):
         return f"Сообщение от {self.profile} от {self.created_at} "
+
 
 class Notification(models.Model):
     FRIEND_REQUEST = 'FR'

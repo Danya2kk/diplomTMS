@@ -35,6 +35,12 @@
                 <div class="news-reaction-block">
                      <a class="btn-news" href="{% url 'update-profile' %}">Редактировать</a>
                 </div>
+            {% else %}
+                <div class="news-reaction-block">
+                     <a class="btn-news" href="{% url 'update-profile' %}">Отправить сообщение</a>
+                    <a class="btn-news" href="{% url 'update-profile' %}">Предложить дружбу</a>
+                </div>
+
             {% endif %}
         </div>
     </section>

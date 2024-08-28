@@ -187,13 +187,26 @@ class LoginUser(LoginView):  # логин через класс - проверк
         return reverse_lazy('home')
 
 
-@login_required
-def news_list(request):
-    news_items = News.objects.all().order_by('-created_at')
+def profile_list(request):
+    # Получаем все профили
+    profile_items = Profile.objects.select_related('user').all()  # Используем select_related для оптимизации запроса
+
+    # Словарь для хранения аватаров по профилям
+    avatars = {}
+
+    # Получаем аватары для всех профилей
+    avatar_items = Mediafile.objects.filter(file_type='avatar', profile__in=profile_items)
+
+    # Заполняем словарь аватаров
+    for avatar in avatar_items:
+        avatars[avatar.profile.id] = avatar
+
     context = {
-        'news_items': news_items,
+        'profile_items': profile_items,
+        'avatars': avatars,
     }
-    return render(request, 'main/news_list.html', context)
+
+    return render(request, 'main/profile_list.html', context)
 
 
 @require_GET

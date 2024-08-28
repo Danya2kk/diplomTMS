@@ -1,0 +1,40 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+
+<div class="profile-detail-container">
+    {% for profile in profile_items %}
+        <section class="profile-detail-content">
+            <!-- Левый блок с аватаром и именем -->
+            <div class="profile-detail-left">
+                {% with avatars|get_item:profile.id as avatar %}
+                    {% if avatar %}
+                        <a href="{% url 'profile' profile.user.username %}">
+                            <img src="{{ avatar.file.url }}" alt="Avatar of {{ profile.firstname }}">
+                        </a>
+                    {% else %}
+                        <a href="{% url 'profile' profile.user.username %}">
+                            <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
+                        </a>
+                    {% endif %}
+                {% endwith %}
+                <div class="profile-detail-left">
+                    <a class="profile-name" href="{% url 'profile' profile.user.username %}">
+                        {{ profile.firstname }} {{ profile.lastname }}
+                    </a>
+                </div>
+            </div>
+            <!-- Правый блок с деталями профиля -->
+            <div class="profile-detail-right profile-detail-text">
+                <p>Возраст: {{ profile.age }}</p>
+                <p>Пол: {{ profile.gender }}</p>
+                <p>Местоположение: {{ profile.location }}</p>
+                <p>Ссылка: <a href="{{ profile.link }}">{{ profile.link }}</a></p>
+            </div>
+        </section>
+    {% endfor %}
+</div>
+
+{% endblock %}
