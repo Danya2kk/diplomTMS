@@ -27,7 +27,7 @@ class ProfileFilter(filters.FilterSet):
 
 class GroupFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
-    description = filters.CharFilter(field_name='name', lookup_expr='icontains')
+    description = filters.CharFilter(field_name='description', lookup_expr='icontains')
     group_type = filters.ChoiceFilter(field_name='group_type', choices=Group.GROUP_TYPES)
 
     class Meta:
