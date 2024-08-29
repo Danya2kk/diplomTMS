@@ -8,7 +8,7 @@ router = DefaultRouter()
 router.register(r'profiles', views.ProfileViewSet)
 router.register(r'activities', views.ActivityLogViewSet)
 router.register(r'groups', views.GroupViewSet)
-router.register(r'friendships', views.FriendshipViewSet)
+router.register(r'friendships', views.FriendshipViewSet, basename='friendship')
 router.register(r'notifications', views.NotificationViewSet)
 
 urlpatterns = [

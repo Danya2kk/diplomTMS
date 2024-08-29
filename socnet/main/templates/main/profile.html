@@ -38,12 +38,122 @@
             {% else %}
                 <div class="news-reaction-block">
                      <a class="btn-news" href="{% url 'update-profile' %}">Отправить сообщение</a>
-                    <a class="btn-news" href="{% url 'update-profile' %}">Предложить дружбу</a>
+                    {% if friendship_exists %}
+                        <p>Этот человек Ваш друг!</p>
+                    {% else %}
+                     <button class="btn-news" id="send-friend-request" data-profile-id="{{ profile.id }}">Предложить дружбу</button>
+                    {% endif %}
                 </div>
 
             {% endif %}
         </div>
+
     </section>
 </div>
+ <section class="news-detail-content">
+     {% if is_owner %}
+            {% if incoming_friend_requests %}
+                <div class="friend-requests">
+                    <h3>Входящие запросы на дружбу:</h3>
+                    <ul>
+                        {% for request in incoming_friend_requests %}
+                            <li>
+                                {{ request.profile_one.firstname }} {{ request.profile_one.lastname }}
+                                <form method="post" action="{% url 'friendship-accept-request' request.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit">Принять</button>
+                                </form>
+                                <form method="post" action="{% url 'friendship-deny-request' request.id %}" class="deny-request-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">Отклонить</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <p>Запросов на дружбу пока нет!</p>
+            {% endif %}
+        {% endif %}
+</section>
+<script>
+document.getElementById('send-friend-request').addEventListener('click', function() {
+    var profileId = this.getAttribute('data-profile-id');
+    var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch('/friendships/send_request/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ profile_id: profileId })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`Network response was not ok. Status: ${response.status}, Text: ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.detail) {
+            alert(data.detail);
+            var button = document.getElementById('send-friend-request');
+            button.textContent = 'Запрос отправлен';
+            button.disabled = true;
+        } else {
+            alert('Неизвестная ошибка');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при отправке запроса. Проверьте консоль разработчика для подробностей.');
+    });
+});
+
+document.querySelectorAll('.deny-friend-request').forEach(button => {
+    button.addEventListener('click', function(event) {
+        event.preventDefault();
+        var url = this.getAttribute('data-url');
+        var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'Accept': 'application/json'
+        }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`Network response was not ok. Status: ${response.status}, Text: ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.detail) {
+                alert(data.detail);
+                this.closest('li').remove();  // Удаление элемента списка
+            } else {
+                alert('Неизвестная ошибка');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+        });
+    });
+});
+
+
+</script>
+
+
 
 {% endblock %}
