@@ -15,7 +15,7 @@ class ProfileFilter(filters.FilterSet):
     firstname = filters.CharFilter(field_name='firstname', lookup_expr='icontains')
     lastname = filters.CharFilter(field_name='lastname', lookup_expr='icontains')
     location = filters.CharFilter(field_name='location', lookup_expr='icontains')
-    interests = filters.MultipleChoiceFilter(
+    interests = filters.ModelMultipleChoiceFilter(
         field_name='interests',
         queryset=Interest.objects.all(),
     )
@@ -27,7 +27,7 @@ class ProfileFilter(filters.FilterSet):
 class GroupFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     description = filters.CharFilter(field_name='description', lookup_expr='icontains')
-    group_type = filters.ModelMultipleChoiceFilter(
+    group_type = filters.ChoiceFilter(
         field_name='group_type',
         choices=Group.GROUP_TYPES
     )
