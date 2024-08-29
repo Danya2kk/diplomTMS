@@ -608,3 +608,26 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.read = True
         notification.save()
         return Response({'detail': 'Уведомление помечено как прочитанное'}, status=status.HTTP_200_OK)
+
+@login_required
+def friends_list(request):
+    user_profile = request.user.profile
+
+    friendships = Friendship.objects.filter(
+        Q(profile_one=user_profile) | Q(profile_two=user_profile)
+    ).select_related('profile_one', 'profile_two', 'status')
+
+    friends = []
+    for friendship in friendships:
+        if friendship.profile_one == user_profile:
+            friend = friendship.profile_two
+        else:
+            friend = friendship.profile_one
+
+        friends.append({
+            'friend_name': f'{friend.firstname} {friend.lastname}',
+            'friend_profile_username': friend.username,
+            'status': friendship.status.name,
+        })
+
+    return JsonResponse({'friends': friends}, safe=False)

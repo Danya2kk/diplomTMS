@@ -33,5 +33,6 @@ urlpatterns = [
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
     # path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
+    path('friends/', views.friends_list, name='friends_list'),
     path('', include(router.urls)),
 ]
