@@ -610,24 +610,83 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Уведомление помечено как прочитанное'}, status=status.HTTP_200_OK)
 
 @login_required
-def friends_list(request):
+def friends_list_api(request):
     user_profile = request.user.profile
 
     friendships = Friendship.objects.filter(
-        Q(profile_one=user_profile) | Q(profile_two=user_profile)
+        Q(profile_one=user_profile) | Q(profile_two=user_profile) & Q(status__name='Друзья')
     ).select_related('profile_one', 'profile_two', 'status')
 
     friends = []
+    seen_profiles = set()
+
     for friendship in friendships:
         if friendship.profile_one == user_profile:
             friend = friendship.profile_two
         else:
             friend = friendship.profile_one
 
-        friends.append({
-            'friend_name': f'{friend.firstname} {friend.lastname}',
-            'friend_profile_username': friend.username,
-            'status': friendship.status.name,
-        })
+        if friend.id not in seen_profiles:
+            seen_profiles.add(friend.id)  # Добавляем ID друга в множество
+
+            friends.append({
+                'friend_name': f'{friend.firstname} {friend.lastname}',
+                'friend_profile_username': friend.user.username,
+                'status': friendship.status.name,
+            })
 
     return JsonResponse({'friends': friends}, safe=False)
+
+@login_required
+def send_friend_request(request, username):
+    '''Отправить запрос на дружбу'''
+
+    user_profile = request.user.profile
+    friend_profile = get_object_or_404(Profile, user__username=username)
+
+    if user_profile == friend_profile:
+        messages.error(request, 'Вы не можете отправить запрос на дружбу самому себе!')
+        return redirect("profile", username=username)
+
+    if Friendship.objects.filter(
+            (Q(profile_one=user_profile) & Q(profile_two=friend_profile)) |
+            (Q(profile_one=friend_profile) & Q(profile_two=user_profile))
+    ).exists():
+        messages.error(request, 'Запрос на дружбу уже отправлен или вы уже друзья.')
+        return redirect("profile", username=username)
+
+    sent_status = get_object_or_404(FriendshipStatus, name='Отправлен запрос')
+
+    # Создаем новый объект Friendship с указанным статусом
+    Friendship.objects.create(profile_one=user_profile, profile_two=friend_profile, status=sent_status)
+
+    messages.success(request, 'Запрос на дружбу отправлен.')
+    return redirect("profile", username=username)
+
+
+@login_required
+def accept_friend_request(request, username):
+    '''Принять запрос на дружбу'''
+
+    user_profile = request.user.profile
+    friend_profile = get_object_or_404(Profile, user__username=username)
+
+    friendship = get_object_or_404(Friendship, profile_one=friend_profile, profile_two=user_profile)
+
+    if friendship.status.name == "Друзья":
+        messages.error(request, 'Вы уже друзья.')
+        return redirect('profile_detail', username=username)
+    elif friendship.status.name == "Заблокирован":
+        messages.error(request, 'Вы не можете принять этот запрос.')
+        return redirect('profile_detail', username=username)
+    elif friendship.status.name != "Отправлен запрос":
+        messages.error(request, 'Невозможно принять запрос. Некорректный статус запроса.')
+        return redirect('profile_detail', username=username)
+
+    # Обновляем статус дружбы на "Друзья"
+    friends_status = get_object_or_404(FriendshipStatus, name='Друзья')
+    friendship.status = friends_status
+    friendship.save()
+
+    messages.success(request, 'Запрос на дружбу принят.')
+    return redirect('profile_detail', username=username)
