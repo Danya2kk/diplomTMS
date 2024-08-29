@@ -1,3 +1,4 @@
+
 {% extends 'main/layout.html' %}
 {% load static %}
 
@@ -63,10 +64,9 @@
                                     {% csrf_token %}
                                     <button type="submit">Принять</button>
                                 </form>
-                                <form method="post" action="{% url 'friendship-deny-request' request.id %}" class="deny-request-form">
-                                    {% csrf_token %}
-                                    <button type="submit" class="deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">Отклонить</button>
-                                </form>
+                                <button type="button" class="btn-news deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
+                                    Отклонить запрос
+                                </button>
                             </li>
                         {% endfor %}
                     </ul>
@@ -77,76 +77,80 @@
         {% endif %}
 </section>
 <script>
-document.getElementById('send-friend-request').addEventListener('click', function() {
-    var profileId = this.getAttribute('data-profile-id');
-    var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+document.addEventListener('DOMContentLoaded', function() {
+    var sendFriendRequestButton = document.getElementById('send-friend-request');
+    if (sendFriendRequestButton) {
+        sendFriendRequestButton.addEventListener('click', function () {
+            var profileId = this.getAttribute('data-profile-id');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch('/friendships/send_request/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ profile_id: profileId })
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.text().then(text => {
-                throw new Error(`Network response was not ok. Status: ${response.status}, Text: ${text}`);
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.detail) {
-            alert(data.detail);
-            var button = document.getElementById('send-friend-request');
-            button.textContent = 'Запрос отправлен';
-            button.disabled = true;
-        } else {
-            alert('Неизвестная ошибка');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Произошла ошибка при отправке запроса. Проверьте консоль разработчика для подробностей.');
-    });
-});
-
-document.querySelectorAll('.deny-friend-request').forEach(button => {
-    button.addEventListener('click', function(event) {
-        event.preventDefault();
-        var url = this.getAttribute('data-url');
-        var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,
-            'Accept': 'application/json'
-        }
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(`Network response was not ok. Status: ${response.status}, Text: ${text}`);
+            fetch('/friendships/send_request/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ profile_id: profileId })
+            })
+            .then(response => {
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        throw new Error(data.detail || 'Неизвестная ошибка');
+                    }
+                    return data;
                 });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.detail) {
-                alert(data.detail);
-                this.closest('li').remove();  // Удаление элемента списка
-            } else {
-                alert('Неизвестная ошибка');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            })
+            .then(data => {
+                if (data.detail) {
+                    alert(data.detail);
+                    sendFriendRequestButton.textContent = 'Запрос отправлен';
+                    sendFriendRequestButton.disabled = true;
+                } else {
+                    alert('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                alert(error.message);
+            });
+        });
+    }
+
+    // Обработка отклонения запроса
+    document.querySelectorAll('.deny-friend-request').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        throw new Error(data.detail || 'Неизвестная ошибка');
+                    }
+                    return data;
+                });
+            })
+            .then(data => {
+                if (data.detail) {
+                    alert(data.detail);
+                    this.closest('li').remove();
+                } else {
+                    alert('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                alert('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
         });
     });
 });

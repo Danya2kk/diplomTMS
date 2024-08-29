@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
+from django.contrib.messages import get_messages
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
@@ -548,16 +549,16 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         if Friendship.objects.filter(
                 (Q(profile_one=profile_one, profile_two=profile_two) |
                  Q(profile_one=profile_two, profile_two=profile_one)) &
-                ~Q(status__name='blocked')  # Добавим условие, чтобы не учитывать заблокированные
+                ~Q(status__name='Заблокирован')  # Добавим условие, чтобы не учитывать заблокированные
         ).exists():
             return JsonResponse({'detail': 'Вы уже друзья или запрос уже отправлен'}, status=status.HTTP_400_BAD_REQUEST)
 
         friendship_status = FriendshipStatus.objects.get(name='Отправлен запрос')
         friendship = Friendship.objects.create(profile_one=profile_one, profile_two=profile_two,
                                                status=friendship_status)
-        serializer = self.get_serializer(friendship)
+        # serializer = self.get_serializer(friendship)
 
-        return JsonResponse({'detail': 'Запрос на дружбу отправлен'}, status=status.HTTP_201_CREATED)
+        return JsonResponse({'detail': 'Запрос на дружбу отправлен'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='accept-request', url_name='accept-request')
     def accept_request(self, request, pk):
@@ -605,10 +606,21 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
             friendship.delete()
 
-            return JsonResponse({'detail': 'Заявка на дружбу отклонена'}, status=status.HTTP_200_OK)
+
+            messages.success(request, 'Запрос на дружбу отrлонен')
+
+            return JsonResponse({'detail': 'Запрос на дружбу отклонен'}, status=status.HTTP_200_OK)
+
 
         except Friendship.DoesNotExist:
+
             return JsonResponse({'detail': 'Запрос дружбы не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'], url_path='list-requests', url_name='list-requests')
+    def list_requests(self, request):
+        profile = request.user.profile
+        incoming_friend_requests = Friendship.objects.filter(profile_two=profile, status__name='Отправлен запрос')
+        return render(request, 'main/partials_friend_requests.html', {'incoming_friend_requests': incoming_friend_requests})
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all().order_by('-timestamp')
