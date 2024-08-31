@@ -1,0 +1,181 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="news-detail-container">
+    <section class="news-detail-content">
+        <!-- Содержимое новости: изображение, описание, теги и т.д. -->
+        <img src="{{ news_item.image.url }}" alt="Описание фото" class="news-inner-image">
+        <div class="news-detail-text">
+            <p>{{ news_item.content }}</p>
+            <p>Тэги: {{ news_item.tags.all|join:", " }}</p>
+            <p>Автор: {{ news_item.profile.firstname }} {{ news_item.profile.lastname }}</p>
+            <p>Дата создания: {{ news_item.created_at }}</p>
+        </div>
+        <div class="news-detail-text">
+            <a class="btn-news" href="{% url 'news_create' %}">Добавить новость</a>
+            {% if is_owner %}
+                <a class="btn-news" href="{% url 'news_edit' news_item.pk %}">Редактировать</a>
+                <a class="btn-news" href="{% url 'news_delete' news_item.pk %}">Удалить</a>
+            {% endif %}
+            <div class="separator-line"></div>
+            {% if is_owner %}
+                <div class="news-reaction-block">
+                    <p>Реакция на новость</p>
+                    <button class="reaction-btn {% if user_reaction == 'like' %}active{% endif %}" data-object-id="{{ news_item.id }}" data-model-name="news" data-reaction-type="like">
+                        <img class="reaction-img" src="{% static 'images/like.gif' %}" alt="Like">
+                    </button>
+                    <button class="reaction-btn {% if user_reaction == 'dislike' %}active{% endif %}" data-object-id="{{ news_item.id }}" data-model-name="news" data-reaction-type="dislike">
+                        <img class="reaction-img" src="{% static 'images/dislike.gif' %}" alt="Dislike">
+                    </button>
+                </div>
+                <div class="news-reaction-block">
+                    <p>Средний рейтинг: <span id="total-score">{{ total_score }}</span></p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+<div class="comments-wrapper">
+    <!-- Кнопка для показа/скрытия комментариев -->
+    <button id="toggle-comments-btn" class="btn-comment-news">Показать комментарии</button>
+
+    <!-- Область комментариев -->
+    <div id="comments-section" class="comments-section">
+        <a class="btn-comment" href="javascript:void(0);" onclick="toggleCommentForm('new-comment-form');">Добавить комментарий</a>
+
+        <div id="new-comment-form" class="comment-form" style="display:none;">
+            <textarea id="new-comment-text" placeholder="Введите ваш комментарий"></textarea>
+            <button onclick="submitComment()">Отправить</button>
+        </div>
+
+        <!-- Включение HTML комментариев из partial_comments.html -->
+        {% include 'main/partial_comments.html' %}
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+
+      // Функция для установки ширины comments-wrapper и кнопки
+    function adjustContentWidth() {
+        // Получаем ширину контейнера .news-detail-content
+        var contentWidth = $('.news-detail-content').outerWidth();
+
+        // Устанавливаем эту ширину для comments-wrapper
+        $('.comments-wrapper').css('width', contentWidth + 'px');
+
+        // Устанавливаем ширину кнопки на 100% от родительского контейнера
+        $('#toggle-comments-btn').css('width', '100%');
+    }
+
+    // Вызываем функцию при загрузке страницы
+    adjustContentWidth();
+
+    // Вызываем функцию при изменении размера окна
+    $(window).resize(function() {
+        adjustContentWidth();
+    });
+
+
+    // Реакции на новости
+    $('.reaction-btn').click(function(event) {
+        event.preventDefault();
+        var button = $(this);
+        var objectId = button.data('object-id');
+        var reactionType = button.data('reaction-type');
+        var url = "{% url 'reaction_toggle' %}"; // Проверьте, что этот URL правильный
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    'object_id': objectId,
+                    'reaction_type': reactionType,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    $('.reaction-btn[data-object-id="' + objectId + '"]').removeClass('active');
+                    if (response.reaction_type === reactionType) {
+                        button.addClass('active');
+                    }
+                    $('#total-score').text(response.total_score); // Убедитесь, что элемент с ID 'total-score' существует в HTML
+                },
+                error: function(xhr, status, error) {
+                    console.error('Ошибка при отправке запроса: ', error);
+                }
+            });
+    });
+
+
+
+    // Скрипт для аккордеона комментариев
+        $('#toggle-comments-btn').click(function() {
+            $('#comments-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
+                var isVisible = $('#comments-section').is(':visible');
+                $('#toggle-comments-btn').text(isVisible ? 'Скрыть комментарии' : 'Показать комментарии');
+            });
+        });
+
+    // Функция для переключения видимости формы добавления комментария
+    window.toggleCommentForm = function(formId) {
+        console.log('toggleCommentForm called with:', formId);
+        var form = $('#' + formId);
+        if (form.length) {
+            form.slideToggle();
+        } else {
+            console.warn('Элемент с ID ' + formId + ' не найден.');
+        }
+    };
+
+    // Функция для отправки комментария
+    window.submitComment = function(parentId) {
+        console.log('submitComment called with parentId:', parentId);
+        var commentText;
+        if (parentId) {
+            commentText = $('#reply-text-' + parentId).val();
+        } else {
+            commentText = $('#new-comment-text').val();
+        }
+
+        if (!commentText.trim()) {
+            alert("Пожалуйста, введите текст комментария.");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'add_comment' news_item.id %}",
+            method: 'POST',
+            data: {
+                'text': commentText,
+                'parent_id': parentId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                $('#comments-section').html(response.comments_html);
+
+                // Скрыть форму комментария после добавления
+                if (parentId) {
+                    toggleCommentForm('reply-form-' + parentId);
+                } else {
+                    toggleCommentForm('new-comment-form');
+                }
+
+                // Сбросить текстовое поле
+                if (parentId) {
+                    $('#reply-text-' + parentId).val('');
+                } else {
+                    $('#new-comment-text').val('');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Ошибка при отправке комментария: ', error);
+            }
+        });
+    };
+});
+</script>
+
+
+{% endblock %}

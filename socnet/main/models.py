@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.db.models import Q
 
 
 class User(AbstractUser):
@@ -22,12 +23,31 @@ class User(AbstractUser):
 
 
 class PrivacyLevel(models.Model):
+    PUBLIC = 'public'
+    PRIVATE = 'private'
+    FRIENDS_ONLY = 'friends_only'
+
+    PRIVACY_CHOICES = [
+        (PUBLIC, 'Public'),
+        (PRIVATE, 'Private'),
+        (FRIENDS_ONLY, 'Friends Only'),
+    ]
     name = models.CharField(max_length=255)
     description = models.TextField()
+
+    def __str__(self):
+        return self.name
 
 
 class Interest(models.Model):
     name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+def get_default_privacy_level():
+    return PrivacyLevel.objects.get(id=1)
 
 
 class Profile(models.Model):
@@ -38,30 +58,49 @@ class Profile(models.Model):
     location = models.CharField(max_length=255)
     link = models.TextField()
     settings = models.CharField(max_length=255)
+    age = models.IntegerField(blank=True, null=True)  # Необязательное поле
+    gender = models.CharField(max_length=50, blank=True, null=True)  # Необязательное поле
+    location = models.CharField(max_length=255, blank=True, null=True)  # Необязательное поле
+    link = models.TextField(blank=True, null=True)  # Необязательное поле
+    settings = models.CharField(max_length=255, blank=True, null=True)  # Необязательное поле
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    privacy = models.ForeignKey(PrivacyLevel, on_delete=models.SET_NULL, null=True)
-    interests = models.ManyToManyField(Interest)
+    privacy = models.ForeignKey(PrivacyLevel, on_delete=models.SET_NULL, null=True, default=get_default_privacy_level)
+    interests = models.ManyToManyField(Interest, blank=True)  # Необязательное поле
+
+    def __str__(self):
+        return f'{self.firstname} {self.lastname}'
+
+    def is_friend_with(self, other_profile):
+        return Friendship.objects.filter(
+            (Q(profile_one=self, profile_two=other_profile) |
+             Q(profile_one=other_profile, profile_two=self)),
+            status='friends'
+        ).exists()
 
 
 class Mediafile(models.Model):
     profile = models.ForeignKey(Profile, related_name='media_files', on_delete=models.CASCADE)
     file = models.FileField(upload_to='media/')
     upload_date = models.DateTimeField(auto_now_add=True)
-    file_type = models.CharField(max_length=50, choices=[('image', 'Image'), ('video', 'Video'), ('other', 'Other')])
+    file_type = models.CharField(max_length=50, choices=[('avatar', 'Avatar'), ('video', 'Video'), ('other', 'Other'),
+                                                         ('image', 'Image')])
     description = models.TextField()
 
 
+class FriendshipStatus(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
 class Friendship(models.Model):
-    STATUS_CHOICES = [
-        ('sent', 'Отправлен запрос'),
-        ('friends', 'Друзья'),
-        ('blocked', 'Заблокирован'),
-    ]
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='sent', )
+    status = models.ForeignKey(FriendshipStatus, on_delete=models.CASCADE)
     description = models.TextField(blank=True, null=True)
-    profile_one = models.IntegerField()
-    profile_two = models.IntegerField()
+    profile_one = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='friendships_initiated')
+    profile_two = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='friendships_received')
 
 
 class Mail(models.Model):
@@ -119,6 +158,9 @@ class GroupMembership(models.Model):
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
+    def __str__(self):
+        return self.name
+
 
 class News(models.Model):
     title = models.CharField(max_length=255)
@@ -133,18 +175,31 @@ class Comment(models.Model):
     text = models.TextField()
     author = models.ForeignKey(Profile, related_name='comments', on_delete=models.CASCADE)
     news = models.ForeignKey(News, related_name='comments', on_delete=models.CASCADE)
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.author} on {self.news} - {self.text[:20]}"
+
+    class Meta:
+        ordering = ['created_at']  # Сортировка комментариев по дате создания
+
+    def is_parent(self):
+        """ Проверяет, является ли комментарий родительским. """
+        return self.parent is None
+
+    def get_replies(self):
+        """ Возвращает все ответы на комментарий. """
+        return Comment.objects.filter(parent=self)
 
 
 class Reaction(models.Model):
     LIKE = 'like'
     DISLIKE = 'dislike'
-    HEART = 'heart'
 
     REACTION_CHOICES = [
         (LIKE, 'Like'),
         (DISLIKE, 'Dislike'),
-        (HEART, 'Heart'),
     ]
 
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
@@ -167,7 +222,11 @@ class StatusProfile(models.Model):
 
 class Chat(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    profile = models.ForeignKey(Profile, related_name='news_message', on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, related_name='chat_message', on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, related_name='chat_members', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Сообщение от {self.profile} от {self.created_at} "
 
 
 class Notification(models.Model):
