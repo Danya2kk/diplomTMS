@@ -1,0 +1,23 @@
+<div class="friend-requests">
+    <h3>Входящие запросы на дружбу:</h3>
+    <ul>
+        {% if incoming_friend_requests %}
+            {% for request in incoming_friend_requests %}
+                <li>
+                    {{ request.profile_one.firstname }} {{ request.profile_one.lastname }}
+                    <!-- Проверка данных -->
+                    <p>Request ID: {{ request.id }}</p>
+                    <form method="post" action="{% url 'friendship-accept-request' request.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Принять</button>
+                    </form>
+                    <button type="button" class="btn-news deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
+                        Отклонить запрос
+                    </button>
+                </li>
+            {% endfor %}
+        {% else %}
+            <p>Запросов на дружбу пока нет!</p>
+        {% endif %}
+    </ul>
+</div>

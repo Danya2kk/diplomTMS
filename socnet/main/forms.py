@@ -12,12 +12,11 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 class RegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
-    firstname = forms.CharField(max_length=255)
-    lastname = forms.CharField(max_length=255)
+
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'firstname', 'lastname']
+        fields = ['username', 'email', 'password']
 
     def clean(self):
         cleaned_data = super().clean()

@@ -56,6 +56,7 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/popup.js' %}"></script>
 <script>
 $(document).ready(function() {
 
@@ -140,7 +141,7 @@ $(document).ready(function() {
         }
 
         if (!commentText.trim()) {
-            alert("Пожалуйста, введите текст комментария.");
+            showPopup("Пожалуйста, введите текст комментария.");
             return;
         }
 
