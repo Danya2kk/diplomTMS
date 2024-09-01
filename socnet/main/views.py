@@ -1,3 +1,14 @@
+
+from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect
+from django.views import View
+
+from .forms import RegistrationForm, LoginForm
+from django.contrib.auth import login, authenticate, get_user_model
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -6,7 +17,7 @@ from django.contrib.messages import get_messages
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import DetailView
+from django.views.generic import DetailView, FormView
 from rest_framework import status, viewsets
 from django.db.models import Count, Q
 from rest_framework.decorators import action, renderer_classes
@@ -37,6 +48,7 @@ from .forms import LoginUserForm
 
 
 # Create your views here.
+
 def index(request):
     context = {
         'title': 'Домашняя страница',
@@ -63,7 +75,9 @@ def my_profile_view(request):
         'is_owner': True,  # Устанавливаем, что текущий пользователь — владелец профиля
     }
 
-    return render(request, 'main/profile.html', context)
+    return render(request, 'main/chat.html', context)
+
+
 
 
 @login_required
@@ -187,6 +201,31 @@ def update_profile(request):
 
     return render(request, 'main/profile_update.html', context)
 
+class RegisterUser(FormView):
+    template_name = 'main/registration.html'
+    form_class = RegistrationForm
+    success_url = '/'
+
+    def form_valid(self, form):
+        # модель пользователя внутри функции
+        User = get_user_model()
+
+        # Сохранение пользователя
+        user = form.save(commit=False)
+        user.set_password(form.cleaned_data['password'])
+        user.save()
+
+        # Создание профиля для нового пользователя
+        Profile.objects.create(user=user)
+
+        # Вход пользователя после регистрации
+        auth_login(self.request, user)
+
+        # Создание токена для пользователя
+        token = Token.objects.create(user=user)
+        self.request.session['token'] = token.key
+
+        return super().form_valid(form)
 
 class UserPasswordChange(PasswordChangeView):
     form_class = UserPasswordChangeForm
@@ -199,9 +238,30 @@ class LoginUser(LoginView):  # логин через класс - проверк
     template_name = 'main/login.html'
     extra_context = {'title': 'Авторизация'}
 
+    def form_valid(self, form):
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+        user = authenticate(self.request, username=username, password=password)
+        if user is not None:
+            auth_login(self.request, user)
+
+            # Получение или создание токена
+            token, _ = Token.objects.get_or_create(user=user)
+            self.request.session['token'] = token.key
+
+            return super().form_valid(form)
+        return self.form_invalid(form)
+
     def get_success_url(self):
         messages.success(self.request, 'Вы успешно авторизовались!')
         return reverse_lazy('home')
+
+
+class LogoutUser(View):
+    def get(self, request):
+        logout(request)
+        request.session.flush()
+        return render(request, 'main/logout.html')
 
 
 def profile_list(request):
@@ -641,3 +701,4 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.read = True
         notification.save()
         return Response({'detail': 'Уведомление помечено как прочитанное'}, status=status.HTTP_200_OK)
+
