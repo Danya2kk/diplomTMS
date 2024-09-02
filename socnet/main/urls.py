@@ -1,12 +1,14 @@
 
-from django.urls import path
+from django.urls import path, re_path
+from django.views.generic import TemplateView
+
 from . import views
-from .views import StatusListView,StatusCreateView,StatusDeleteView,StatusUpdateView,StatusDetailView
 from django.contrib.auth.views import PasswordChangeDoneView
 from django.urls import path, include
 
 from main import views
 from rest_framework.routers import DefaultRouter
+
 
 
 router = DefaultRouter()
@@ -17,7 +19,6 @@ router.register(r'friendships', views.FriendshipViewSet, basename='friendship')
 router.register(r'notifications', views.NotificationViewSet)
 
 urlpatterns = [
-
     path('', views.index, name='home'),
     path('chat', views.index, name='chat'),
     path('register/', views.RegisterUser.as_view(), name='register'),
@@ -31,7 +32,7 @@ urlpatterns = [
     path('password-change/', views.UserPasswordChange.as_view(), name='password_change'),
     path('password-change/done', PasswordChangeDoneView.as_view(template_name='main/password_change_done.html'), name='password_change_done'),
     path('news/<int:pk>', views.news_detail, name='news_detail'),
-    # path('news', views.news_list, name='news'),
+    path('news', views.news_list, name='news'),
     path('api/news/', views.news_list_api, name='news_list_api'),
     path('news/<int:pk>/edit/', views.news_edit, name='news_edit'),
     path('news/create/', views.news_create, name='news_create'),
@@ -41,8 +42,8 @@ urlpatterns = [
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
     # path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
-    path('friends/', views.friends_list_api, name='friends_list_api'),
     path('', include(router.urls)),
 
-]
 
+    # re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
+]

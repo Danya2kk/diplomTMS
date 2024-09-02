@@ -2,7 +2,7 @@
 from django.http import JsonResponse, Http404
 from django.contrib.contenttypes.models import ContentType
 from .models import News, Tag, Comment, Reaction, Friendship
-from .forms import NewsForm, TagForm, CommentForm, ReactionForm
+from .forms import NewsForm,  CommentForm, ReactionForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -361,6 +361,14 @@ def profile_list(request):
     }
 
     return render(request, 'main/profile_list.html', context)
+
+@login_required
+def news_list(request):
+    news_items = News.objects.all().order_by('-created_at')
+    context = {
+        'news_items': news_items,
+    }
+    return render(request, 'main/news_list.html', context)
 
 
 @require_GET
@@ -898,33 +906,6 @@ def send_friend_request(request, username):
 
 
 
-@login_required
-def reaction_count(request, content_type_id, object_id):
-    content_type = ContentType.objects.get_for_id(content_type_id)
-    obj = content_type.get_object_for_this_type(pk=object_id)
-    reaction_counts = {
-        reaction_type: Reaction.objects.filter(
-            content_type=content_type,
-            object_id=object_id,
-            reaction_type=reaction_type
-        ).count()
-        for reaction_type in REACTION_CHOICES
-    }
-    return JsonResponse(reaction_counts)
-
-
-#База для статуса дружбы
-PENDING = 'pending'
-ACCEPTED = 'accepted'
-BLOCKED = 'blocked'
-
-STATUS_CHOICES = [
-    (PENDING, 'Отправлен запрос'),
-    (ACCEPTED, 'Друзья'),
-    (BLOCKED, 'Заблокирован'),
-]
-
-
 class FriendshipListView(LoginRequiredMixin, ListView):
     model = Friendship
     template_name = 'friendship_list.html'
@@ -955,7 +936,7 @@ class FriendshipCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.profile_one = self.request.user.profile
-        form.instance.status = PENDING
+        # form.instance.status = PENDING
         return super().form_valid(form)
 
 
@@ -982,7 +963,7 @@ class FriendshipDeleteView(LoginRequiredMixin, DeleteView, UserPassesTestMixin):
 def accept_friendship(request, pk):
     friendship = get_object_or_404(Friendship, pk=pk)
     if friendship.profile_two == request.user.profile:
-        friendship.status = ACCEPTED
+        # friendship.status = ACCEPTED
         friendship.save()
         messages.success(request, 'Запрос на дружбу принят!')
     else:
@@ -1003,7 +984,7 @@ def reject_friendship(request, pk):
 def block_friendship(request, pk):
     friendship = get_object_or_404(Friendship, pk=pk)
     if friendship.profile_one == request.user.profile or friendship.profile_two == request.user.profile:
-        friendship.status = BLOCKED
+        # friendship.status = BLOCKED
         friendship.save()
         messages.success(request, 'Пользователь заблокирован!')
     else:
@@ -1014,7 +995,7 @@ def block_friendship(request, pk):
 def unblock_friendship(request, pk):
     friendship = get_object_or_404(Friendship, pk=pk)
     if friendship.profile_one == request.user.profile or friendship.profile_two == request.user.profile:
-        friendship.status = PENDING
+        # friendship.status = PENDING
         friendship.save()
         messages.success(request, 'Пользователь разблокирован!')
     else:
