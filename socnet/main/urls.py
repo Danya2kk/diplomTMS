@@ -1,20 +1,27 @@
+
+from django.urls import path
+
 from django.contrib.auth.views import PasswordChangeDoneView
 from django.urls import path, include
+
 from main import views
 from rest_framework.routers import DefaultRouter
-from django.contrib.auth.views import LogoutView
+
 
 router = DefaultRouter()
 router.register(r'profiles', views.ProfileViewSet)
 router.register(r'activities', views.ActivityLogViewSet)
 router.register(r'groups', views.GroupViewSet)
-router.register(r'friendships', views.FriendshipViewSet)
+router.register(r'friendships', views.FriendshipViewSet, basename='friendship')
 router.register(r'notifications', views.NotificationViewSet)
 
 urlpatterns = [
     path('', views.index, name='home'),
-    path('login/', views.LoginUser.as_view(), name='login'),     # для
-    path('logout', LogoutView.as_view(), name='logout'),
+
+    path('chat', views.index, name='chat'),
+    path('register/', views.RegisterUser.as_view(), name='register'),
+    path('login/', views.LoginUser.as_view(), name='login'),
+    path('logout/', views.LogoutUser.as_view(), name='logout'),
     path('chat', views.chat, name='chat'),
     path('profile_list', views.profile_list, name='profile_list'),
     path('profile', views.my_profile_view, name='my_profile'),
@@ -36,3 +43,4 @@ urlpatterns = [
     path('friends/', views.friends_list_api, name='friends_list_api'),
     path('', include(router.urls)),
 ]
+
