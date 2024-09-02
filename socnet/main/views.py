@@ -90,6 +90,7 @@ def profile_view(request, username):
     # Проверяем, является ли текущий пользователь владельцем профиля
     is_owner = request.user.username == username
 
+
     # Проверка уровня конфиденциальности профиля
     privacy_level = profile.privacy
 
@@ -105,36 +106,59 @@ def profile_view(request, username):
             ).exists()
     )
 
+    ban_exists_out = (
+            Friendship.objects.filter(
+                profile_one__user=request.user, profile_two=profile, status__name='Заблокирован'
+            ).exists() )
+    ban_exists_in = (
+            Friendship.objects.filter(
+                profile_one=profile, profile_two__user=request.user, status__name='Заблокирован'
+            ).exists()
+    )
+
     # Определяем, есть ли входящий запрос на дружбу
     incoming_friend_requests = Friendship.objects.filter(
         profile_two=request.user.profile,
         status__name='Отправлен запрос'
     )
 
+    # Определяем, кто отправил запрос, если таковой имеется
+    friend_request_senders = [
+        request.profile_one for request in incoming_friend_requests if request.profile_one
+    ]
+
+    username_friend = profile.user.username
     # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
     if privacy_level.name == "Никто" and not is_owner:
         context = {
             'profile': {
                 'firstname': profile.firstname,
                 'lastname': profile.lastname,
-            },
+              },
             'restricted_view': True,  # Вид ограничен
             'is_owner': is_owner,
             'avatar': avatar,
             'friendship_exists': friendship_exists,
+            'friend_request_senders': friend_request_senders,
             'incoming_friend_requests': incoming_friend_requests,
+            'ban_exists_out':ban_exists_out,
+            'ban_exists_in': ban_exists_in,
         }
     elif privacy_level.name == "Только друзья" and not friendship_exists and not is_owner:
         context = {
             'profile': {
                 'firstname': profile.firstname,
                 'lastname': profile.lastname,
+
             },
             'is_owner': is_owner,
             'restricted_view': True,  # Вид ограничен для друзей
             'avatar': avatar,
             'friendship_exists': friendship_exists,
+            'friend_request_senders': friend_request_senders,
             'incoming_friend_requests': incoming_friend_requests,
+            'ban_exists_out':ban_exists_out,
+            'ban_exists_in': ban_exists_in,
         }
     else:
         # Полный доступ к профилю
@@ -144,7 +168,10 @@ def profile_view(request, username):
             'restricted_view': False,  # Полный доступ к профилю
             'avatar': avatar,
             'friendship_exists': friendship_exists,
+            'friend_request_senders': friend_request_senders,
             'incoming_friend_requests': incoming_friend_requests,
+            'ban_exists_out':ban_exists_out,
+            'ban_exists_in': ban_exists_in,
         }
 
     return render(request, 'main/profile.html', context)
@@ -260,8 +287,9 @@ class LoginUser(LoginView):  # логин через класс - проверк
 class LogoutUser(View):
     def get(self, request):
         logout(request)
-        request.session.flush()
-        return render(request, 'main/logout.html')
+        # request.session.flush()
+        messages.success(request, 'Вы успешно вышли из системы!')
+        return redirect('home')
 
 
 def profile_list(request):
@@ -641,22 +669,51 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         except Friendship.DoesNotExist:
             return JsonResponse({'detail': 'Запрос дружбы не найден'}, status=status.HTTP_404_NOT_FOUND)
 
-
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='block-people', url_name='block-people')
     def block_user(self, request, pk):
+        profile_one = request.user.profile
+        profile_two = Profile.objects.get(id=pk)
+
+               # Проверяем наличие дружбы или запроса на дружбу
+        existing_friendship = Friendship.objects.filter(
+            (Q(profile_one=profile_one, profile_two=profile_two) |
+             Q(profile_one=profile_two, profile_two=profile_one)) &
+            Q(status__name__in=['Друзья', 'Отправлен запрос'])
+        ).first()  # Используем first() для получения первого найденного объекта или None
+
+        if existing_friendship:
+            # Удаляем существующую дружбу или запрос на дружбу
+            existing_friendship.delete()
+
+        # Создаем запись о блокировке
+        friendship_status = FriendshipStatus.objects.get(name='Заблокирован')
+        Friendship.objects.create(profile_one=profile_one, profile_two=profile_two, status=friendship_status)
+
+        return JsonResponse({'detail': 'Пользователь заблокирован'}, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='unblock-people', url_name='unblock-people')
+    def unblock_user(self, request, pk):
+        profile_one = request.user.profile
+
         try:
-            friendship = get_object_or_404(Friendship, pk=pk)
+            profile_two = Profile.objects.get(id=pk)
+        except Profile.DoesNotExist:
+            return JsonResponse({'detail': 'Профиль не найден'}, status=status.HTTP_404_NOT_FOUND)
 
-            if friendship.status.name == 'Заблокирован':
-                return JsonResponse({'detail': 'Пользователь уже заблокирован'}, status=status.HTTP_400_BAD_REQUEST)
+        # Проверяем наличие блокировки
+        existing_friendship = Friendship.objects.filter(
+            profile_one=profile_one,
+            profile_two=profile_two,
+            status__name='Заблокирован'
+        ).first()  # Используем first() для получения первого найденного объекта или None
 
-            friendship.status = FriendshipStatus.objects.get(name='Заблокирован')
-            friendship.save()
-
-            return JsonResponse({'detail': 'Пользователь заблокирован'}, status==status.HTTP_201_CREATED)
-
-        except Friendship.DoesNotExist:
-            return JsonResponse({'detail': 'Запрос дружбы не найден'}, status=status.HTTP_404_NOT_FOUND)
+        if existing_friendship:
+            # Удаляем существующую блокировку
+            existing_friendship.delete()
+            return JsonResponse({'detail': 'Пользователь успешно разблокирован'}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse({'detail': 'Пользователь не найден в списке заблокированных'},
+                                status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=True, methods=['post'], url_path='deny-request', url_name='deny-request')
     def deny_friendship(self, request, pk=None):
@@ -667,15 +724,47 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             if friendship.profile_two != profile and friendship.profile_one != profile:
                 return JsonResponse({'detail': 'Вы не можете отклонить этот запрос'}, status=status.HTTP_403_FORBIDDEN)
 
-            if friendship.status.name == 'Друзья':
-                friendship.delete()
-                return JsonResponse({'detail': 'Дружба удалена'}, status=status.HTTP_200_OK)
-            else:
-                friendship.delete()
-                return JsonResponse({'detail': 'Запрос на дружбу отклонен'}, status=status.HTTP_200_OK)
+            friendship.delete()
+            return JsonResponse({'detail': 'Запрос на дружбу отклонен'}, status=status.HTTP_200_OK)
 
         except Friendship.DoesNotExist:
             return JsonResponse({'detail': 'Запрос дружбы не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], url_path='delete-friend', url_name='delete-friend')
+    def delete_friendship(self, request, pk):
+        profile_2 = get_object_or_404(Profile, id=pk)
+
+
+        # Определяем, есть ли дружба между текущим пользователем и владельцем профиля
+        friendship_exists = (
+                Friendship.objects.filter(
+                    profile_one__user=request.user, profile_two=profile_2, status__name='Друзья'
+                ).exists() or
+                Friendship.objects.filter(
+                    profile_one=profile_2, profile_two__user=request.user, status__name='Друзья'
+                ).exists()
+        )
+
+        if friendship_exists:
+            # Попробуем найти и удалить дружбу
+            try:
+                friendship = Friendship.objects.get(
+                    (Q(profile_one__user=request.user, profile_two=profile_2) |
+                     Q(profile_one=profile_2, profile_two__user=request.user)),
+                    status__name='Друзья'
+                )
+
+                # Удаляем объект дружбы
+                friendship.delete()
+
+                return JsonResponse({'detail': 'Дружба успешно удалена.'}, status=status.HTTP_200_OK)
+
+            except Friendship.DoesNotExist:
+                return JsonResponse({'detail': 'Дружба не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+
+        else:
+            return JsonResponse({'detail': 'Дружба не существует или уже удалена.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
     @action(detail=False, methods=['get'], url_path='list-requests', url_name='list-requests')
     def list_requests(self, request):
