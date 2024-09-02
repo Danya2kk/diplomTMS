@@ -10,13 +10,24 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 
 class RegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
-
+    password = forms.CharField(
+        label='Пароль',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль', 'class': 'form-input'})
+    )
+    password_confirm = forms.CharField(
+        label='Повторите пароль',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль', 'class': 'form-input'})
+    )
 
     class Meta:
-        model = User
-        fields = ['username', 'email', 'password']
+        model = get_user_model()
+        fields = ['username', 'email', 'first_name', 'last_name']
+        widgets = {
+            'username': forms.TextInput(attrs={'placeholder': 'Введите логин', 'class': 'form-input'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'Введите email', 'class': 'form-input'}),
+            'first_name': forms.TextInput(attrs={'placeholder': 'Введите имя', 'class': 'form-input'}),
+            'last_name': forms.TextInput(attrs={'placeholder': 'Введите фамилию', 'class': 'form-input'}),
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -24,16 +35,15 @@ class RegistrationForm(forms.ModelForm):
         password_confirm = cleaned_data.get("password_confirm")
 
         if password and password_confirm and password != password_confirm:
-            self.add_error('password_confirm', "Passwords do not match")
+            self.add_error('password_confirm', "Пароли не совпадают")
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])
+        user.set_password(self.cleaned_data["password"])  # Устанавливаем зашифрованный пароль
         if commit:
             user.save()
         return user
-
 
 class LoginForm(forms.Form):
     username = forms.CharField()

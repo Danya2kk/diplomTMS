@@ -1,14 +1,49 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-</head>
-<body>
-    <h2>Register</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-</body>
-</html>
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block content %}
+
+<div>
+<div>{{ from.non_field_errors }}</div>
+<form method="post">
+{% csrf_token %}
+<div>
+    <h2 class="Auth_title"> Регистрация </h2>
+    <p >{{ form.username.label_tag}}</p>
+    <p>{{ form.username}}</p>
+</div>
+    <div>
+<p>{{ form.email.label_tag}}</p>
+<p>{{ form.email}}</p>
+
+</div>
+    <div>
+<p>{{ form.password.label_tag}}</p>
+<p>{{ form.password}}</p>
+
+</div>
+    <div>
+<p>{{ form.password_confirm.label_tag}}</p>
+<p>{{ form.password_confirm}}</p>
+
+</div>
+    <div>
+<p>{{ form.first_name.label_tag}}</p>
+<p>{{ form.first_name}}</p>
+
+</div>
+    <div>
+<p>{{ form.last_name.label_tag}}</p>
+<p>{{ form.last_name}}</p>
+
+</div>
+
+
+<p><button type="submit">Зарегистрироваться</button></p>
+
+
+</form>
+</div>
+
+
+{% endblock %}

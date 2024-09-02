@@ -271,16 +271,17 @@ class RegisterUser(FormView):
     success_url = '/'
 
     def form_valid(self, form):
-        # модель пользователя внутри функции
-        User = get_user_model()
-
         # Сохранение пользователя
         user = form.save(commit=False)
         user.set_password(form.cleaned_data['password'])
         user.save()
 
-        # Создание профиля для нового пользователя
-        Profile.objects.create(user=user)
+        # Создание профиля для нового пользователя с обязательными полями
+        Profile.objects.create(
+            user=user,
+            firstname=user.first_name,  # Из модели User
+            lastname=user.last_name,    # Из модели User
+        )
 
         # Вход пользователя после регистрации
         auth_login(self.request, user)
