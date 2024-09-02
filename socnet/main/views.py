@@ -19,7 +19,7 @@ from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, FormView
 from rest_framework import status, viewsets
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Prefetch
 from rest_framework.decorators import action, renderer_classes
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -106,6 +106,40 @@ def profile_view(request, username):
             ).exists()
     )
 
+
+    friends_profiles = []
+
+    if friendship_exists or is_owner is True:
+        # Предварительная загрузка аватаров
+        avatars_prefetch = Prefetch(
+            'media_files',
+            queryset=Mediafile.objects.filter(file_type='avatar'),
+            to_attr='avatars'
+        )
+
+        # Получаем все дружеские связи и загружаем связанные профили, пользователей и аватары
+        friendships = Friendship.objects.filter(
+            Q(status__name='Друзья') &
+            (Q(profile_one=profile) | Q(profile_two=profile))
+        ).select_related('profile_one__user', 'profile_two__user').prefetch_related(
+            Prefetch('profile_one__media_files', queryset=Mediafile.objects.filter(file_type='avatar'),
+                     to_attr='avatars'),
+            Prefetch('profile_two__media_files', queryset=Mediafile.objects.filter(file_type='avatar'),
+                     to_attr='avatars')
+        )
+
+        # Проходим по каждому объекту Friendship и добавляем профиль друга в список
+        for friendship in friendships:
+            if friendship.profile_one == profile:
+                # Если profile — profile_one, добавляем profile_two в список друзей
+                friends_profiles.append(friendship.profile_two)
+            else:
+                # Иначе добавляем profile_one в список друзей
+                friends_profiles.append(friendship.profile_one)
+
+    # Убираем дубликаты, если они есть
+    friends_profiles = list(set(friends_profiles))
+
     ban_exists_out = (
             Friendship.objects.filter(
                 profile_one__user=request.user, profile_two=profile, status__name='Заблокирован'
@@ -127,7 +161,7 @@ def profile_view(request, username):
         request.profile_one for request in incoming_friend_requests if request.profile_one
     ]
 
-    username_friend = profile.user.username
+
     # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
     if privacy_level.name == "Никто" and not is_owner:
         context = {
@@ -143,6 +177,7 @@ def profile_view(request, username):
             'incoming_friend_requests': incoming_friend_requests,
             'ban_exists_out':ban_exists_out,
             'ban_exists_in': ban_exists_in,
+
         }
     elif privacy_level.name == "Только друзья" and not friendship_exists and not is_owner:
         context = {
@@ -159,6 +194,7 @@ def profile_view(request, username):
             'incoming_friend_requests': incoming_friend_requests,
             'ban_exists_out':ban_exists_out,
             'ban_exists_in': ban_exists_in,
+
         }
     else:
         # Полный доступ к профилю
@@ -172,6 +208,7 @@ def profile_view(request, username):
             'incoming_friend_requests': incoming_friend_requests,
             'ban_exists_out':ban_exists_out,
             'ban_exists_in': ban_exists_in,
+            'friends_profiles': friends_profiles,
         }
 
     return render(request, 'main/profile.html', context)
