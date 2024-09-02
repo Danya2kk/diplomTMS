@@ -1,11 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-
-from .models import Mediafile, Comment, FriendshipStatus
+from .models import Mediafile, Comment, FriendshipStatus, Friendship
 from .models import User, Profile, News, Tag, PrivacyLevel, Interest
 
 
-# Register your models here.
+
+
 
 
 @admin.register(Profile)
@@ -24,13 +24,14 @@ class InterestAdmin(admin.ModelAdmin):
 
 
 admin.site.register(User, UserAdmin)
+
 admin.site.register(Mediafile)
 
 admin.site.register(News)
 admin.site.register(Tag)
 
 admin.site.register(Comment)
-
-
+admin.site.register(Friendship)
 
 admin.site.register(FriendshipStatus)
+

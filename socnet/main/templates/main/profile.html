@@ -1,4 +1,3 @@
-
 {% extends 'main/layout.html' %}
 {% load static %}
 
@@ -7,29 +6,30 @@
     <section class="news-detail-content">
         <!-- Содержимое профиля: изображение, описание,  -->
         {% if avatar and avatar.file %}
-                <img src="{{ avatar.file.url }}" alt="Avatar" class="news-inner-image">
-
-            {% else %}
-                <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
-            {% endif %}
+            <img src="{{ avatar.file.url }}" alt="Avatar" class="news-inner-image">
+        {% else %}
+            <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
+        {% endif %}
         <div class="news-detail-text">
             <p>{{ profile.firstname }} {{ profile.lastname }}</p>
-            {% if restricted_view %}
-                <p>Пользователь скрыл информацию о себе</p>
+            {% if ban_exists_in %}
+                 <p>Данные скрыты. Пользователь Вас заблокировал</p>
             {% else %}
-                <p>Возраст: {{ profile.age }}</p>
-                <p>Пол: {{ profile.gender }}</p>
-                <p>Местоположение: {{ profile.location }}</p>
-                <p>Ссылка: <a href="{{ profile.link }}">{{ profile.link }}</a></p>
-                <p>Настройки: {{ profile.settings }}</p>
-
-                <p>Интересы: {{ profile.interests.all|join:", " }}</p>
+                {% if restricted_view %}
+                    <p>Пользователь скрыл информацию о себе</p>
+                {% else %}
+                    <p>Возраст: {{ profile.age }}</p>
+                    <p>Пол: {{ profile.gender }}</p>
+                    <p>Местоположение: {{ profile.location }}</p>
+                    <p>Ссылка: <a href="{{ profile.link }}">{{ profile.link }}</a></p>
+                    <p>Настройки: {{ profile.settings }}</p>
+                    <p>Интересы: {{ profile.interests.all|join:", " }}</p>
+                {% endif %}
             {% endif %}
         </div>
         <div class="news-detail-text">
             {% if is_owner %}
                 <p>Уровень приватности:</p> <p>{{ profile.privacy.name }}: {{ profile.privacy.description }}</p>
-
             {% endif %}
             <div class="separator-line"></div>
             {% if is_owner %}
@@ -39,45 +39,129 @@
             {% else %}
                 <div class="news-reaction-block">
                      <a class="btn-news" href="{% url 'update-profile' %}">Отправить сообщение</a>
+
                     {% if friendship_exists %}
                         <p>Этот человек Ваш друг!</p>
+                        <button type="button" class="btn-news delete-friend" data-url="{% url 'friendship-delete-friend' profile.id %}">
+                            Удалить из друзей
+                        </button>
                     {% else %}
                      <button class="btn-news" id="send-friend-request" data-profile-id="{{ profile.id }}">Предложить дружбу</button>
                     {% endif %}
+                    {% if ban_exists_out %}
+                         <p>Пользователь Вами заблокирован</p>
+                     <button type="button" class="btn-news unblock-people" data-url="{% url 'friendship-unblock-people' profile.id %}">
+                            Разблокировать
+                        </button>
+                    {% else %}
+                    <button type="button" class="btn-news block-people" data-url="{% url 'friendship-block-people' profile.id %}">
+                            Заблокировать пользователя
+                        </button>
+                    {% endif %}
                 </div>
-
             {% endif %}
         </div>
-
     </section>
 </div>
- <section class="news-detail-content">
-     {% if is_owner %}
-            {% if incoming_friend_requests %}
-                <div class="friend-requests">
-                    <h3>Входящие запросы на дружбу:</h3>
-                    <ul>
-                        {% for request in incoming_friend_requests %}
-                            <li>
-                                {{ request.profile_one.firstname }} {{ request.profile_one.lastname }}
-                                <form method="post" action="{% url 'friendship-accept-request' request.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit">Принять</button>
-                                </form>
-                                <button type="button" class="btn-news deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
-                                    Отклонить запрос
-                                </button>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% else %}
-                <p>Запросов на дружбу пока нет!</p>
-            {% endif %}
-        {% endif %}
+
+<div class="news-detail-container2">
+       <p class="btn-comment-news">Список друзей:</p>
+
+    {% if friends_profiles %}
+        {% for friend in friends_profiles %}
+            {% if friend.avatars %}
+                        <a href="{% url 'profile' friend.user.username %}">
+                            <<img src="{{ friend.avatars.0.file.url }}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
+                        </a>
+             {% else %}
+                        <a href="{% url 'profile' friend.user.username %}">
+                             <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
+                        </a>
+             {% endif %}
+            <a class="profile-name" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
+        {% endfor %}
+    {% else %}
+        <p>У вас нет друзей!</p>
+    {% endif %}
+</div>
+
+<section class="news-detail-content">
+
+    {% if is_owner %}
+    <div class="comments-wrapper">
+        <button id="toggle-comments-btn" class="btn-comment-news">Показать запросы в друзья</button>
+
+
+    <div id="comments-section" class="comments-section">
+
+                {% if incoming_friend_requests %}
+                    <div class="friend-requests">
+                        <ul>
+                            {% for request in incoming_friend_requests %}
+                                <li class="no-markers">
+
+                                    <div class="news-reaction-block">
+                                        <a class="profile-name" href="{% url 'profile' request.profile_one.user.username %}"> {{ request.profile_one.firstname }} {{ request.profile_one.lastname }} </a>
+
+                                         <button type="button" class="btn-news accept-request" data-url="{% url 'friendship-accept-request' request.id %}">
+                                                 Принять
+                                        </button>
+
+                                    </form>
+                                        <button type="button" class="btn-news deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
+                                                 Отклонить запрос
+                                        </button>
+                                    </div>
+
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <p>Запросов на дружбу пока нет!</p>
+                {% endif %}
+
+     </div>
+
+    </div>
+
+    {% endif %}
 </section>
+<script src="{% static 'js/popup.js' %}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
+    // Функция для установки ширины comments-wrapper и кнопки
+    function adjustContentWidth() {
+        // Получаем ширину контейнера .news-detail-content
+        var contentWidth = $('.news-detail-content').outerWidth();
+
+        // Устанавливаем эту ширину для comments-wrapper
+        $('.comments-wrapper').css('width', contentWidth + 'px');
+        $('.news-detail-container2').css('width', contentWidth + 'px');
+        $('.btn-comment-news').css('width', contentWidth + 'px');
+
+
+        // Устанавливаем ширину кнопки на 100% от родительского контейнера
+        $('#toggle-comments-btn').css('width', '100%');
+    }
+
+    // Вызываем функцию при загрузке страницы
+    adjustContentWidth();
+
+    // Вызываем функцию при изменении размера окна
+    $(window).resize(function() {
+        adjustContentWidth();
+    });
+
+    // Скрипт для аккордеона запросов дружбы
+    $('#toggle-comments-btn').click(function() {
+        $('#comments-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
+            var isVisible = $('#comments-section').is(':visible');
+            $('#toggle-comments-btn').text(isVisible ? 'Скрыть запросы дружбы' : 'Показать запросы дружбы');
+        });
+    });
+
+    // Обработка отправки запроса на дружбу
     var sendFriendRequestButton = document.getElementById('send-friend-request');
     if (sendFriendRequestButton) {
         sendFriendRequestButton.addEventListener('click', function () {
@@ -93,29 +177,147 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({ profile_id: profileId })
             })
-            .then(response => {
-                return response.json().then(data => {
-                    if (!response.ok) {
-                        throw new Error(data.detail || 'Неизвестная ошибка');
-                    }
-                    return data;
-                });
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.detail) {
-                    alert(data.detail);
+                    showAjaxPopup(data.detail); // Отображение сообщения
                     sendFriendRequestButton.textContent = 'Запрос отправлен';
                     sendFriendRequestButton.disabled = true;
                 } else {
-                    alert('Неизвестная ошибка');
+                    showAjaxPopup('Неизвестная ошибка');
                 }
             })
             .catch(error => {
                 console.error('Error:', error.message);
-                alert(error.message);
+                showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
             });
         });
     }
+
+    document.querySelectorAll('.accept-request').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
+
+    document.querySelectorAll('.block-people').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
+
+
+    document.querySelectorAll('.unblock-people').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
+
+    document.querySelectorAll('.delete-friend').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
 
     // Обработка отклонения запроса
     document.querySelectorAll('.deny-friend-request').forEach(button => {
@@ -131,33 +333,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Accept': 'application/json'
                 }
             })
-            .then(response => {
-                return response.json().then(data => {
-                    if (!response.ok) {
-                        throw new Error(data.detail || 'Неизвестная ошибка');
-                    }
-                    return data;
-                });
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.detail) {
-                    alert(data.detail);
+                    showAjaxPopup(data.detail);
                     this.closest('li').remove();
                 } else {
-                    alert('Неизвестная ошибка');
+                    showAjaxPopup('Неизвестная ошибка');
                 }
             })
             .catch(error => {
                 console.error('Error:', error.message);
-                alert('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
             });
         });
     });
 });
-
-
 </script>
-
-
 
 {% endblock %}

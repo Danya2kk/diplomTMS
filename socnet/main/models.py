@@ -23,6 +23,15 @@ class User(AbstractUser):
 
 
 class PrivacyLevel(models.Model):
+    PUBLIC = 'public'
+    PRIVATE = 'private'
+    FRIENDS_ONLY = 'friends_only'
+
+    PRIVACY_CHOICES = [
+        (PUBLIC, 'Public'),
+        (PRIVATE, 'Private'),
+        (FRIENDS_ONLY, 'Friends Only'),
+    ]
     name = models.CharField(max_length=255)
     description = models.TextField()
 
@@ -44,6 +53,11 @@ def get_default_privacy_level():
 class Profile(models.Model):
     firstname = models.CharField(max_length=255)
     lastname = models.TextField()
+    age = models.IntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=50)
+    location = models.CharField(max_length=255)
+    link = models.TextField()
+    settings = models.CharField(max_length=255)
     age = models.IntegerField(blank=True, null=True)  # Необязательное поле
     gender = models.CharField(max_length=50, blank=True, null=True)  # Необязательное поле
     location = models.CharField(max_length=255, blank=True, null=True)  # Необязательное поле
@@ -250,3 +264,20 @@ class ActivityLog(models.Model):
     action_type = models.CharField(max_length=20, choices=ACTION_CHOICES)
     description = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class ArchivedMail(models.Model):
+    sender = models.ForeignKey(Profile, related_name='archived_sent_messages', on_delete=models.CASCADE)
+    recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='archived_received_messages')
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='archived_replies')
+    is_read = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(auto_now_add=True)
+
+
+class ArchiveChat(models.Model):
+    profile = models.ForeignKey(Profile, related_name='archived_chat_messages', on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, related_name='archived_chat_members', on_delete=models.CASCADE)
+    created_at = models.DateTimeField()
+    archived_at = models.DateTimeField(auto_now_add=True)
