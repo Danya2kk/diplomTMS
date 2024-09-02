@@ -2,13 +2,11 @@
 from django.shortcuts import render, redirect
 from django.shortcuts import render, redirect
 from django.views import View
-
 from .forms import RegistrationForm, LoginForm
 from django.contrib.auth import login, authenticate, get_user_model
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -43,8 +41,13 @@ from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Case, When, IntegerField, Sum
 from django.shortcuts import render
-
+from django.urls import reverse_lazy
+from django.views.generic.edit import FormView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import MailForm
+from .models import Mail
 from .forms import LoginUserForm
+from django.views.generic import ListView
 
 
 # Create your views here.
@@ -702,3 +705,48 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.save()
         return Response({'detail': 'Уведомление помечено как прочитанное'}, status=status.HTTP_200_OK)
 
+
+class SendMailView(LoginRequiredMixin, FormView):
+    form_class = MailForm
+    template_name = 'main/send_mail.html'
+    success_url = reverse_lazy('mailbox')  # перенаправление в почтовый ящик после успешной отправки
+
+    def form_valid(self, form):
+        # привязка отправителя к текущему пользователю
+        mail = form.save(commit=False)
+        mail.sender = self.request.user.profile  # предположим что у пользователя есть связанный профиль
+
+        # Проверяем, что отправитель и получатель не совпадают
+        if mail.sender == mail.recipient:
+            form.add_error('recipient', 'Вы не можете отправить сообщение самому себе.')
+            return self.form_invalid(form)
+
+        mail.save()
+        return super().form_valid(form)
+
+
+class UserMailView(LoginRequiredMixin, ListView):
+    template_name = 'main/user_mailbox.html'
+    context_object_name = 'messages'
+
+    def get_queryset(self):
+        user_profile = self.request.user.profile
+        sent_messages = Mail.objects.filter(sender=user_profile)
+        received_messages = Mail.objects.filter(recipient=user_profile)
+        return {'sent_messages': sent_messages, 'received_messages': received_messages}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_profile = self.request.user.profile
+        context['sent_messages'] = Mail.objects.filter(sender=user_profile)
+        context['received_messages'] = Mail.objects.filter(recipient=user_profile)
+        return context
+def mark_as_read(request):
+    if request.method == 'POST':
+        mail_id = request.POST.get('mail_id')
+        if mail_id:
+            mail = get_object_or_404(Mail, id=mail_id, recipient=request.user.profile)
+            if not mail.is_read:
+                mail.is_read = True
+                mail.save()
+    return redirect('mailbox')
