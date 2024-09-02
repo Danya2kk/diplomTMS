@@ -1,6 +1,7 @@
 
 from django.urls import path
-
+from . import views
+from .views import StatusListView,StatusCreateView,StatusDeleteView,StatusUpdateView,StatusDetailView
 from django.contrib.auth.views import PasswordChangeDoneView
 from django.urls import path, include
 
@@ -16,8 +17,8 @@ router.register(r'friendships', views.FriendshipViewSet, basename='friendship')
 router.register(r'notifications', views.NotificationViewSet)
 
 urlpatterns = [
-    path('', views.index, name='home'),
 
+    path('', views.index, name='home'),
     path('chat', views.index, name='chat'),
     path('register/', views.RegisterUser.as_view(), name='register'),
     path('login/', views.LoginUser.as_view(), name='login'),
@@ -42,5 +43,6 @@ urlpatterns = [
     # path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
     path('friends/', views.friends_list_api, name='friends_list_api'),
     path('', include(router.urls)),
+
 ]
 
