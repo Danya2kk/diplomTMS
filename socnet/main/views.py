@@ -1,6 +1,8 @@
 
 from django.http import JsonResponse, Http404
 from django.contrib.contenttypes.models import ContentType
+
+from .filters import ProfileFilter, GroupFilter
 from .models import News, Tag, Comment, Reaction, Friendship
 from .forms import NewsForm,  CommentForm, ReactionForm
 from django.shortcuts import render, redirect, get_object_or_404
@@ -345,22 +347,22 @@ class LogoutUser(View):
 
 
 def profile_list(request):
-    # Получаем все профили
-    profile_items = Profile.objects.select_related('user').all()  # Используем select_related для оптимизации запроса
+    # Создаем экземпляр фильтра с использованием GET параметров
+    profile_filter = ProfileFilter(request.GET, queryset=Profile.objects.select_related('user').prefetch_related('media_files'))
 
-    # Словарь для хранения аватаров по профилям
-    avatars = {}
+    # Получаем отфильтрованные профили
+    profile_items = profile_filter.qs
 
-    # Получаем аватары для всех профилей
+    # Получаем аватары для отфильтрованных профилей
     avatar_items = Mediafile.objects.filter(file_type='avatar', profile__in=profile_items)
 
-    # Заполняем словарь аватаров
-    for avatar in avatar_items:
-        avatars[avatar.profile.id] = avatar
+    # Создаем словарь для хранения аватаров по профилям
+    avatars = {avatar.profile.id: avatar for avatar in avatar_items}
 
     context = {
         'profile_items': profile_items,
         'avatars': avatars,
+        'profile_filter': profile_filter,
     }
 
     return render(request, 'main/profile_list.html', context)
@@ -1049,17 +1051,33 @@ def unblock_friendship(request, pk):
         messages.error(request, 'Ошибка разблокировки.')
     return redirect('friendship-list')
 
+
 class GroupListView(ListView):
     model = Group
-    template_name = 'group/group_list.html'
+    template_name = 'main/group_list.html'
     context_object_name = 'groups'
 
     def get_queryset(self):
         search_term = self.request.GET.get('search_term', None)
+        queryset = Group.objects.all().order_by('-name')
         if search_term:
-            return Group.objects.filter(name__icontains=search_term).order_by('-created_at')
-        else:
-            return Group.objects.all().order_by('-created_at')
+            queryset = queryset.filter(name__icontains=search_term)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        # Получаем контекст данных из суперкласса ListView
+        context = super().get_context_data(**kwargs)
+
+        # Создаем экземпляр фильтра с данными из запроса и передаем в него queryset
+        filterset = GroupFilter(self.request.GET, queryset=self.get_queryset())
+
+        # Добавляем фильтр в контекст
+        context['filterset'] = filterset
+
+        # Заменяем queryset на отфильтрованный
+        context['groups'] = filterset.qs
+
+        return context
 
 class GroupDetailView(DetailView):
     model = Group

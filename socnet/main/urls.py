@@ -42,6 +42,7 @@ urlpatterns = [
     path('news/create/', views.news_create, name='news_create'),
     path('news/<int:pk>/delete/', views.news_delete, name='news_delete'),
     path('news/<int:news_id>/add_comment/', views.add_comment, name='add_comment'),
+    path('groups_list/', views.GroupListView.as_view(), name='groups_list'),
     # path('<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
@@ -49,6 +50,7 @@ urlpatterns = [
     path('send-message/', SendMailView.as_view(), name='send_message'),
     path('mailbox/', UserMailView.as_view(), name='mailbox'),
     path('mark-as-read/', mark_as_read, name='mark_as_read'),
+
 
     path('', include(router.urls)),
 
