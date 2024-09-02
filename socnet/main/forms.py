@@ -1,5 +1,5 @@
 from django import forms
-from .models import User
+from .models import User, Group, Friendship
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import PasswordChangeForm
@@ -10,13 +10,24 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 
 class RegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
-
+    password = forms.CharField(
+        label='Пароль',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль', 'class': 'form-input'})
+    )
+    password_confirm = forms.CharField(
+        label='Повторите пароль',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль', 'class': 'form-input'})
+    )
 
     class Meta:
-        model = User
-        fields = ['username', 'email', 'password']
+        model = get_user_model()
+        fields = ['username', 'email', 'first_name', 'last_name']
+        widgets = {
+            'username': forms.TextInput(attrs={'placeholder': 'Введите логин', 'class': 'form-input'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'Введите email', 'class': 'form-input'}),
+            'first_name': forms.TextInput(attrs={'placeholder': 'Введите имя', 'class': 'form-input'}),
+            'last_name': forms.TextInput(attrs={'placeholder': 'Введите фамилию', 'class': 'form-input'}),
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -24,16 +35,15 @@ class RegistrationForm(forms.ModelForm):
         password_confirm = cleaned_data.get("password_confirm")
 
         if password and password_confirm and password != password_confirm:
-            self.add_error('password_confirm', "Passwords do not match")
+            self.add_error('password_confirm', "Пароли не совпадают")
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])
+        user.set_password(self.cleaned_data["password"])  # Устанавливаем зашифрованный пароль
         if commit:
             user.save()
         return user
-
 
 class LoginForm(forms.Form):
     username = forms.CharField()
@@ -200,3 +210,60 @@ class LoginUserForm(AuthenticationForm):
         model = get_user_model()
         fields = ['username', 'password']
 
+
+
+class FriendshipCreateForm(forms.ModelForm):
+    class Meta:
+        model = Friendship
+        fields = ['profile_two', 'description']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['profile_two'].queryset = Profile.objects.exclude(user=self.instance.profile_one.user)
+
+
+class FriendshipUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Friendship
+        fields = ['status', 'description']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+class FriendshipSearchForm(forms.Form):
+    search_term = forms.CharField(label='Поиск', required=False)
+
+
+class GroupCreateForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ['name', 'description', 'photo', 'group_type', 'rules']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'rules': forms.Textarea(attrs={'rows': 3}),
+            'group_type': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, *kwargs)
+        self.fields['creator'].initial = kwargs.get('user').profile
+
+
+class GroupUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ['name', 'description', 'photo', 'group_type', 'rules']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'rules': forms.Textarea(attrs={'rows': 3}),
+            # 'group_type': forms.Select(choices=GROUP_TYPES),
+        }
+
+
+class GroupSearchForm(forms.Form):
+    search_term = forms.CharField(label='Поиск', required=False)

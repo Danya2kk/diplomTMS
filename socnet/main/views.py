@@ -1,5 +1,16 @@
 
-from django.shortcuts import render, redirect
+from django.http import JsonResponse, Http404
+from django.contrib.contenttypes.models import ContentType
+from .models import News, Tag, Comment, Reaction, Friendship
+from .forms import NewsForm,  CommentForm, ReactionForm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib import messages
+from .models import Group, GroupMembership,Status
+from .forms import GroupCreateForm, GroupUpdateForm, GroupSearchForm
+
 from django.shortcuts import render, redirect
 from django.views import View
 
@@ -271,16 +282,17 @@ class RegisterUser(FormView):
     success_url = '/'
 
     def form_valid(self, form):
-        # модель пользователя внутри функции
-        User = get_user_model()
-
         # Сохранение пользователя
         user = form.save(commit=False)
         user.set_password(form.cleaned_data['password'])
         user.save()
 
-        # Создание профиля для нового пользователя
-        Profile.objects.create(user=user)
+        # Создание профиля для нового пользователя с обязательными полями
+        Profile.objects.create(
+            user=user,
+            firstname=user.first_name,  # Из модели User
+            lastname=user.last_name,    # Из модели User
+        )
 
         # Вход пользователя после регистрации
         auth_login(self.request, user)
@@ -349,6 +361,14 @@ def profile_list(request):
     }
 
     return render(request, 'main/profile_list.html', context)
+
+@login_required
+def news_list(request):
+    news_items = News.objects.all().order_by('-created_at')
+    context = {
+        'news_items': news_items,
+    }
+    return render(request, 'main/news_list.html', context)
 
 
 @require_GET
@@ -857,6 +877,7 @@ def friends_list_api(request):
 
     return JsonResponse({'friends': friends}, safe=False)
 
+
 @login_required
 def send_friend_request(request, username):
     '''Отправить запрос на дружбу'''
@@ -884,7 +905,195 @@ def send_friend_request(request, username):
     return redirect("profile", username=username)
 
 
+
+class FriendshipListView(LoginRequiredMixin, ListView):
+    model = Friendship
+    template_name = 'friendship_list.html'
+    context_object_name = 'friendships'
+
+    def get_queryset(self):
+        return Friendship.objects.filter(
+            Q(profile_one=self.request.user.profile) | Q(profile_two=self.request.user.profile)).order_by('-created_at')
+
+
+class FriendshipListView(LoginRequiredMixin, DetailView):
+    model = Friendship
+    template_name = 'friendship_detail.html'
+    context_object_name = 'friendship'
+
+    def get_object(self):
+        friendship = super().get_object()
+        if friendship.profile_one == self.request.user.profile or friendship.profile_two == self.request.user.profile:
+            return friendship
+        else:
+            raise Http404('Друг не найден')
+
+
+class FriendshipCreateView(LoginRequiredMixin, CreateView):
+    model = Friendship
+    fields = ['profile_two', 'description']
+    template_name = 'friendship_form.html'
+
+    def form_valid(self, form):
+        form.instance.profile_one = self.request.user.profile
+        # form.instance.status = PENDING
+        return super().form_valid(form)
+
+
+class FriendshipUpdateView(LoginRequiredMixin, UpdateView, UserPassesTestMixin):
+    model = Friendship
+    fields = ['status', 'description']
+    template_name = 'friendship_form.html'
+
+    def test_func(self):
+        friendship = self.get_object()
+        return friendship.profile_one == self.request.user.profile or friendship.profile_two == self.request.user.profile
+
+
+class FriendshipDeleteView(LoginRequiredMixin, DeleteView, UserPassesTestMixin):
+    model = Friendship
+    success_url = '/friendship/'
+    template_name = 'friendship_confirm_delete.html'
+
+    def test_func(self):
+        friendship = self.get_object()
+        return friendship.profile_one == self.request.user.profile or friendship.profile_two == self.request.user.profile
+
 @login_required
+def accept_friendship(request, pk):
+    friendship = get_object_or_404(Friendship, pk=pk)
+    if friendship.profile_two == request.user.profile:
+        # friendship.status = ACCEPTED
+        friendship.save()
+        messages.success(request, 'Запрос на дружбу принят!')
+    else:
+        messages.error(request, 'Вы не можете принять этот запрос.')
+    return redirect('friendship-list')
+
+@login_required
+def reject_friendship(request, pk):
+    friendship = get_object_or_404(Friendship, pk=pk)
+    if friendship.profile_two == request.user.profile:
+        friendship.delete()
+        messages.success(request, 'Запрос на дружбу отклонен!')
+    else:
+        messages.error(request, 'Вы не можете отклонить этот запрос.')
+    return redirect('friendship-list')
+
+@login_required
+def block_friendship(request, pk):
+    friendship = get_object_or_404(Friendship, pk=pk)
+    if friendship.profile_one == request.user.profile or friendship.profile_two == request.user.profile:
+        # friendship.status = BLOCKED
+        friendship.save()
+        messages.success(request, 'Пользователь заблокирован!')
+    else:
+        messages.error(request, 'Ошибка блокировки.')
+    return redirect('friendship-list')
+
+@login_required
+def unblock_friendship(request, pk):
+    friendship = get_object_or_404(Friendship, pk=pk)
+    if friendship.profile_one == request.user.profile or friendship.profile_two == request.user.profile:
+        # friendship.status = PENDING
+        friendship.save()
+        messages.success(request, 'Пользователь разблокирован!')
+    else:
+        messages.error(request, 'Ошибка разблокировки.')
+    return redirect('friendship-list')
+
+class GroupListView(ListView):
+    model = Group
+    template_name = 'group/group_list.html'
+    context_object_name = 'groups'
+
+    def get_queryset(self):
+        search_term = self.request.GET.get('search_term', None)
+        if search_term:
+            return Group.objects.filter(name__icontains=search_term).order_by('-created_at')
+        else:
+            return Group.objects.all().order_by('-created_at')
+
+class GroupDetailView(DetailView):
+    model = Group
+    template_name = 'group/group_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_member'] = self.object.members.filter(profile=self.request.user.profile).exists() # Check if user is a member
+        return context
+
+@login_required
+def join_group(request, pk):
+    group = get_object_or_404(Group, pk=pk)
+    if not group.members.filter(profile=request.user.profile).exists():
+        GroupMembership.objects.create(
+            profile=request.user.profile,
+            group=group,
+            status=Status.objects.get(name='member')
+        )
+        messages.success(request, f'Вы присоединились к группе {group.name}.')
+    else:
+        messages.info(request, f'Вы уже являетесь членом группы {group.name}.')
+    return redirect('group-detail', pk=pk)
+
+
+@login_required
+def leave_group(request, pk):
+    group = get_object_or_404(Group, pk=pk)
+    membership = group.members.filter(profile=request.user.profile).first()
+    if membership:
+        membership.delete()
+        messages.success(request, f'Вы покинули группу {group.name}.')
+    else:
+        messages.info(request, f'Вы не являетесь членом группы {group.name}.')
+    return redirect('group-detail', pk=pk)
+
+
+class GroupCreateView(LoginRequiredMixin, CreateView):
+    model = Group
+    form_class = GroupCreateForm
+    template_name = 'group/group_form.html'
+
+    def form_valid(self, form):
+        form.instance.creator = self.request.user.profile
+        group = form.save()
+        GroupMembership.objects.create(
+            profile=self.request.user.profile,
+            group=group,
+            status=Status.objects.get(name='admin') # Set the creator as admin
+        )
+        return super().form_valid(form)
+
+class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Group
+    form_class = GroupUpdateForm
+    template_name = 'group/group_form.html'
+
+    def test_func(self):
+        group = self.get_object()
+        return group.creator == self.request.user.profile
+
+class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Group
+    success_url = '/group/'
+    template_name = 'group/group_confirm_delete.html'
+
+    def test_func(self):
+        group = self.get_object()
+        return group.creator == self.request.user.profile
+
+
+def group_search(request):
+    form = GroupSearchForm(request.GET)
+    if form.is_valid():
+        search_term = form.cleaned_data['search_term']
+        groups = Group.objects.filter(name__icontains=search_term).order_by('-created_at')
+        return render(request, 'group/group_list.html', {'groups': groups})
+    else:
+        return render(request, 'group/group_list.html', {'form': form})
+
+
 def accept_friend_request(request, username):
     '''Принять запрос на дружбу'''
 
