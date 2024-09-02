@@ -1,6 +1,8 @@
 
 from django.http import JsonResponse, Http404
 from django.contrib.contenttypes.models import ContentType
+
+from .filters import ProfileFilter, GroupFilter
 from .models import News, Tag, Comment, Reaction, Friendship
 from .forms import NewsForm,  CommentForm, ReactionForm
 from django.shortcuts import render, redirect, get_object_or_404
@@ -13,13 +15,11 @@ from .forms import GroupCreateForm, GroupUpdateForm, GroupSearchForm
 
 from django.shortcuts import render, redirect
 from django.views import View
-
 from .forms import RegistrationForm, LoginForm
 from django.contrib.auth import login, authenticate, get_user_model
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -54,8 +54,13 @@ from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Case, When, IntegerField, Sum
 from django.shortcuts import render
-
+from django.urls import reverse_lazy
+from django.views.generic.edit import FormView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import MailForm
+from .models import Mail
 from .forms import LoginUserForm
+from django.views.generic import ListView
 
 
 # Create your views here.
@@ -342,22 +347,22 @@ class LogoutUser(View):
 
 
 def profile_list(request):
-    # Получаем все профили
-    profile_items = Profile.objects.select_related('user').all()  # Используем select_related для оптимизации запроса
+    # Создаем экземпляр фильтра с использованием GET параметров
+    profile_filter = ProfileFilter(request.GET, queryset=Profile.objects.select_related('user').prefetch_related('media_files'))
 
-    # Словарь для хранения аватаров по профилям
-    avatars = {}
+    # Получаем отфильтрованные профили
+    profile_items = profile_filter.qs
 
-    # Получаем аватары для всех профилей
+    # Получаем аватары для отфильтрованных профилей
     avatar_items = Mediafile.objects.filter(file_type='avatar', profile__in=profile_items)
 
-    # Заполняем словарь аватаров
-    for avatar in avatar_items:
-        avatars[avatar.profile.id] = avatar
+    # Создаем словарь для хранения аватаров по профилям
+    avatars = {avatar.profile.id: avatar for avatar in avatar_items}
 
     context = {
         'profile_items': profile_items,
         'avatars': avatars,
+        'profile_filter': profile_filter,
     }
 
     return render(request, 'main/profile_list.html', context)
@@ -849,6 +854,50 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Уведомление помечено как прочитанное'}, status=status.HTTP_200_OK)
 
 
+class SendMailView(LoginRequiredMixin, FormView):
+    form_class = MailForm
+    template_name = 'main/send_mail.html'
+    success_url = reverse_lazy('mailbox')  # перенаправление в почтовый ящик после успешной отправки
+
+    def form_valid(self, form):
+        # привязка отправителя к текущему пользователю
+        mail = form.save(commit=False)
+        mail.sender = self.request.user.profile  # предположим что у пользователя есть связанный профиль
+
+        # Проверяем, что отправитель и получатель не совпадают
+        if mail.sender == mail.recipient:
+            form.add_error('recipient', 'Вы не можете отправить сообщение самому себе.')
+            return self.form_invalid(form)
+
+        mail.save()
+        return super().form_valid(form)
+
+
+class UserMailView(LoginRequiredMixin, ListView):
+    template_name = 'main/user_mailbox.html'
+    context_object_name = 'messages'
+
+    def get_queryset(self):
+        user_profile = self.request.user.profile
+        sent_messages = Mail.objects.filter(sender=user_profile)
+        received_messages = Mail.objects.filter(recipient=user_profile)
+        return {'sent_messages': sent_messages, 'received_messages': received_messages}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_profile = self.request.user.profile
+        context['sent_messages'] = Mail.objects.filter(sender=user_profile)
+        context['received_messages'] = Mail.objects.filter(recipient=user_profile)
+        return context
+def mark_as_read(request):
+    if request.method == 'POST':
+        mail_id = request.POST.get('mail_id')
+        if mail_id:
+            mail = get_object_or_404(Mail, id=mail_id, recipient=request.user.profile)
+            if not mail.is_read:
+                mail.is_read = True
+                mail.save()
+    return redirect('mailbox')
 @login_required
 def friends_list_api(request):
     user_profile = request.user.profile
@@ -1002,17 +1051,33 @@ def unblock_friendship(request, pk):
         messages.error(request, 'Ошибка разблокировки.')
     return redirect('friendship-list')
 
+
 class GroupListView(ListView):
     model = Group
-    template_name = 'group/group_list.html'
+    template_name = 'main/group_list.html'
     context_object_name = 'groups'
 
     def get_queryset(self):
         search_term = self.request.GET.get('search_term', None)
+        queryset = Group.objects.all().order_by('-name')
         if search_term:
-            return Group.objects.filter(name__icontains=search_term).order_by('-created_at')
-        else:
-            return Group.objects.all().order_by('-created_at')
+            queryset = queryset.filter(name__icontains=search_term)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        # Получаем контекст данных из суперкласса ListView
+        context = super().get_context_data(**kwargs)
+
+        # Создаем экземпляр фильтра с данными из запроса и передаем в него queryset
+        filterset = GroupFilter(self.request.GET, queryset=self.get_queryset())
+
+        # Добавляем фильтр в контекст
+        context['filterset'] = filterset
+
+        # Заменяем queryset на отфильтрованный
+        context['groups'] = filterset.qs
+
+        return context
 
 class GroupDetailView(DetailView):
     model = Group

@@ -112,6 +112,9 @@ class Mail(models.Model):
     is_read = models.BooleanField(default=False)
     is_deleted_sender = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f'{self.content}'
+
 
 class Group(models.Model):
     PUBLIC = 'public'

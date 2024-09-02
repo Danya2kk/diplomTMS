@@ -3,7 +3,7 @@ from .models import User, Group, Friendship
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import PasswordChangeForm
-from .models import Profile, User, Mediafile, Comment, Interest, PrivacyLevel
+from .models import Profile, User, Mediafile, Comment, Interest, PrivacyLevel,Mail
 from .models import News, Tag, Reaction
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
@@ -210,6 +210,14 @@ class LoginUserForm(AuthenticationForm):
         model = get_user_model()
         fields = ['username', 'password']
 
+class MailForm(forms.ModelForm):
+    class Meta:
+        model = Mail
+        fields = ['recipient', 'content', 'parent']  # 'parent' для возможности ответа на сообщение
+        widgets = {
+            'content': forms.Textarea(attrs={'placeholder': 'Введите сообщение...'}),
+
+        }
 
 
 class FriendshipCreateForm(forms.ModelForm):

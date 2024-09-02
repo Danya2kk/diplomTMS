@@ -9,6 +9,10 @@ from django.urls import path, include
 from main import views
 from rest_framework.routers import DefaultRouter
 
+from main.views import UserMailView, SendMailView
+
+from main.views import mark_as_read
+
 
 
 router = DefaultRouter()
@@ -38,10 +42,16 @@ urlpatterns = [
     path('news/create/', views.news_create, name='news_create'),
     path('news/<int:pk>/delete/', views.news_delete, name='news_delete'),
     path('news/<int:news_id>/add_comment/', views.add_comment, name='add_comment'),
+    path('groups_list/', views.GroupListView.as_view(), name='groups_list'),
     # path('<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
     # path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
+    path('send-message/', SendMailView.as_view(), name='send_message'),
+    path('mailbox/', UserMailView.as_view(), name='mailbox'),
+    path('mark-as-read/', mark_as_read, name='mark_as_read'),
+
+
     path('', include(router.urls)),
 
 

@@ -1,10 +1,13 @@
 {% load static %}
 
-{% extends "base.html" %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Почтовый ящик</title>
+</head>
+<body>
     <h1>Почтовый ящик</h1>
-
     <h2>Отправленные сообщения</h2>
     <ul>
         {% for message in sent_messages %}
@@ -30,6 +33,9 @@
                 <strong>От:</strong> {{ message.sender }}<br>
                 <strong>Содержание:</strong> {{ message.content }}<br>
                 <strong>Получено:</strong> {{ message.timestamp|date:"d.m.Y H:i" }}<br>
+                {% if message.parent %}
+                    <strong>Ответ на сообщение:</strong> {{ message.parent.content }}<br>
+                {% endif %}
                 {% if message.is_read %}
                     <span style="color: green;">Прочитано</span>
                 {% else %}
@@ -46,4 +52,5 @@
             <li>Нет полученных сообщений.</li>
         {% endfor %}
     </ul>
-{% endblock %}
+</body>
+</html>

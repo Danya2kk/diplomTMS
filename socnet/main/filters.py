@@ -13,17 +13,19 @@ class FriendshipFilter(filters.FilterSet):
 
 
 class ProfileFilter(filters.FilterSet):
-    firstname = filters.CharFilter(field_name='firstname', lookup_expr='icontains')
-    lastname = filters.CharFilter(field_name='lastname', lookup_expr='icontains')
-    location = filters.CharFilter(field_name='location', lookup_expr='icontains')
+    firstname = filters.CharFilter(field_name='firstname', lookup_expr='icontains', label='Имя')
+    lastname = filters.CharFilter(field_name='lastname', lookup_expr='icontains', label='Фамилия')
+    location = filters.CharFilter(field_name='location', lookup_expr='icontains', label='Местоположение')
+    gender = filters.CharFilter(field_name='gender', lookup_expr='icontains', label='Пол')
     interests = filters.ModelMultipleChoiceFilter(
         field_name='interests',
         queryset=Interest.objects.all(),
+     label = 'Интересы'
     )
 
     class Meta:
         model = Profile
-        fields = ['firstname', 'lastname', 'location', 'interests']
+        fields = ['firstname', 'lastname', 'gender', 'location', 'interests']
 
 class GroupFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
