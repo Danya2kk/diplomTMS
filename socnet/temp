@@ -1,0 +1,16 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block content %}
+    <h1 class="Auth_title"> Новости</h1>
+    <div class="news-container">
+        {% for news_item in news_items %}
+            <div class="news-item">
+                <a href="{% url 'news_detail' news_item.pk %}">
+                    <img src="{{ news_item.image.url }}" alt="Описание фото" class="news-image">
+                </a>
+                <a href="{% url 'news_detail' news_item.pk %}" class="news-title">{{ news_item.title }}</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
