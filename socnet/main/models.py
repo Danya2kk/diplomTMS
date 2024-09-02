@@ -267,3 +267,20 @@ class ActivityLog(models.Model):
     action_type = models.CharField(max_length=20, choices=ACTION_CHOICES)
     description = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class ArchivedMail(models.Model):
+    sender = models.ForeignKey(Profile, related_name='archived_sent_messages', on_delete=models.CASCADE)
+    recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='archived_received_messages')
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='archived_replies')
+    is_read = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(auto_now_add=True)
+
+
+class ArchiveChat(models.Model):
+    profile = models.ForeignKey(Profile, related_name='archived_chat_messages', on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, related_name='archived_chat_members', on_delete=models.CASCADE)
+    created_at = models.DateTimeField()
+    archived_at = models.DateTimeField(auto_now_add=True)

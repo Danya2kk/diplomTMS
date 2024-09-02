@@ -4,29 +4,22 @@
     <meta charset="UTF-8">
     <title>Дипломная работа</title>
     <meta name="csrf-token" content="{{ csrf_token }}">
-
-
     {% load static %}
     <!-- Подключаем JavaScript для всплывающего окна -->
     <script src="{% static 'js/popup.js' %}"></script>
-
-     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
     <!-- Сообщения Django -->
-        {% if messages %}
-            <div id="success-popup" class="popup">
-                <p id="popup-message">
-                    {% for message in messages %}
-                        {{ message }}
-                    {% endfor %}
-                </p>
-                <button id="close-popup">Закрыть</button>
-            </div>
-        {% endif %}
+    <div id="django-messages">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+</div>
 
     <!-- AJAX сообщение -->
     <div id="ajax-popup" class="popup" style="display: none;">
@@ -47,8 +40,6 @@
 
     <!-- Подключаем React-приложение с локального сервера разработки -->
     <script src="http://localhost:3000/static/js/bundle.js"></script>
-
-
 
 </body>
 </html>
