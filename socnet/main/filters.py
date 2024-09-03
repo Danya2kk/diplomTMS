@@ -28,10 +28,10 @@ class ProfileFilter(filters.FilterSet):
         fields = ['firstname', 'lastname', 'gender', 'location', 'interests']
 
 class GroupFilter(filters.FilterSet):
-    name = filters.CharFilter(field_name='name', lookup_expr='icontains')
-    description = filters.CharFilter(field_name='description', lookup_expr='icontains')
-    group_type = filters.ChoiceFilter(field_name='group_type', choices=Group.GROUP_TYPES)
-
+    name = filters.CharFilter(field_name='name', lookup_expr='icontains', label='Название')
+    description = filters.CharFilter(field_name='description', lookup_expr='icontains', label='Описание')
+    group_type = filters.ChoiceFilter(field_name='group_type', choices=Group.GROUP_TYPES, label='Тип группы')
+    creator = filters.CharFilter(field_name='creator', lookup_expr='icontains', label='Основатель')
     class Meta:
         model = Group
-        fields = ['name', 'description', 'group_type']
+        fields = ['name', 'description', 'group_type', 'creator']

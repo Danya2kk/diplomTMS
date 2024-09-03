@@ -1077,6 +1077,15 @@ class GroupListView(ListView):
         # Заменяем queryset на отфильтрованный
         context['groups'] = filterset.qs
 
+        # data = [
+        #     {
+        #         'id': item.id,
+        #         'title': item.title,
+        #         'image': request.build_absolute_uri(item.image.url) if item.image else ''
+        #     }
+        #     for item in news_items
+        # ]
+
         return context
 
 class GroupDetailView(DetailView):

@@ -13,7 +13,7 @@
         <form method="get" action="{% url 'profile_list' %}">
             {{ profile_filter.form.as_p }}  <!-- Используем форму для отображения полей -->
             <button type="submit" class="btn-filter-list">Применить фильтр</button>
-            <a href="{% url 'profile_list' %}" class="btn-reset-list">Сбросить фильтры</a>
+            <button class="btn-filter-list"> <a href="{% url 'profile_list' %}" class="no-markers" >Сбросить фильтры</a></button>
         </form>
     </div>
 
