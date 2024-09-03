@@ -276,6 +276,7 @@ class ArchivedMail(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='archived_replies')
     is_read = models.BooleanField(default=False)
+    is_deleted_sender = models.BooleanField(default=False)
     archived_at = models.DateTimeField(auto_now_add=True)
 
 

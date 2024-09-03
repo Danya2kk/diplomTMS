@@ -16,6 +16,7 @@ import os.path
 import os
 
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -189,4 +190,27 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+
+CELERY_BEAT_SCHEDULE = {
+    'archive-chat-daily': {
+        'task': 'socnet.tasks.archive_chat',
+        'schedule': crontab(hour=0, minute=0),  # каждый день в полночь
+    },
+    'archive-mail-weekly': {
+        'task': 'socnet.tasks.archive_mail',
+        'schedule': crontab(0, 0, day_of_week='sunday'),  # каждое воскресенье в полночь
+        # 'schedule': crontab(minute='*/1'),  # Каждую минуту
+    },
+    'clean-mail-every-six-months': {
+        'task': 'socnet.tasks.clean_mail',
+        'schedule': crontab(0, 0, day_of_month='1', month_of_year='*/6'),  # 1-го числа каждые 6 месяцев
+    },
+}
 
