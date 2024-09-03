@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Mediafile, Comment, FriendshipStatus, Friendship, Group
+from .models import Mediafile, Comment, FriendshipStatus, Friendship, Group, Mail, Chat
 from .models import User, Profile, News, Tag, PrivacyLevel, Interest
 
 
@@ -35,3 +35,6 @@ admin.site.register(Friendship)
 
 admin.site.register(FriendshipStatus)
 admin.site.register(Group)
+
+admin.site.register(Chat)
+admin.site.register(Mail)
