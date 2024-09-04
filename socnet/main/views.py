@@ -1,16 +1,15 @@
-
 from django.http import JsonResponse, Http404
 from django.contrib.contenttypes.models import ContentType
 
 from .filters import ProfileFilter, GroupFilter
 from .models import News, Tag, Comment, Reaction, Friendship
-from .forms import NewsForm,  CommentForm, ReactionForm
+from .forms import NewsForm, CommentForm, ReactionForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
-from .models import Group, GroupMembership,Status
+from .models import Group, GroupMembership, Status
 from .forms import GroupCreateForm, GroupUpdateForm, GroupSearchForm
 
 from django.shortcuts import render, redirect
@@ -65,6 +64,11 @@ from django.views.generic import ListView
 
 # Create your views here.
 
+def get_messages(request):
+    # Получаем сообщения
+    messages_list = [{'message': message.message, 'level': message.level_tag} for message in messages.get_messages(request)]
+    return JsonResponse({'messages': messages_list})
+
 def index(request):
     context = {
         'title': 'Домашняя страница',
@@ -94,8 +98,6 @@ def my_profile_view(request):
     return render(request, 'main/chat.html', context)
 
 
-
-
 @login_required
 def profile_view(request, username):
     '''Просмотр профиля пользователя'''
@@ -105,7 +107,6 @@ def profile_view(request, username):
 
     # Проверяем, является ли текущий пользователь владельцем профиля
     is_owner = request.user.username == username
-
 
     # Проверка уровня конфиденциальности профиля
     privacy_level = profile.privacy
@@ -121,7 +122,6 @@ def profile_view(request, username):
                 profile_one=profile, profile_two__user=request.user, status__name='Друзья'
             ).exists()
     )
-
 
     friends_profiles = []
 
@@ -157,13 +157,13 @@ def profile_view(request, username):
     friends_profiles = list(set(friends_profiles))
 
     ban_exists_out = (
-            Friendship.objects.filter(
-                profile_one__user=request.user, profile_two=profile, status__name='Заблокирован'
-            ).exists() )
+        Friendship.objects.filter(
+            profile_one__user=request.user, profile_two=profile, status__name='Заблокирован'
+        ).exists())
     ban_exists_in = (
-            Friendship.objects.filter(
-                profile_one=profile, profile_two__user=request.user, status__name='Заблокирован'
-            ).exists()
+        Friendship.objects.filter(
+            profile_one=profile, profile_two__user=request.user, status__name='Заблокирован'
+        ).exists()
     )
 
     # Определяем, есть ли входящий запрос на дружбу
@@ -177,21 +177,20 @@ def profile_view(request, username):
         request.profile_one for request in incoming_friend_requests if request.profile_one
     ]
 
-
     # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
     if privacy_level.name == "Никто" and not is_owner:
         context = {
             'profile': {
                 'firstname': profile.firstname,
                 'lastname': profile.lastname,
-              },
+            },
             'restricted_view': True,  # Вид ограничен
             'is_owner': is_owner,
             'avatar': avatar,
             'friendship_exists': friendship_exists,
             'friend_request_senders': friend_request_senders,
             'incoming_friend_requests': incoming_friend_requests,
-            'ban_exists_out':ban_exists_out,
+            'ban_exists_out': ban_exists_out,
             'ban_exists_in': ban_exists_in,
 
         }
@@ -208,7 +207,7 @@ def profile_view(request, username):
             'friendship_exists': friendship_exists,
             'friend_request_senders': friend_request_senders,
             'incoming_friend_requests': incoming_friend_requests,
-            'ban_exists_out':ban_exists_out,
+            'ban_exists_out': ban_exists_out,
             'ban_exists_in': ban_exists_in,
 
         }
@@ -222,13 +221,12 @@ def profile_view(request, username):
             'friendship_exists': friendship_exists,
             'friend_request_senders': friend_request_senders,
             'incoming_friend_requests': incoming_friend_requests,
-            'ban_exists_out':ban_exists_out,
+            'ban_exists_out': ban_exists_out,
             'ban_exists_in': ban_exists_in,
             'friends_profiles': friends_profiles,
         }
 
     return render(request, 'main/profile.html', context)
-
 
 
 @login_required
@@ -281,6 +279,7 @@ def update_profile(request):
 
     return render(request, 'main/profile_update.html', context)
 
+
 class RegisterUser(FormView):
     template_name = 'main/registration.html'
     form_class = RegistrationForm
@@ -296,7 +295,7 @@ class RegisterUser(FormView):
         Profile.objects.create(
             user=user,
             firstname=user.first_name,  # Из модели User
-            lastname=user.last_name,    # Из модели User
+            lastname=user.last_name,  # Из модели User
         )
 
         # Вход пользователя после регистрации
@@ -307,6 +306,7 @@ class RegisterUser(FormView):
         self.request.session['token'] = token.key
 
         return super().form_valid(form)
+
 
 class UserPasswordChange(PasswordChangeView):
     form_class = UserPasswordChangeForm
@@ -343,12 +343,14 @@ class LogoutUser(View):
         logout(request)
         # request.session.flush()
         messages.success(request, 'Вы успешно вышли из системы!')
+
         return redirect('home')
 
 
 def profile_list(request):
     # Создаем экземпляр фильтра с использованием GET параметров
-    profile_filter = ProfileFilter(request.GET, queryset=Profile.objects.select_related('user').prefetch_related('media_files'))
+    profile_filter = ProfileFilter(request.GET,
+                                   queryset=Profile.objects.select_related('user').prefetch_related('media_files'))
 
     # Получаем отфильтрованные профили
     profile_items = profile_filter.qs
@@ -366,6 +368,7 @@ def profile_list(request):
     }
 
     return render(request, 'main/profile_list.html', context)
+
 
 @login_required
 def news_list(request):
@@ -446,6 +449,7 @@ def news_detail(request, pk):
 
     return render(request, 'main/news_detail.html', context)
 
+
 @login_required
 def news_create(request):
     if request.method == 'POST':
@@ -505,8 +509,6 @@ def news_delete(request, pk):
     news_item.delete()
     messages.success(request, 'Новость успешно удалена!')
     return redirect('home')
-
-
 
 
 @csrf_exempt
@@ -573,7 +575,6 @@ def reaction_toggle(request):
     return JsonResponse({'error': 'Неверный запрос.'}, status=400)
 
 
-
 def add_comment(request, news_id):
     if request.method == 'POST':
         text = request.POST.get('text')
@@ -594,6 +595,7 @@ def add_comment(request, news_id):
         })
 
         return JsonResponse({'comments_html': comments_html})
+
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -619,6 +621,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
         except Profile.DoesNotExist:
             return Response({'detail': 'Профиль пользователя не найден'}, status=status.HTTP_404_NOT_FOUND)
+
     @action(detail=False, methods=['get'])
     def get_reccomended_friends(self, request):
         try:
@@ -626,8 +629,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
             user_interests = profile.interests.values_list('id', flat=True)
 
             recomended_profiles = Profile.objects.exclude(id=profile.id).annotate(
-            interests_count=Count('interests', filter=Q(interests__in=user_interests))
-            .order_by('-interests_count')
+                interests_count=Count('interests', filter=Q(interests__in=user_interests))
+                .order_by('-interests_count')
             )
 
             serializer = self.get_serializer(recomended_profiles, many=True)
@@ -665,7 +668,8 @@ class GroupViewSet(viewsets.ModelViewSet):
     def invite(self, request, pk):
         group = get_object_or_404(Group, pk=pk)
         if request.user.profile != group.creator:
-            return Response({'detail': 'Только создатель группы может отправлять приглашения'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'detail': 'Только создатель группы может отправлять приглашения'},
+                            status=status.HTTP_403_FORBIDDEN)
 
         invited_ids = request.data.get('profile_ids', [])
         if not invited_ids:
@@ -675,9 +679,10 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         for profile in invited_profiles:
             Notification.objects.create(profile=profile, notification_type=Notification.GROUP_INVITE,
-                content=f"Вы получили инвайт в группу'{group.name}'")
+                                        content=f"Вы получили инвайт в группу'{group.name}'")
 
         return Response(f'Инвайт отправлен {len(invited_profiles)} пользователям')
+
 
 class FriendshipViewSet(viewsets.ModelViewSet):
     queryset = Friendship.objects.all()
@@ -701,7 +706,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
                  Q(profile_one=profile_two, profile_two=profile_one)) &
                 ~Q(status__name='Заблокирован')  # Добавим условие, чтобы не учитывать заблокированные
         ).exists():
-            return JsonResponse({'detail': 'Вы уже друзья или запрос уже отправлен'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'detail': 'Вы уже друзья или запрос уже отправлен'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
         friendship_status = FriendshipStatus.objects.get(name='Отправлен запрос')
         friendship = Friendship.objects.create(profile_one=profile_one, profile_two=profile_two,
@@ -736,7 +742,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         profile_one = request.user.profile
         profile_two = Profile.objects.get(id=pk)
 
-               # Проверяем наличие дружбы или запроса на дружбу
+        # Проверяем наличие дружбы или запроса на дружбу
         existing_friendship = Friendship.objects.filter(
             (Q(profile_one=profile_one, profile_two=profile_two) |
              Q(profile_one=profile_two, profile_two=profile_one)) &
@@ -796,7 +802,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     def delete_friendship(self, request, pk):
         profile_2 = get_object_or_404(Profile, id=pk)
 
-
         # Определяем, есть ли дружба между текущим пользователем и владельцем профиля
         friendship_exists = (
                 Friendship.objects.filter(
@@ -827,12 +832,13 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         else:
             return JsonResponse({'detail': 'Дружба не существует или уже удалена.'}, status=status.HTTP_400_BAD_REQUEST)
 
-
     @action(detail=False, methods=['get'], url_path='list-requests', url_name='list-requests')
     def list_requests(self, request):
         profile = request.user.profile
         incoming_friend_requests = Friendship.objects.filter(profile_two=profile, status__name='Отправлен запрос')
-        return render(request, 'main/partials_friend_requests.html', {'incoming_friend_requests': incoming_friend_requests})
+        return render(request, 'main/partials_friend_requests.html',
+                      {'incoming_friend_requests': incoming_friend_requests})
+
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all().order_by('-timestamp')
@@ -889,6 +895,8 @@ class UserMailView(LoginRequiredMixin, ListView):
         context['sent_messages'] = Mail.objects.filter(sender=user_profile)
         context['received_messages'] = Mail.objects.filter(recipient=user_profile)
         return context
+
+
 def mark_as_read(request):
     if request.method == 'POST':
         mail_id = request.POST.get('mail_id')
@@ -898,6 +906,8 @@ def mark_as_read(request):
                 mail.is_read = True
                 mail.save()
     return redirect('mailbox')
+
+
 @login_required
 def friends_list_api(request):
     user_profile = request.user.profile
@@ -954,7 +964,6 @@ def send_friend_request(request, username):
     return redirect("profile", username=username)
 
 
-
 class FriendshipListView(LoginRequiredMixin, ListView):
     model = Friendship
     template_name = 'friendship_list.html'
@@ -1008,6 +1017,7 @@ class FriendshipDeleteView(LoginRequiredMixin, DeleteView, UserPassesTestMixin):
         friendship = self.get_object()
         return friendship.profile_one == self.request.user.profile or friendship.profile_two == self.request.user.profile
 
+
 @login_required
 def accept_friendship(request, pk):
     friendship = get_object_or_404(Friendship, pk=pk)
@@ -1019,6 +1029,7 @@ def accept_friendship(request, pk):
         messages.error(request, 'Вы не можете принять этот запрос.')
     return redirect('friendship-list')
 
+
 @login_required
 def reject_friendship(request, pk):
     friendship = get_object_or_404(Friendship, pk=pk)
@@ -1028,6 +1039,7 @@ def reject_friendship(request, pk):
     else:
         messages.error(request, 'Вы не можете отклонить этот запрос.')
     return redirect('friendship-list')
+
 
 @login_required
 def block_friendship(request, pk):
@@ -1039,6 +1051,7 @@ def block_friendship(request, pk):
     else:
         messages.error(request, 'Ошибка блокировки.')
     return redirect('friendship-list')
+
 
 @login_required
 def unblock_friendship(request, pk):
@@ -1052,16 +1065,25 @@ def unblock_friendship(request, pk):
     return redirect('friendship-list')
 
 
-class GroupListView(ListView):
+class GroupListView(LoginRequiredMixin, ListView):
     model = Group
     template_name = 'main/group_list.html'
     context_object_name = 'groups'
 
     def get_queryset(self):
         search_term = self.request.GET.get('search_term', None)
-        queryset = Group.objects.all().order_by('-name')
+        user_profile = self.request.user.profile
+
+        # Основной запрос, исключающий секретные группы, в которые пользователь не входит
+        queryset = Group.objects.all().order_by('-name').exclude(
+            group_type=Group.SECRET,
+            members__profile=user_profile
+        )
+
+        # Применение фильтра по названию группы, если указан поисковый запрос
         if search_term:
             queryset = queryset.filter(name__icontains=search_term)
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -1077,25 +1099,56 @@ class GroupListView(ListView):
         # Заменяем queryset на отфильтрованный
         context['groups'] = filterset.qs
 
-        # data = [
-        #     {
-        #         'id': item.id,
-        #         'title': item.title,
-        #         'image': request.build_absolute_uri(item.image.url) if item.image else ''
-        #     }
-        #     for item in news_items
-        # ]
-
         return context
 
-class GroupDetailView(DetailView):
-    model = Group
-    template_name = 'group/group_detail.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['is_member'] = self.object.members.filter(profile=self.request.user.profile).exists() # Check if user is a member
-        return context
+# class GroupDetailView(DetailView):
+#     model = Group
+#     template_name = 'group/group_detail.html'
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['is_member'] = self.object.members.filter(profile=self.request.user.profile).exists() # Check if user is a member
+#         return context
+
+def GroupDetailView(request, pk):
+    '''Просмотр профиля группы'''
+
+    # Получение профиля группы
+    group = get_object_or_404(Group, id=pk)
+
+    # Получение профиля текущего пользователя
+    profile = get_object_or_404(Profile, user=request.user)
+
+    # Проверяем, является ли текущий пользователь создателем группы
+    is_creator = group.creator == profile
+
+    # Определяем список участников группы и выбираем профили с именем пользователя их аватары
+    group_members = (
+        GroupMembership.objects.filter(group=group)
+        .select_related('profile__user')
+        .prefetch_related(
+            Prefetch(
+                'profile__media_files',
+                queryset=Mediafile.objects.filter(file_type='avatar'),
+                to_attr='avatars'
+            )
+        )
+    )
+
+    # Проверяем, является ли группа публичной
+    public_group = group.group_type == Group.PUBLIC
+    secret_group = group.group_type == Group.SECRET
+
+    context = {
+        'group': group,
+        'is_creator': is_creator,
+        'group_members': group_members,
+        'public_group': public_group,
+        'secret_group': secret_group,
+    }
+
+    return render(request, 'main/group_detail.html', context)
 
 @login_required
 def join_group(request, pk):
@@ -1135,9 +1188,10 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
         GroupMembership.objects.create(
             profile=self.request.user.profile,
             group=group,
-            status=Status.objects.get(name='admin') # Set the creator as admin
+            status=Status.objects.get(name='admin')  # Set the creator as admin
         )
         return super().form_valid(form)
+
 
 class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Group
@@ -1147,6 +1201,7 @@ class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         group = self.get_object()
         return group.creator == self.request.user.profile
+
 
 class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Group
@@ -1193,4 +1248,3 @@ def accept_friend_request(request, username):
 
     messages.success(request, 'Запрос на дружбу принят.')
     return redirect('profile_detail', username=username)
-

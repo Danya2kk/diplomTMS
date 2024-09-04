@@ -133,6 +133,9 @@ class Group(models.Model):
     creator = models.ForeignKey(Profile, on_delete=models.CASCADE)
     rules = models.TextField(blank=True)
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class Status(models.Model):
     ADMIN = 'admin'
@@ -145,7 +148,7 @@ class Status(models.Model):
     name = models.CharField(max_length=20, choices=STATUS_CHOICES, default=USER)
 
     def __str__(self):
-        return dict(self.STATUS_CHOICES).get(self.name, self.name)
+        return f'{self.name} '
 
 
 class GroupMembership(models.Model):
@@ -156,6 +159,9 @@ class GroupMembership(models.Model):
 
     class Meta:
         unique_together = ('profile', 'group')
+
+    def __str__(self):
+        return f'{self.profile} {self.group} {self.status} {self.joined_at}'
 
 
 class Tag(models.Model):
@@ -172,6 +178,9 @@ class News(models.Model):
     profile = models.ForeignKey(Profile, related_name='news_posts', on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag, related_name='news_posts', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
 
 
 class Comment(models.Model):

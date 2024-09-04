@@ -1,91 +1,69 @@
 {% extends 'main/layout.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block content %}
+<h2 class="Auth_title">Группа {{ group.name }} </h2>
 <div class="news-detail-container">
+
     <section class="news-detail-content">
         <!-- Содержимое профиля: изображение, описание,  -->
-        {% if avatar and avatar.file %}
-            <img src="{{ avatar.file.url }}" alt="Avatar" class="news-inner-image">
-        {% else %}
-            <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
-        {% endif %}
+         <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="news-inner-image">
         <div class="news-detail-text">
-            <p>{{ profile.firstname }} {{ profile.lastname }}</p>
-            {% if ban_exists_in %}
-                 <p>Данные скрыты. Пользователь Вас заблокировал</p>
-            {% else %}
-                {% if restricted_view %}
-                    <p>Пользователь скрыл информацию о себе</p>
-                {% else %}
-                    <p>Возраст: {{ profile.age }}</p>
-                    <p>Пол: {{ profile.gender }}</p>
-                    <p>Местоположение: {{ profile.location }}</p>
-                    <p>Ссылка: <a href="{{ profile.link }}">{{ profile.link }}</a></p>
-                    <p>Настройки: {{ profile.settings }}</p>
-                    <p>Интересы: {{ profile.interests.all|join:", " }}</p>
-                {% endif %}
-            {% endif %}
+            <p>Название группы: {{ group.name }} </p>
+            <p>Описание группы {{ group.description }} </p>
+            <p>Тип группы: {{ group.group_type }} </p>
+            <p>Основатель: {{ group.creator }}</p>
+            <p>Правила группы: {{ group.rules }}</p>
         </div>
         <div class="news-detail-text">
-            {% if is_owner %}
-                <p>Уровень приватности:</p> <p>{{ profile.privacy.name }}: {{ profile.privacy.description }}</p>
-            {% endif %}
             <div class="separator-line"></div>
-            {% if is_owner %}
+            {% if is_creator %}
                 <div class="news-reaction-block">
-                     <a class="btn-news" href="{% url 'update-profile' %}">Редактировать</a>
+                     <a class="btn-news" href="{% url 'update-profile' %}">Редактировать группу</a>
                 </div>
             {% else %}
+                {% if public_group %}
                 <div class="news-reaction-block">
-                     <a class="btn-news" href="{% url 'update-profile' %}">Отправить сообщение</a>
-
-                    {% if friendship_exists %}
-                        <p>Этот человек Ваш друг!</p>
-                        <button type="button" class="btn-news delete-friend" data-url="{% url 'friendship-delete-friend' profile.id %}">
-                            Удалить из друзей
-                        </button>
+                     <a class="btn-news" href="{% url 'update-profile' %}">Вступить в группу</a>
+                 {% else %}
+                    {% if secret_group%}
                     {% else %}
-                     <button class="btn-news" id="send-friend-request" data-profile-id="{{ profile.id }}">Предложить дружбу</button>
+                     <p>Группа закрытая. По вопросу вступления в группу обратитесь к администратору</p>
                     {% endif %}
-                    {% if ban_exists_out %}
-                         <p>Пользователь Вами заблокирован</p>
-                     <button type="button" class="btn-news unblock-people" data-url="{% url 'friendship-unblock-people' profile.id %}">
-                            Разблокировать
-                        </button>
-                    {% else %}
-                    <button type="button" class="btn-news block-people" data-url="{% url 'friendship-block-people' profile.id %}">
-                            Заблокировать пользователя
-                        </button>
-                    {% endif %}
+                 {% endif %}
                 </div>
             {% endif %}
+
+
         </div>
     </section>
 </div>
 
 <div class="news-detail-container2">
-       <p class="btn-comment-news">Список друзей:</p>
+       <p class="btn-comment-news">Список участников группы:</p>
 
-    {% if friends_profiles %}
-        {% for friend in friends_profiles %}
-            {% if friend.avatars %}
-                        <a href="{% url 'profile' friend.user.username %}">
-                            <<img src="{{ friend.avatars.0.file.url }}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
-                        </a>
-             {% else %}
-                        <a href="{% url 'profile' friend.user.username %}">
-                             <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
-                        </a>
-             {% endif %}
-            <a class="profile-name" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
-        {% endfor %}
+    {% if group_members %}
+            {% for group_member in group_members %}
+                <p>{{ group_member.status.name }}</p>
+                {% if group_member.profile.avatars %}
+                    <a href="{% url 'profile' group_member.profile.user.username %}">
+                        <img src="{{ group_member.profile.avatars.0.file.url }}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
+                    </a>
+                {% else %}
+                    <a href="{% url 'profile' group_member.profile.user.username %}">
+                        <img src="{% static 'images/nophoto.jpg' %}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
+                    </a>
+                {% endif %}
+                <a class="profile-name" href="{% url 'profile' group_member.profile.user.username %}">{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}</a>
+                {% if is_creator and group_member.status.name != 'admin' %}
+                    <a class="btn-news" href="{% url 'update-profile' %}">Исключить</a>
+                {% endif %}
+
+            {% endfor %}
+
     {% else %}
-         {% if is_owner %}
-                 <p>У вас нет друзей!</p>
-         {% else %}
-                <p>Друзей нет</p>
-        {% endif %}
+        <p>В группе пока нет людей</p>
     {% endif %}
 </div>
 

@@ -5,10 +5,15 @@
 {% block content %}
 <h2 class="Auth_title">Список групп  </h2>
 
+
 <div  class="profile-container-wrapper">
 
 <div class="profile-container-list">
     <div class="filters-list">
+        <h3 class="Auth_title"> Работа с группами </h3>
+        <div class="news-reaction-block center-text">
+                     <a class="btn-news" href="{% url 'update-profile' %}">Создать группу</a>
+        </div>
         <h3 class="Auth_title"> Фильтры </h3>
         <form method="get" action="{% url 'groups_list' %}">
             {{ filterset.form.as_p }}
@@ -23,7 +28,7 @@
                 <!-- Левый блок с аватаром и именем -->
                     <div class="profile-detail-left">
                               <a href="{% url 'group' group.id %}">
-                                <img src="{{ MEDIA_URL }}{{ group.photo }}" alt="{{ group.name }}" class="news-inner-image">
+                                <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="news-inner-image">
                             </a>
 
                             <div class="profile-detail-left">

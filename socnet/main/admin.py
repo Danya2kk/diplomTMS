@@ -1,12 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Mediafile, Comment, FriendshipStatus, Friendship, Group, Mail, Chat
+from .models import Mediafile, Comment, FriendshipStatus, Friendship, Group, Mail, Chat, GroupMembership, Status
 from .models import User, Profile, News, Tag, PrivacyLevel, Interest
-
-
-
-
-
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -38,3 +33,7 @@ admin.site.register(Group)
 
 admin.site.register(Chat)
 admin.site.register(Mail)
+
+admin.site.register(GroupMembership)
+
+admin.site.register(Status)
