@@ -39,6 +39,7 @@ urlpatterns = [
     path('news/<int:news_id>/add_comment/', views.add_comment, name='add_comment'),
     path('groups_list/', views.GroupListView.as_view(), name='groups_list'),
     path('group/<int:pk>', views.GroupDetailView, name='group'),
+    path('groups/invite/<str:username>/<int:pk>/', views.GroupInvite, name='group_invite'),
     # path('<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
@@ -46,6 +47,9 @@ urlpatterns = [
     path('send-message/', views.SendMailView.as_view(), name='send_message'),
     path('mailbox/', views.UserMailView.as_view(), name='mailbox'),
     path('mark-as-read/', views.mark_as_read, name='mark_as_read'),
+    path('update_status/', views.update_status, name='update_status'),
+
+
 
 
     path('', include(router.urls)),

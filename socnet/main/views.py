@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import JsonResponse, Http404
 from django.contrib.contenttypes.models import ContentType
 
@@ -11,7 +12,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib import messages
 from .models import Group, GroupMembership, Status
 from .forms import GroupCreateForm, GroupUpdateForm, GroupSearchForm
-
+from django.utils import timezone
 from django.shortcuts import render, redirect
 from django.views import View
 from .forms import RegistrationForm, LoginForm
@@ -64,10 +65,10 @@ from django.views.generic import ListView
 
 # Create your views here.
 
-def get_messages(request):
-    # Получаем сообщения
-    messages_list = [{'message': message.message, 'level': message.level_tag} for message in messages.get_messages(request)]
-    return JsonResponse({'messages': messages_list})
+# def get_messages(request):
+#     # Получаем сообщения
+#     messages_list = [{'message': message.message, 'level': message.level_tag} for message in messages.get_messages(request)]
+#     return JsonResponse({'messages': messages_list})
 
 def index(request):
     context = {
@@ -177,6 +178,11 @@ def profile_view(request, username):
         request.profile_one for request in incoming_friend_requests if request.profile_one
     ]
 
+    try:
+        is_status = StatusProfile.objects.get(profile=profile)
+    except StatusProfile.DoesNotExist:
+        is_status = None
+
     # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
     if privacy_level.name == "Никто" and not is_owner:
         context = {
@@ -192,6 +198,7 @@ def profile_view(request, username):
             'incoming_friend_requests': incoming_friend_requests,
             'ban_exists_out': ban_exists_out,
             'ban_exists_in': ban_exists_in,
+            'is_status': is_status,
 
         }
     elif privacy_level.name == "Только друзья" and not friendship_exists and not is_owner:
@@ -209,6 +216,7 @@ def profile_view(request, username):
             'incoming_friend_requests': incoming_friend_requests,
             'ban_exists_out': ban_exists_out,
             'ban_exists_in': ban_exists_in,
+            'is_status': is_status,
 
         }
     else:
@@ -224,6 +232,7 @@ def profile_view(request, username):
             'ban_exists_out': ban_exists_out,
             'ban_exists_in': ban_exists_in,
             'friends_profiles': friends_profiles,
+            'is_status': is_status,
         }
 
     return render(request, 'main/profile.html', context)
@@ -285,6 +294,7 @@ class RegisterUser(FormView):
     form_class = RegistrationForm
     success_url = '/'
 
+    @transaction.atomic
     def form_valid(self, form):
         # Сохранение пользователя
         user = form.save(commit=False)
@@ -292,10 +302,19 @@ class RegisterUser(FormView):
         user.save()
 
         # Создание профиля для нового пользователя с обязательными полями
-        Profile.objects.create(
+        profile = Profile.objects.create(
             user=user,
             firstname=user.first_name,  # Из модели User
             lastname=user.last_name,  # Из модели User
+        )
+
+        # Создание записи в StatusProfile
+        StatusProfile.objects.create(
+            profile=profile,  # Используем только что созданный профиль
+            is_online=True,
+            is_busy=False,
+            do_not_disturb=False,
+            last_updated=timezone.now()
         )
 
         # Вход пользователя после регистрации
@@ -307,6 +326,39 @@ class RegisterUser(FormView):
 
         return super().form_valid(form)
 
+
+@login_required
+@require_POST
+def update_status(request):
+    # Получаем данные из AJAX-запроса
+    status_type = request.POST.get('status_type')
+    status_value = request.POST.get('status_value') == 'true'
+
+    try:
+        # Пытаемся получить статус профиля пользователя
+        status_profile = StatusProfile.objects.get(profile=request.user.profile)
+    except StatusProfile.DoesNotExist:
+        # Если статус профиля не существует, создаем его
+        status_profile = StatusProfile.objects.create(
+            profile=request.user.profile,
+            is_online=True,
+            is_busy=False,
+            do_not_disturb=False,
+            last_updated=timezone.now()
+        )
+
+    # Обновляем только измененный статус
+    if status_type == 'is_busy':
+        status_profile.is_busy = status_value
+    elif status_type == 'do_not_disturb':
+        status_profile.do_not_disturb = status_value
+
+    # Обновляем поле last_updated и сохраняем объект
+    status_profile.last_updated = timezone.now()
+    status_profile.save()
+
+    # Возвращаем успешный ответ
+    return JsonResponse({'success': True, 'status_type': status_type, 'status_value': status_value})
 
 class UserPasswordChange(PasswordChangeView):
     form_class = UserPasswordChangeForm
@@ -1149,6 +1201,45 @@ def GroupDetailView(request, pk):
     }
 
     return render(request, 'main/group_detail.html', context)
+
+
+@csrf_exempt
+def GroupInvite(request, username, pk):
+
+    if request.method != 'POST':
+        return JsonResponse({'detail': 'Метод не разрешен'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    group = get_object_or_404(Group, id=pk)
+    profile = get_object_or_404(Profile, user__username=username)
+
+    # Проверка, является ли пользователь членом группы
+    if_member = GroupMembership.objects.filter(profile=profile, group=group).exists()
+
+    # Получение статуса профиля. Если нет, возвращаем False.
+    status_profile = StatusProfile.objects.filter(profile=profile).first()
+
+    if status_profile:
+        if status_profile.do_not_disturb:
+            return JsonResponse({'detail': 'Пользователя пригласить нельзя. У него стоит статус не беспокоить'},
+                                status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # Если статус не найден, можно назначить его значение по умолчанию
+        status_profile = None  # или используйте другое значение по умолчанию
+
+    # Получение объекта Status (по id 1 User)
+    status_instance = get_object_or_404(Status, id=1)
+
+    if if_member:
+        return JsonResponse({'detail': 'Данный пользователь уже в Вашей группе.'}, status=status.HTTP_200_OK)
+    else:
+        GroupMembership.objects.create(
+            profile=profile,
+            group=group,
+            status=status_instance,  # Передаем объект Status
+        )
+        return JsonResponse({'detail': 'Приглашение в группу успешно отправлено.'}, status=status.HTTP_200_OK)
+
+
 
 @login_required
 def join_group(request, pk):

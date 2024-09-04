@@ -22,6 +22,21 @@
                 <div class="news-reaction-block">
                      <a class="btn-news" href="{% url 'update-profile' %}">Редактировать группу</a>
                 </div>
+                <div class="news-reaction-block">
+                     <button type="button" id="invite-to-group-btn" class="btn-news">
+                            Пригласить в группу
+                     </button>
+
+                        <!-- Модальное окно -->
+                        <div id="invite-modal" class="popup">
+                            <div class="popup-content">
+                                <span class="close">&times;</span>
+                                <h2>Пригласить пользователя в группу</h2>
+                                <input type="text" id="username-input" placeholder="Введите username того кого хотите пригласить в группу">
+                                <button id="send-invite-btn" class="btn-news">Отправить приглашение</button>
+                            </div>
+                        </div>
+                </div>
             {% else %}
                 {% if public_group %}
                 <div class="news-reaction-block">
@@ -67,50 +82,64 @@
     {% endif %}
 </div>
 
-<section class="news-detail-content">
-
-    {% if is_owner %}
-    <div class="comments-wrapper">
-        <button id="toggle-comments-btn" class="btn-comment-news">Показать запросы в друзья</button>
-
-
-    <div id="comments-section" class="comments-section">
-
-                {% if incoming_friend_requests %}
-                    <div class="friend-requests">
-                        <ul>
-                            {% for request in incoming_friend_requests %}
-                                <li class="no-markers">
-
-                                    <div class="news-reaction-block">
-                                        <a class="profile-name" href="{% url 'profile' request.profile_one.user.username %}"> {{ request.profile_one.firstname }} {{ request.profile_one.lastname }} </a>
-
-                                         <button type="button" class="btn-news accept-request" data-url="{% url 'friendship-accept-request' request.id %}">
-                                                 Принять
-                                        </button>
-
-                                    </form>
-                                        <button type="button" class="btn-news deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
-                                                 Отклонить запрос
-                                        </button>
-                                    </div>
-
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% else %}
-                    <p>Запросов на дружбу пока нет!</p>
-                {% endif %}
-
-     </div>
-
-    </div>
-
-    {% endif %}
-</section>
 <script src="{% static 'js/popup.js' %}"></script>
 <script>
+
+    $(document).ready(function() {
+    // Открытие модального окна
+    $('#invite-to-group-btn').click(function() {
+        $('#invite-modal').removeClass('fade-out').addClass('fade-in').show();
+    });
+
+    // Закрытие модального окна
+    $('.close').click(function() {
+        $('#invite-modal').removeClass('fade-in').addClass('fade-out');
+        setTimeout(() => $('#invite-modal').hide(), 500); // Задержка для плавного исчезновения
+    });
+
+    // Закрытие модального окна при клике вне его
+    $(window).click(function(event) {
+        if ($(event.target).is('#invite-modal')) {
+            $('.close').click(); // Используем обработчик для закрытия
+        }
+    });
+
+    // Обработка отправки приглашения
+    $('#send-invite-btn').click(function() {
+        var username = $('#username-input').val().trim();
+        var groupId = {{ group.id }}; // Вставьте ID группы
+
+        if (username === '') {
+            showAjaxPopup('Пожалуйста, введите имя пользователя.');
+            return;
+        }
+
+        var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch(`/groups/invite/${username}/${groupId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            showAjaxPopup(data.detail);
+            if (data.status === 200) {
+                $('#invite-modal').removeClass('fade-in').addClass('fade-out');
+                setTimeout(() => $('#invite-modal').hide(), 500); // Задержка для плавного исчезновения
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxPopup('Произошла ошибка. Проверьте консоль для подробностей.');
+        });
+    });
+});
+
+
 $(document).ready(function() {
     // Функция для установки ширины comments-wrapper и кнопки
     function adjustContentWidth() {

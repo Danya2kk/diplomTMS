@@ -74,6 +74,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    # Наше middleware
+    'main.middleware.UserActivityMiddleware',
 
 ]
 
@@ -211,6 +213,10 @@ CELERY_BEAT_SCHEDULE = {
     'clean-mail-every-six-months': {
         'task': 'socnet.tasks.clean_mail',
         'schedule': crontab(0, 0, day_of_month='1', month_of_year='*/6'),  # 1-го числа каждые 6 месяцев
+    },
+    'update-online-status-every-5-minutes': {
+        'task': 'your_app_name.tasks.update_online_status',
+        'schedule': crontab(minute='*/5'),  # Выполнять каждые 5 минут
     },
 }
 

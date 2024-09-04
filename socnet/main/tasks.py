@@ -1,5 +1,5 @@
 from celery import shared_task
-from .models import Mail, Chat, ArchivedMail, ArchiveChat
+from .models import Mail, Chat, ArchivedMail, ArchiveChat, StatusProfile
 from django.utils import timezone
 from datetime import timedelta
 
@@ -47,3 +47,14 @@ def clean_mail():
             is_deleted_sender=mail.is_deleted_sender
         )
     mails_to_delete.delete()
+
+@shared_task
+def update_online_status():
+    # Определяем пороговое время для определения, что пользователь неактивен
+    time_threshold = timezone.now() - timedelta(minutes=5)
+
+    # Фильтруем профили, где last_updated старше порогового времени
+    profiles_to_update = StatusProfile.objects.filter(last_updated__lt=time_threshold, is_online=True)
+
+    # Обновляем статус is_online на False для этих профилей
+    profiles_to_update.update(is_online=False)
