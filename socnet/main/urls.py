@@ -40,6 +40,11 @@ urlpatterns = [
     path('groups_list/', views.GroupListView.as_view(), name='groups_list'),
     path('group/<int:pk>', views.GroupDetailView, name='group'),
     path('groups/invite/<str:username>/<int:pk>/', views.GroupInvite, name='group_invite'),
+    path('groups/join/<int:pk>/', views.join_group, name='group_join'),
+    path('groups/group_leave/<int:pk>/', views.leave_group, name='group_leave'),
+    path('groups/group_kik/<str:username>/<int:pk>/', views.kik_group, name='group_kik'),
+    path('groups/group_create/', views.GroupCreateView.as_view(), name='group_create'),
+
     # path('<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),

@@ -1,25 +1,26 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Функция для отображения AJAX сообщений
-    function showAjaxPopup(message) {
-        const popup = document.getElementById('ajax-popup');
-        const popupMessage = document.getElementById('ajax-popup-message');
+console.log("popup.js загружен");
 
-        if (popup && popupMessage) {
-            popupMessage.textContent = message;
-            popup.style.display = 'block'; // Показываем окно
+function showAjaxPopup(message) {
+    const popup = document.getElementById('ajax-popup');
+    const popupMessage = document.getElementById('ajax-popup-message');
 
+    if (popup && popupMessage) {
+        popupMessage.textContent = message;
+        popup.style.display = 'block'; // Показываем окно
+
+        setTimeout(() => {
+            popup.style.opacity = 1; // Показать плавно
             setTimeout(() => {
-                popup.style.opacity = 1; // Показать плавно
+                popup.style.opacity = 0; // Скрыть плавно
                 setTimeout(() => {
-                    popup.style.opacity = 0; // Скрыть плавно
-                    setTimeout(() => {
-                        popup.style.display = 'none'; // Прячем полностью
-                    }, 500);
-                }, 3000);
-            }, 100);
-        }
+                    popup.style.display = 'none'; // Прячем полностью
+                }, 500);
+            }, 3000);
+        }, 100);
     }
+}
 
+document.addEventListener('DOMContentLoaded', function() {
     // Получаем все сообщения из блока
     const djangoMessagesContainer = document.getElementById('django-messages');
     if (djangoMessagesContainer) {

@@ -18,6 +18,9 @@
         </div>
         <div class="news-detail-text">
             <div class="separator-line"></div>
+            <div class="news-reaction-block">
+                     <a class="btn-news" href="{% url 'update-profile' %}">Чат группы</a>
+                </div>
             {% if is_creator %}
                 <div class="news-reaction-block">
                      <a class="btn-news" href="{% url 'update-profile' %}">Редактировать группу</a>
@@ -32,20 +35,27 @@
                             <div class="popup-content">
                                 <span class="close">&times;</span>
                                 <h2>Пригласить пользователя в группу</h2>
-                                <input type="text" id="username-input" placeholder="Введите username того кого хотите пригласить в группу">
+                                <input type="text_group" id="username-input" placeholder="Введите username того кого хотите пригласить в группу">
                                 <button id="send-invite-btn" class="btn-news">Отправить приглашение</button>
                             </div>
                         </div>
                 </div>
             {% else %}
-                {% if public_group %}
-                <div class="news-reaction-block">
-                     <a class="btn-news" href="{% url 'update-profile' %}">Вступить в группу</a>
+               {% if not is_member %}
+                           {% if public_group %}
+                                <div class="news-reaction-block">
+                                    <button id="join-group-btn" class="btn-news">Вступить в группу</button>
+                                 {% else %}
+                                    {% if secret_group%}
+                                     <p>Группа секретная. Как вы это видите- понятия не имею!</p>
+                                    {% else %}
+                                   <p>Группа закрытая. По вопросу вступления в группу обратитесь к администратору</p>
+                                    {% endif %}
+                           {% endif %}
                  {% else %}
-                    {% if secret_group%}
-                    {% else %}
-                     <p>Группа закрытая. По вопросу вступления в группу обратитесь к администратору</p>
-                    {% endif %}
+                                    <div class="news-reaction-block">
+                                             <button id="leave-group-btn" class="btn-news">Выйти из группы</button>
+                                     </div>
                  {% endif %}
                 </div>
             {% endif %}
@@ -56,91 +66,49 @@
 </div>
 
 <div class="news-detail-container2">
-       <p class="btn-comment-news">Список участников группы:</p>
+    <p class="btn-comment-news">Список участников группы:</p>
 
     {% if group_members %}
+        <div class="group-members-container">
             {% for group_member in group_members %}
-                <p>{{ group_member.status.name }}</p>
-                {% if group_member.profile.avatars %}
-                    <a href="{% url 'profile' group_member.profile.user.username %}">
-                        <img src="{{ group_member.profile.avatars.0.file.url }}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
-                    </a>
-                {% else %}
-                    <a href="{% url 'profile' group_member.profile.user.username %}">
-                        <img src="{% static 'images/nophoto.jpg' %}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
-                    </a>
-                {% endif %}
-                <a class="profile-name" href="{% url 'profile' group_member.profile.user.username %}">{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}</a>
-                {% if is_creator and group_member.status.name != 'admin' %}
-                    <a class="btn-news" href="{% url 'update-profile' %}">Исключить</a>
-                {% endif %}
+                <div class="group-member">
+                    <!-- Контейнер для статуса участника -->
+                    <div class="group-member-status">
+                        <p>{{ group_member.status.name }}</p>
+                    </div>
 
+                    <!-- Контейнер для аватара участника -->
+                    <div class="group-member-avatar">
+                        {% if group_member.profile.avatars %}
+                            <a href="{% url 'profile' group_member.profile.user.username %}">
+                                <img src="{{ group_member.profile.avatars.0.file.url }}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
+                            </a>
+                        {% else %}
+                            <a href="{% url 'profile' group_member.profile.user.username %}">
+                                <img src="{% static 'images/nophoto.jpg' %}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Контейнер для имени участника -->
+                    <div class="group-member-name">
+                        <a class="profile-group-name" href="{% url 'profile' group_member.profile.user.username %}">{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}</a>
+                    </div>
+
+                    {% if is_creator and group_member.status.name != 'admin' %}
+                      <button class="kik-group-btn btn-news" data-username="{{ group_member.profile.user.username }}">Исключить</button>
+                    {% endif %}
+                </div>
             {% endfor %}
-
+        </div>
     {% else %}
         <p>В группе пока нет людей</p>
     {% endif %}
 </div>
 
-<script src="{% static 'js/popup.js' %}"></script>
+
 <script>
-
     $(document).ready(function() {
-    // Открытие модального окна
-    $('#invite-to-group-btn').click(function() {
-        $('#invite-modal').removeClass('fade-out').addClass('fade-in').show();
-    });
-
-    // Закрытие модального окна
-    $('.close').click(function() {
-        $('#invite-modal').removeClass('fade-in').addClass('fade-out');
-        setTimeout(() => $('#invite-modal').hide(), 500); // Задержка для плавного исчезновения
-    });
-
-    // Закрытие модального окна при клике вне его
-    $(window).click(function(event) {
-        if ($(event.target).is('#invite-modal')) {
-            $('.close').click(); // Используем обработчик для закрытия
-        }
-    });
-
-    // Обработка отправки приглашения
-    $('#send-invite-btn').click(function() {
-        var username = $('#username-input').val().trim();
-        var groupId = {{ group.id }}; // Вставьте ID группы
-
-        if (username === '') {
-            showAjaxPopup('Пожалуйста, введите имя пользователя.');
-            return;
-        }
-
-        var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        fetch(`/groups/invite/${username}/${groupId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            showAjaxPopup(data.detail);
-            if (data.status === 200) {
-                $('#invite-modal').removeClass('fade-in').addClass('fade-out');
-                setTimeout(() => $('#invite-modal').hide(), 500); // Задержка для плавного исчезновения
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAjaxPopup('Произошла ошибка. Проверьте консоль для подробностей.');
-        });
-    });
-});
-
-
-$(document).ready(function() {
     // Функция для установки ширины comments-wrapper и кнопки
     function adjustContentWidth() {
         // Получаем ширину контейнера .news-detail-content
@@ -360,6 +328,175 @@ $(document).ready(function() {
         });
     });
 });
+
+
+
+
+    // Обработка вступления в группу
+    document.querySelectorAll('.join-group-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            var groupId = {{ group.id }};
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(`/groups/join/${groupId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    })
+
+
+
+    $(document).ready(function() {
+    // Открытие модального окна
+    $('#invite-to-group-btn').click(function() {
+        $('#invite-modal').removeClass('fade-out').addClass('fade-in').show();
+    });
+
+    // Закрытие модального окна
+    $('.close').click(function() {
+        $('#invite-modal').removeClass('fade-in').addClass('fade-out');
+        setTimeout(() => $('#invite-modal').hide(), 500); // Задержка для плавного исчезновения
+    });
+
+    // Закрытие модального окна при клике вне его
+    $(window).click(function(event) {
+        if ($(event.target).is('#invite-modal')) {
+            $('.close').click(); // Используем обработчик для закрытия
+        }
+    });
+
+    // Обработка отправки приглашения
+    $('#send-invite-btn').click(function() {
+        var username = $('#username-input').val().trim();
+        var groupId = {{ group.id }};
+
+        if (username === '') {
+            showAjaxPopup('Пожалуйста, введите имя пользователя.');
+            return;
+        }
+
+        var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch(`/groups/invite/${username}/${groupId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            showAjaxPopup(data.detail);
+            if (data.status === 200) {
+                $('#invite-modal').removeClass('fade-in').addClass('fade-out');
+                setTimeout(() => $('#invite-modal').hide(), 500); // Задержка для плавного исчезновения
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxPopup('Произошла ошибка. Проверьте консоль для подробностей.');
+        });
+    });
+});
+
+
+// Обработка выхода из группы
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const leaveGroupBtn = document.getElementById('leave-group-btn');
+
+    if (leaveGroupBtn) {  // Проверяем, существует ли элемент
+        leaveGroupBtn.addEventListener('click', function() {
+            var groupId = {{ group.id }};
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(`/groups/group_leave/${groupId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000); // Задержка в 2 секунды для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    }
+});
+
+// Обработка исключения из группы
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.kik-group-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                var groupId = {{ group.id }};  // Проверь, доступна ли переменная group.id
+                var username = this.getAttribute('data-username');  // Получаем username из data-атрибута
+                var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                // Проверь, что ты получаешь правильный username и groupId
+                console.log('Username:', username);
+                console.log('Group ID:', groupId);
+
+                fetch(`/groups/group_kik/${username}/${groupId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.detail) {
+                        showAjaxPopup(data.detail);
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000); // Задержка в 2 секунды для отображения сообщения
+                    } else {
+                        showAjaxPopup('Неизвестная ошибка');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error.message);
+                    showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
+                });
+            });
+        });
+    });
 </script>
 
 {% endblock %}

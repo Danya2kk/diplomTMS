@@ -1,0 +1,46 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block content %}
+<h2 class="Auth_title"> Создание группы </h2>
+<div class="news-detail-container">
+
+    <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <section class="news-detail-content2">
+        <div class="news-detail-text">
+             <div class="form-group">
+                <p>{{form.photo.label_tag }}</p>
+                <p>{{ form.photo }}</p>
+
+                  <button type="submit">Создать группу</button>
+            </div>
+        </div>
+       <!-- Содержимое профиля: изображение, описание,  -->
+
+        <div class="news-detail-text">
+             <div class="form-group">
+                <p>{{ form.name.label_tag }}</p>
+                <p> {{ form.name }}</p>
+            </div>
+            <div class="form-group">
+                <p>{{ form.description.label_tag }}</p>
+                <p>{{ form.description }}</p>
+            </div>
+
+            <div class="form-group">
+                <p>{{ form.group_type.label_tag }}</p>
+                <p>{{ form.group_type }}</p>
+            </div>
+
+            <div class="form-group">
+                <p>{{ form.rules.label_tag }}</p>
+                <p>{{ form.rules }}</p>
+            </div>
+
+        </div>
+
+    </section>
+     </form>
+</div>
+{% endblock %}

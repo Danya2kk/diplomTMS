@@ -52,6 +52,30 @@
             {% endif %}
 
             <div class="separator-line"></div>
+
+           <!-- Кнопка для вызова модального окна -->
+                    <button id="inviteBtn" class="btn-news">Пригласить в группу</button>
+
+                    <!-- Модальное окно (скрыто по умолчанию) -->
+                    <div id="inviteModal" class="modal">
+                      <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h2>Выберите группу для приглашения</h2>
+
+                        <!-- Выбор группы -->
+                        <label for="group-select">Группа:</label>
+                        <select id="group-select">
+                          {% for group in is_admin_groups %}
+                            <option value="{{ group.group.id }}" class="btn">{{ group.group.name }}</option>
+                          {% endfor %}
+                        </select>
+
+                        <!-- Кнопка для отправки приглашения -->
+                        <button id="sendInviteBtn" class="btn-news">Отправить приглашение</button>
+                      </div>
+                    </div>
+
+
             {% if is_owner %}
                 <div class="news-reaction-block">
                      <a class="btn-news" href="{% url 'update-profile' %}">Редактировать</a>
@@ -162,8 +186,66 @@
 
     {% endif %}
 </section>
-<script src="{% static 'js/popup.js' %}"></script>
 <script>
+
+    document.getElementById("sendInviteBtn").addEventListener("click", function() {
+    var groupId = document.getElementById("group-select").value;
+    var username = "user";  // Передаем имя пользователя через шаблон
+
+    console.log("Group ID:", groupId);
+    console.log("Username:", username);
+
+    // Закрытие модального окна
+    var modal = document.getElementById("inviteModal");
+    if (modal) {
+        modal.style.display = "none";
+    }
+
+    // Отправляем POST-запрос с username и pk (id группы)
+    fetch(`/groups/invite/${username}/${groupId}/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "pAcmW0AzUBEJuITdT3QXENJoWNjk6z9ph4gqPNzf7gAFeFJdGhf2k8x9ByalmifJ",  // Добавляем CSRF токен
+      },
+      body: JSON.stringify({
+        username: username,
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.detail) {
+            showAjaxPopup(data.detail);
+            setTimeout(() => {
+                location.reload();
+            }, 2000); // Задержка в 2 секунды для отображения сообщения
+        } else {
+            showAjaxPopup('Неизвестная ошибка');
+        }
+    })
+    .catch(error => console.error('Ошибка:', error));
+});
+
+  // Логика открытия/закрытия модального окна
+  var modal = document.getElementById("inviteModal");
+  var btn = document.getElementById("inviteBtn");
+  var span = document.getElementsByClassName("close")[0];
+
+  btn.onclick = function() {
+    modal.style.display = "block";
+  }
+
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+
+
      $(document).ready(function() {
         // Обработчик изменения чекбокса "Занят"
         $('#is_busy_checkbox').change(function() {

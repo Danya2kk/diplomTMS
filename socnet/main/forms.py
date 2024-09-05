@@ -248,18 +248,32 @@ class FriendshipSearchForm(forms.Form):
 
 
 class GroupCreateForm(forms.ModelForm):
+
+    name = forms.CharField(
+        label='Название',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите название группы', 'class': 'form-input'})
+    )
+    description = forms.CharField(
+        label='Описание группы',
+        widget=forms.Textarea(attrs={'placeholder': 'Введите описание группы', 'class': 'form-input'})
+    )
+
+    group_type = forms.CharField(
+        label='Тип группы',
+        choices=Group.GROUP_TYPES,
+        widget=forms.Select(attrs={'class': 'form-checkbox'}),  # Чекбоксы для множественного выбора
+    )
+    photo = forms.ImageField(
+        label='Изображение',  # Метка для поля image
+    )
+
+    rules = forms.CharField(
+        label='Правила группы',
+        widget=forms.Textarea(attrs={'placeholder': 'Укажите правила группы', 'class': 'form-input'})
+    )
     class Meta:
         model = Group
         fields = ['name', 'description', 'photo', 'group_type', 'rules']
-        widgets = {
-            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'rules': forms.Textarea(attrs={'rows': 3}),
-            'group_type': forms.Select(attrs={'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, *kwargs)
-        self.fields['creator'].initial = kwargs.get('user').profile
 
 
 class GroupUpdateForm(forms.ModelForm):

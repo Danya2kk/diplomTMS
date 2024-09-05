@@ -183,6 +183,10 @@ def profile_view(request, username):
     except StatusProfile.DoesNotExist:
         is_status = None
 
+    status_instance = get_object_or_404(Status, id=2)
+
+    is_admin_groups = GroupMembership.objects.filter(profile=request.user.profile, status=status_instance).select_related('group')
+
     # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
     if privacy_level.name == "Никто" and not is_owner:
         context = {
@@ -199,6 +203,8 @@ def profile_view(request, username):
             'ban_exists_out': ban_exists_out,
             'ban_exists_in': ban_exists_in,
             'is_status': is_status,
+            'is_admin_groups': is_admin_groups,
+            'username': username,
 
         }
     elif privacy_level.name == "Только друзья" and not friendship_exists and not is_owner:
@@ -217,6 +223,8 @@ def profile_view(request, username):
             'ban_exists_out': ban_exists_out,
             'ban_exists_in': ban_exists_in,
             'is_status': is_status,
+            'is_admin_groups': is_admin_groups,
+            'username': username,
 
         }
     else:
@@ -233,6 +241,8 @@ def profile_view(request, username):
             'ban_exists_in': ban_exists_in,
             'friends_profiles': friends_profiles,
             'is_status': is_status,
+            'is_admin_groups': is_admin_groups,
+            'username': username,
         }
 
     return render(request, 'main/profile.html', context)
@@ -1175,6 +1185,7 @@ def GroupDetailView(request, pk):
     # Проверяем, является ли текущий пользователь создателем группы
     is_creator = group.creator == profile
 
+
     # Определяем список участников группы и выбираем профили с именем пользователя их аватары
     group_members = (
         GroupMembership.objects.filter(group=group)
@@ -1188,12 +1199,16 @@ def GroupDetailView(request, pk):
         )
     )
 
+    is_member=  GroupMembership.objects.filter(profile=request.user.profile, group=group).exists()
+
+
     # Проверяем, является ли группа публичной
     public_group = group.group_type == Group.PUBLIC
     secret_group = group.group_type == Group.SECRET
 
     context = {
         'group': group,
+        'is_member': is_member,
         'is_creator': is_creator,
         'group_members': group_members,
         'public_group': public_group,
@@ -1240,47 +1255,78 @@ def GroupInvite(request, username, pk):
         return JsonResponse({'detail': 'Приглашение в группу успешно отправлено.'}, status=status.HTTP_200_OK)
 
 
-
 @login_required
 def join_group(request, pk):
+
     group = get_object_or_404(Group, pk=pk)
-    if not group.members.filter(profile=request.user.profile).exists():
+    status_instance = get_object_or_404(Status, id=1)  # 1-User
+
+    if not group.members.filter(profile=request.user.profile, group=group).exists():
         GroupMembership.objects.create(
             profile=request.user.profile,
             group=group,
-            status=Status.objects.get(name='member')
+            status=status_instance
         )
-        messages.success(request, f'Вы присоединились к группе {group.name}.')
+        return JsonResponse({'detail': 'Вы успешно вступили в группу.'}, status=status.HTTP_200_OK)
+
     else:
-        messages.info(request, f'Вы уже являетесь членом группы {group.name}.')
-    return redirect('group-detail', pk=pk)
+        return JsonResponse({'detail': 'Вы уже состоите в этой группе.'}, status=status.HTTP_200_OK)
+
+
+@login_required
+def kik_group(request, username,pk):
+    group = get_object_or_404(Group, pk=pk)
+
+    user = get_object_or_404(User, username=username)
+
+    # Получаем профиль, связанный с пользователем
+    profile = get_object_or_404(Profile, user=user)
+
+    membership = GroupMembership.objects.get(profile=profile, group=group)
+    if membership:
+        membership.delete()
+        return JsonResponse({'detail': f'Вы исключили пользователя {profile.firstname} {profile.lastname} из группы {group.name}.'}, status=status.HTTP_200_OK)
+
+    else:
+        return JsonResponse({'detail': f'Исключение не возможно пользователь {profile.firstname} {profile.lastname} не состоит в группе {group.name}'}, status=status.HTTP_200_OK)
 
 
 @login_required
 def leave_group(request, pk):
     group = get_object_or_404(Group, pk=pk)
-    membership = group.members.filter(profile=request.user.profile).first()
+    membership = GroupMembership.objects.get(profile=request.user.profile, group=group)
     if membership:
         membership.delete()
-        messages.success(request, f'Вы покинули группу {group.name}.')
+        return JsonResponse({'detail': f'Вы покинули группу {group.name}.'}, status=status.HTTP_200_OK)
+
     else:
-        messages.info(request, f'Вы не являетесь членом группы {group.name}.')
-    return redirect('group-detail', pk=pk)
+        return JsonResponse({'detail': f'Вы не можете покинуть группу {group.name}. Т.к в ней не состоите.'}, status=status.HTTP_200_OK)
 
 
 class GroupCreateView(LoginRequiredMixin, CreateView):
     model = Group
     form_class = GroupCreateForm
-    template_name = 'group/group_form.html'
+    template_name = 'main/create_group.html'
 
     def form_valid(self, form):
+        # Проверка, существует ли группа с таким же именем
+        group_name = form.cleaned_data.get('name')
+        if Group.objects.filter(name=group_name).exists():
+            form.add_error('name', 'Группа с таким именем уже существует.')
+            return self.form_invalid(form)
+
+        # Если группа с таким именем не найдена, продолжаем сохранение
         form.instance.creator = self.request.user.profile
         group = form.save()
+
+        # Создаем запись в GroupMembership
+        status_instance = get_object_or_404(Status, id=2)  # 2 - admin
         GroupMembership.objects.create(
             profile=self.request.user.profile,
             group=group,
-            status=Status.objects.get(name='admin')  # Set the creator as admin
+            status=status_instance
         )
+
         return super().form_valid(form)
 
 
