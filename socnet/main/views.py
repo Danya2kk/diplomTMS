@@ -1312,7 +1312,7 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
         # Проверка, существует ли группа с таким же именем
         group_name = form.cleaned_data.get('name')
         if Group.objects.filter(name=group_name).exists():
-            form.add_error('name', 'Группа с таким именем уже существует.')
+            messages.error(self.request, f'Группа с таким именем "{group_name}" уже существует.')
             return self.form_invalid(form)
 
         # Если группа с таким именем не найдена, продолжаем сохранение
@@ -1326,24 +1326,48 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
             group=group,
             status=status_instance
         )
-
+        messages.success(self.request, f'Группа "{group_name}" успешно создана.')
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('groups_list')
 
 
 class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Group
-    form_class = GroupUpdateForm
-    template_name = 'group/group_form.html'
+    form_class = GroupCreateForm
+    template_name = 'main/update_group.html'
+
+    def form_valid(self, form):
+        # Получаем редактируемую группу
+        group = self.get_object()
+        group_name = form.cleaned_data.get('name')
+
+        # Проверяем, существует ли другая группа с таким же именем
+        if Group.objects.filter(name=group_name).exclude(pk=group.pk).exists():
+            messages.error(self.request, f'Группа с таким именем "{group_name}" уже существует.')
+            return self.form_invalid(form)
+
+        # Сохраняем форму
+        response = super().form_valid(form)
+        messages.success(self.request, f'Группа "{group_name}" успешно изменена.')
+        return response
+
+    def get_success_url(self):
+        return reverse('groups_list')
 
     def test_func(self):
-        group = self.get_object()
-        return group.creator == self.request.user.profile
 
+        group = self.get_object()
+        return self.request.user.profile in group.members.all() or self.request.user == group.creator.user
 
 class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Group
-    success_url = '/group/'
     template_name = 'group/group_confirm_delete.html'
+
+    def get_success_url(self):
+        messages.success(self.request, f'Группа успешно удалена.')
+        return reverse('groups_list')
 
     def test_func(self):
         group = self.get_object()

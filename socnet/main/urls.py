@@ -44,6 +44,9 @@ urlpatterns = [
     path('groups/group_leave/<int:pk>/', views.leave_group, name='group_leave'),
     path('groups/group_kik/<str:username>/<int:pk>/', views.kik_group, name='group_kik'),
     path('groups/group_create/', views.GroupCreateView.as_view(), name='group_create'),
+    path('groups/group_update/<int:pk>/', views.GroupUpdateView.as_view(), name='group_update'),
+    path('groups/group_delete/<int:pk>/', views.GroupDeleteView.as_view(), name='group_delete'),
+
 
     # path('<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),

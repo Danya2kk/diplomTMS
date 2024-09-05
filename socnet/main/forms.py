@@ -258,7 +258,7 @@ class GroupCreateForm(forms.ModelForm):
         widget=forms.Textarea(attrs={'placeholder': 'Введите описание группы', 'class': 'form-input'})
     )
 
-    group_type = forms.CharField(
+    group_type = forms.ChoiceField(
         label='Тип группы',
         choices=Group.GROUP_TYPES,
         widget=forms.Select(attrs={'class': 'form-checkbox'}),  # Чекбоксы для множественного выбора

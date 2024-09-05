@@ -23,7 +23,22 @@
                 </div>
             {% if is_creator %}
                 <div class="news-reaction-block">
-                     <a class="btn-news" href="{% url 'update-profile' %}">Редактировать группу</a>
+                     <a class="btn-news" href="{% url 'group_update' group.id %}">Редактировать группу</a>
+                </div>
+                <div class="news-reaction-block">
+                    <!-- Модальное окно -->
+                        <div id="confirm-delete-modal" style="display: none;">
+                            <div class="modal-content">
+                                <p>Вы уверены, что хотите удалить эту группу?</p>
+                                <button id="confirm-delete-yes">Да</button>
+                                <button id="confirm-delete-no">Нет</button>
+                            </div>
+                        </div>
+
+                        <!-- Кнопка удаления -->
+                     <button type="button" id="delete-group-btn" data-group-id="{{ group.id }}" class="btn-news">Удалить группу>
+
+
                 </div>
                 <div class="news-reaction-block">
                      <button type="button" id="invite-to-group-btn" class="btn-news">
@@ -53,6 +68,9 @@
                                     {% endif %}
                            {% endif %}
                  {% else %}
+                                    <div class="news-reaction-block">
+                                         <a class="btn-news" href="{% url 'update-profile' %}">Чат группы</a>
+                                    </div>
                                     <div class="news-reaction-block">
                                              <button id="leave-group-btn" class="btn-news">Выйти из группы</button>
                                      </div>
@@ -497,6 +515,51 @@
             });
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const deleteButton = document.getElementById('delete-group-btn');
+    const modal = document.getElementById('confirm-delete-modal');
+    const confirmYesButton = document.getElementById('confirm-delete-yes');
+    const confirmNoButton = document.getElementById('confirm-delete-no');
+    let groupIdToDelete;
+
+    // Показать модальное окно при нажатии на кнопку удаления
+    deleteButton.addEventListener('click', function(event) {
+        event.preventDefault();
+        groupIdToDelete = this.getAttribute('data-group-id');
+        modal.style.display = 'block';
+    });
+
+    // Обработчик подтверждения удаления
+    confirmYesButton.addEventListener('click', function() {
+        fetch(`/groups/group_delete/${groupIdToDelete}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '/groups_list/';
+            } else {
+                showAjaxPopup('Ошибка при удалении группы.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxPopup('Произошла ошибка.');
+        });
+
+        modal.style.display = 'none';
+    });
+
+    // Обработчик отмены удаления
+    confirmNoButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+});
+
 </script>
 
 {% endblock %}
