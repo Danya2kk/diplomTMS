@@ -187,6 +187,8 @@ def profile_view(request, username):
 
     is_admin_groups = GroupMembership.objects.filter(profile=request.user.profile, status=status_instance).select_related('group')
 
+    group_list = GroupMembership.objects.filter(profile=profile).select_related('group')
+
     # Определяем видимость профиля в зависимости от уровня конфиденциальности и дружбы
     if privacy_level.name == "Никто" and not is_owner:
         context = {
@@ -243,6 +245,7 @@ def profile_view(request, username):
             'is_status': is_status,
             'is_admin_groups': is_admin_groups,
             'username': username,
+            'group_list': group_list,
         }
 
     return render(request, 'main/profile.html', context)
