@@ -1361,17 +1361,18 @@ class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         group = self.get_object()
         return self.request.user.profile in group.members.all() or self.request.user == group.creator.user
 
-class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+
+class GroupDeleteView(LoginRequiredMixin, DeleteView):
     model = Group
-    template_name = 'group/group_confirm_delete.html'
 
-    def get_success_url(self):
-        messages.success(self.request, f'Группа успешно удалена.')
-        return reverse('groups_list')
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.creator != request.user.profile:
+            return JsonResponse({'error': 'У вас нет прав для удаления этой группы.'}, status=403)
 
-    def test_func(self):
-        group = self.get_object()
-        return group.creator == self.request.user.profile
+        # Удаление группы
+        self.object.delete()
+        return JsonResponse({'message': 'Группа успешно удалена.'})
 
 
 def group_search(request):

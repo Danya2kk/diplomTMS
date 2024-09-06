@@ -36,7 +36,7 @@
                         </div>
 
                         <!-- Кнопка удаления -->
-                     <button type="button" id="delete-group-btn" data-group-id="{{ group.id }}" class="btn-news">Удалить группу>
+                     <button type="button" id="delete-group-btn" data-group-id="{{ group.id }}" class="btn-news">Удалить группу</button>
 
 
                 </div>
@@ -521,6 +521,7 @@
     const modal = document.getElementById('confirm-delete-modal');
     const confirmYesButton = document.getElementById('confirm-delete-yes');
     const confirmNoButton = document.getElementById('confirm-delete-no');
+    var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     let groupIdToDelete;
 
     // Показать модальное окно при нажатии на кнопку удаления
@@ -536,7 +537,8 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRFToken': csrftoken,
+                        'Accept': 'application/json'
             }
         })
         .then(response => {
