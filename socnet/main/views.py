@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from .filters import ProfileFilter, GroupFilter
 from .models import News, Tag, Comment, Reaction, Friendship
-from .forms import NewsForm, CommentForm, ReactionForm
+from .forms import NewsForm, CommentForm, ReactionForm, MediaUploadForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -251,6 +251,60 @@ def profile_view(request, username):
     return render(request, 'main/profile.html', context)
 
 
+def profile_media(request, username):
+
+    is_owner = request.user.username == username
+    user = User.objects.get(username=username)
+
+    profile = Profile.objects.get(user=user)
+    photo = Mediafile.objects.filter(profile=profile).exclude(file_type='avatar')
+
+    context = {
+        'photo': photo,
+        'is_owner': is_owner,
+        'username': username,
+    }
+    return render(request, 'main/media_profile.html', context)
+
+def profile_add_media(request):
+
+    user = User.objects.get(username=request.user.username)
+
+    profile = Profile.objects.get(user=user)
+
+
+
+    if request.method == 'POST':
+
+        if 'file' in request.FILES:
+            print("File uploaded:", request.FILES['file'])
+        else:
+            print("No file in request.FILES")
+
+        form = MediaUploadForm(request.POST,request.FILES)
+
+        if form.is_valid():
+                # Сохранить новый аватар
+            photo = form.save(commit=False)
+
+            photo.profile = profile  # Устанавливаем связь с профилем
+            photo.file_type = 'image'
+            photo.save()
+        else:
+            print(form.errors)
+
+        messages.success(request, 'Фотография успешно сохранена')
+        return redirect('profile-photo', username=request.user.username)
+
+    else:
+        form = MediaUploadForm()
+
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'main/profile_media_add.html', context)
+
 @login_required
 def update_profile(request):
     '''Редактирование профиля'''
@@ -275,8 +329,9 @@ def update_profile(request):
                         previous_avatar.delete()
 
                     # Сохранить новый аватар
-                    avatar = avatar_form.save(commit=False)
-                    avatar.profile = profile
+                    avatar = avatar_form.save(profile=profile, commit=False)
+
+                    avatar.profile = profile  # Устанавливаем связь с профилем
                     avatar.file_type = 'avatar'
                     avatar.save()
 
@@ -289,17 +344,17 @@ def update_profile(request):
         avatar_form = AvatarUploadForm()
 
     # Получаем последний загруженный аватар
-    avatar = profile.media_files.filter(file_type='image').last()
+    avatar = profile.media_files.filter(file_type='avatar').last()
 
     context = {
         'user_form': user_form,
         'profile_form': profile_form,
-        'profile': profile,
-        'avatar': avatar,
         'avatar_form': avatar_form,
+        'avatar': avatar,
     }
 
     return render(request, 'main/profile_update.html', context)
+
 
 
 class RegisterUser(FormView):
@@ -943,24 +998,46 @@ class SendMailView(LoginRequiredMixin, FormView):
         mail.save()
         return super().form_valid(form)
 
+@login_required
+def UserMailView(request):
 
-class UserMailView(LoginRequiredMixin, ListView):
-    template_name = 'main/user_mailbox.html'
-    context_object_name = 'messages'
+    user = User.objects.get(request.user.username)
 
-    def get_queryset(self):
-        user_profile = self.request.user.profile
-        sent_messages = Mail.objects.filter(sender=user_profile)
-        received_messages = Mail.objects.filter(recipient=user_profile)
-        return {'sent_messages': sent_messages, 'received_messages': received_messages}
+    profile = Profile.objects.get(user=user)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user_profile = self.request.user.profile
-        context['sent_messages'] = Mail.objects.filter(sender=user_profile)
-        context['received_messages'] = Mail.objects.filter(recipient=user_profile)
-        return context
+    mail_sender = Mail.objects.filter(sender=profile).select_related('recipient')
+    mail_recipient = Mail.objects.filter(recipient=profile).select_related('sender')
 
+    context = {
+        'mail_sender': mail_sender,
+        'mail_recipient': mail_recipient,
+        'username':request.user.username,
+    }
+
+    return render(request, 'main/mailbox', context)
+
+
+@login_required
+def sender_mail(request):
+
+    user = User.objects.get(request.user.username)
+
+    profile = Profile.objects.get(user=user)
+
+    mail_sender = Mail.objects.filter(sender=profile).select_related('recipient')
+
+    return JsonResponse({'detail': mail_sender}, status=status.HTTP_200_OK)
+
+@login_required
+def recipient_mail(request):
+
+    user = User.objects.get(request.user.username)
+
+    profile = Profile.objects.get(user=user)
+
+    mail_recipient = Mail.objects.filter(recipient=profile).select_related('sender')
+
+    return JsonResponse({'detail': mail_recipient}, status=status.HTTP_200_OK)
 
 def mark_as_read(request):
     if request.method == 'POST':

@@ -27,6 +27,9 @@ urlpatterns = [
     path('profile_list', views.profile_list, name='profile_list'),
     path('profile', views.my_profile_view, name='my_profile'),
     path('profile/<str:username>', views.profile_view, name='profile'),
+    path('profile/photo/<str:username>', views.profile_media, name='profile-photo'),
+    path('profile/photo/add_media/', views.profile_add_media, name='profile_add_media'),
+
     path('update', views.update_profile, name='update-profile'),
     path('password-change/', views.UserPasswordChange.as_view(), name='password_change'),
     path('password-change/done', PasswordChangeDoneView.as_view(template_name='main/password_change_done.html'), name='password_change_done'),
@@ -53,7 +56,7 @@ urlpatterns = [
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
     # path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
     path('send-message/', views.SendMailView.as_view(), name='send_message'),
-    path('mailbox/', views.UserMailView.as_view(), name='mailbox'),
+    path('mailbox/', views.UserMailView, name='mailbox'),
     path('mark-as-read/', views.mark_as_read, name='mark_as_read'),
     path('update_status/', views.update_status, name='update_status'),
 

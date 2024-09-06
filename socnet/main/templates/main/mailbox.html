@@ -1,0 +1,40 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<h2 class="Auth_title">Почта {{ username }} </h2>
+<div class="news-detail-container">
+
+    <section class="news-detail-content">
+        <div class="news-reaction-block">
+                     <button class="recipient_mail" data-username="{{ username }}">Входящие сообщения</button>
+                </div>
+        <div class="news-reaction-block">
+                     <button class="sender_mail" data-username="{{ username }}">Отправленные сообщения</button>
+                </div>
+        <div class="news-detail-text">
+            {% for mail in mail_recipient %}
+
+            {% empty %}
+            <p>Входящих сообщений нет</p>
+            {% endfor%}
+            {% for mail in mail_sender %}
+
+            {% empty %}
+            <p>Входящих сообщений нет</p>
+            {% endfor%}
+        </div>
+
+
+    </section>
+</div>
+
+
+
+<script>
+
+
+</script>
+
+{% endblock %}
