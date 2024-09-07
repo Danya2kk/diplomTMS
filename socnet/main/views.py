@@ -75,7 +75,7 @@ def index(request):
         'title': 'Домашняя страница',
 
     }
-    return render(request, 'main/index.html', context)
+    return render(request, 'main/index2.html', context)
 
 
 def chat(request, pk):
