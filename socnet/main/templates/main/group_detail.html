@@ -18,13 +18,14 @@
         </div>
         <div class="news-detail-text">
             <div class="separator-line"></div>
-            <div class="news-reaction-block">
-                     <a class="btn-news" href="{% url 'update-profile' %}">Чат группы</a>
-                </div>
             {% if is_creator %}
+                     <div class="news-reaction-block">
+                                         <a class="btn-news" href="{% url 'chat' group.id %}">Чат группы</a>
+                      </div>
                 <div class="news-reaction-block">
                      <a class="btn-news" href="{% url 'group_update' group.id %}">Редактировать группу</a>
                 </div>
+
                 <div class="news-reaction-block">
                     <!-- Модальное окно -->
                         <div id="confirm-delete-modal" style="display: none;">
@@ -69,7 +70,7 @@
                            {% endif %}
                  {% else %}
                                     <div class="news-reaction-block">
-                                         <a class="btn-news" href="{% url 'update-profile' %}">Чат группы</a>
+                                         <a class="btn-news" href="{% url 'chat' group.id %}">Чат группы</a>
                                     </div>
                                     <div class="news-reaction-block">
                                              <button id="leave-group-btn" class="btn-news">Выйти из группы</button>
@@ -126,7 +127,7 @@
 
 
 <script>
-    $(document).ready(function() {
+     $(document).ready(function() {
     // Функция для установки ширины comments-wrapper и кнопки
     function adjustContentWidth() {
         // Получаем ширину контейнера .news-detail-content
@@ -561,6 +562,7 @@
         modal.style.display = 'none';
     });
 });
+
 
 </script>
 

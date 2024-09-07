@@ -234,6 +234,7 @@ class StatusProfile(models.Model):
 
 class Chat(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
+    messages = models.TextField()
     profile = models.ForeignKey(Profile, related_name='chat_message', on_delete=models.CASCADE)
     group = models.ForeignKey(Group, related_name='chat_members', on_delete=models.CASCADE)
 

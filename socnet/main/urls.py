@@ -23,7 +23,9 @@ urlpatterns = [
     path('register/', views.RegisterUser.as_view(), name='register'),
     path('login/', views.LoginUser.as_view(), name='login'),
     path('logout/', views.LogoutUser.as_view(), name='logout'),
-    path('chat', views.chat, name='chat'),
+
+    path('group/chat/<int:pk>', views.chat, name='chat'),
+
     path('profile_list', views.profile_list, name='profile_list'),
     path('profile', views.my_profile_view, name='my_profile'),
     path('profile/<str:username>', views.profile_view, name='profile'),

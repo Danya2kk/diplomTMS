@@ -7,58 +7,53 @@
 <div class="news-detail-container">
 
     <section class="mail-detail-content">
-           <div class="mail-detail-left">
-                                 <button class="recipient_mail" data-username="{{ username }}">Входящие сообщения</button>
-                                 <button class="sender_mail" data-username="{{ username }}">Отправленные сообщения</button>
-                    <div class="separator-line"></div>
+        <div class="mail-detail-left">
+            <button class="recipient_mail" data-username="{{ username }}">Входящие сообщения</button>
+            <button class="sender_mail" data-username="{{ username }}">Отправленные сообщения</button>
+            <div class="separator-line"></div>
 
-                          <button class="send_mail">Отправить сообщение</button>
+            <button class="send_mail">Отправить сообщение</button>
 
-                            <!-- Модальное окно -->
-                            <div id="sendMailModal" class="modal" style="display:none;">
-                                <div class="modal-content">
-                                    <span class="close">&times;</span>
-                                    <h2>Отправить сообщение</h2>
-                                    <form id="sendMailForm">
-                                        <label for="recipient">Получатель (username):</label>
-                                        <input type="text" id="recipient" name="recipient" required>
-
-                                        <label for="content">Сообщение:</label>
-                                        <textarea id="content" name="content" required></textarea>
-
-                                        <button type="submit">Отправить</button>
-                                    </form>
-                                </div>
-                            </div>
-
-
-            </div>
-        <div class="mail-detail-right mail-detail-text">
-                        <div class="news-detail-text" id="mailbox-content">
-                            {% for mail in mails %}
-                                <p>{{ mail.content }} от {{ mail.sender.user.username }}</p>
-                            {% empty %}
-                                <p>Сообщений нет</p>
-                            {% endfor %}
-                        </div>
-            </div>
-        <div id="message-modal" class="modal">
+            <!-- Модальное окно -->
+            <div id="sendMailModal" class="modal" style="display:none;">
                 <div class="modal-content">
                     <span class="close">&times;</span>
-                    <div id="modal-body">
-                        <!-- Содержимое модального окна будет добавлено через JavaScript -->
-                    </div>
+                    <h2>Отправить сообщение</h2>
+                    <form id="sendMailForm">
+                        <label for="recipient">Получатель (username):</label>
+                        <input type="text" id="recipient" name="recipient" required>
+
+                        <label for="content">Сообщение:</label>
+                        <textarea id="content" name="content" required></textarea>
+
+                        <button type="submit">Отправить</button>
+                    </form>
                 </div>
             </div>
-
-
+        </div>
+        <div class="mail-detail-right mail-detail-text">
+            <div class="news-detail-text" id="mailbox-content">
+                {% for mail in mails %}
+                    <p>{{ mail.content }} от {{ mail.sender.user.username }}</p>
+                {% empty %}
+                    <p>Сообщений нет</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div id="message-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="modal-body">
+                    <!-- Содержимое модального окна будет добавлено через JavaScript -->
+                </div>
+            </div>
+        </div>
     </section>
 </div>
 
 
-
 <script>
-// Открытие модального окна
+    // Открытие модального окна
 document.querySelector('.send_mail').addEventListener('click', function() {
     document.getElementById('sendMailModal').style.display = 'block';
 });

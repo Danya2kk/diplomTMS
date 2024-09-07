@@ -69,10 +69,6 @@ from django.core import serializers as serial
 
 # Create your views here.
 
-# def get_messages(request):
-#     # Получаем сообщения
-#     messages_list = [{'message': message.message, 'level': message.level_tag} for message in messages.get_messages(request)]
-#     return JsonResponse({'messages': messages_list})
 
 def index(request):
     context = {
@@ -82,9 +78,12 @@ def index(request):
     return render(request, 'main/index.html', context)
 
 
-def chat(request):
+def chat(request, pk):
+
+    group_id = pk
     context = {
-        'is_chat_page': 'true'
+        'is_chat_page': 'true',
+        'group_id': group_id,
     }
     return render(request, 'main/chat.html', context)
 
