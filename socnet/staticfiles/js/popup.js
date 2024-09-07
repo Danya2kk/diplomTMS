@@ -1,4 +1,3 @@
-console.log("popup.js загружен");
 
 function showAjaxPopup(message) {
     const popup = document.getElementById('ajax-popup');

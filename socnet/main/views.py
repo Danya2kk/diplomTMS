@@ -1,6 +1,10 @@
+import json
+
+from Tools.demo.mcast import sender
 from django.db import transaction
 from django.http import JsonResponse, Http404
 from django.contrib.contenttypes.models import ContentType
+from rest_framework.status import HTTP_200_OK
 
 from .filters import ProfileFilter, GroupFilter
 from .models import News, Tag, Comment, Reaction, Friendship
@@ -61,7 +65,7 @@ from .forms import MailForm
 from .models import Mail
 from .forms import LoginUserForm
 from django.views.generic import ListView
-
+from django.core import serializers as serial
 
 # Create your views here.
 
@@ -998,46 +1002,188 @@ class SendMailView(LoginRequiredMixin, FormView):
         mail.save()
         return super().form_valid(form)
 
+
 @login_required
 def UserMailView(request):
-
-    user = User.objects.get(request.user.username)
-
+    user = User.objects.get(username=request.user.username)
     profile = Profile.objects.get(user=user)
+    mails = Mail.objects.filter(recipient=profile).select_related('sender', 'recipient')
 
-    mail_sender = Mail.objects.filter(sender=profile).select_related('recipient')
-    mail_recipient = Mail.objects.filter(recipient=profile).select_related('sender')
+    mail_data = []
+    for mail in mails:
+        mail_data.append({
+            'id': mail.id,
+            'content': mail.content,
+            'timestamp': mail.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'recipient': {
+                'firstname': mail.recipient.firstname,
+                'lastname': mail.recipient.lastname,
+            },
+            'sender': {
+                'firstname': mail.sender.firstname,
+                'lastname': mail.sender.lastname,
+            }
+        })
 
     context = {
-        'mail_sender': mail_sender,
-        'mail_recipient': mail_recipient,
-        'username':request.user.username,
+        'mails': mail_data,
+        'username': request.user.username,
     }
 
-    return render(request, 'main/mailbox', context)
+    return render(request, 'main/mailbox.html', context)
 
 
 @login_required
 def sender_mail(request):
-
-    user = User.objects.get(request.user.username)
-
+    user = request.user
     profile = Profile.objects.get(user=user)
+    mails = Mail.objects.filter(sender=profile).select_related('sender', 'recipient')
 
-    mail_sender = Mail.objects.filter(sender=profile).select_related('recipient')
+    mail_data = []
+    for mail in mails:
+        mail_data.append({
+            'id': mail.id,
+            'content': mail.content,
+            'timestamp': mail.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'recipient': {
+                'firstname': mail.recipient.firstname,
+                'lastname': mail.recipient.lastname,
+            },
+            'sender': {
+                'firstname': mail.sender.firstname,
+                'lastname': mail.sender.lastname,
+            }
+        })
 
-    return JsonResponse({'detail': mail_sender}, status=status.HTTP_200_OK)
+    return JsonResponse({'detail': mail_data}, status=200)
 
 @login_required
 def recipient_mail(request):
-
-    user = User.objects.get(request.user.username)
-
+    user = request.user
     profile = Profile.objects.get(user=user)
+    mails = Mail.objects.filter(recipient=profile).select_related('sender', 'recipient')
 
-    mail_recipient = Mail.objects.filter(recipient=profile).select_related('sender')
+    mail_data = []
+    for mail in mails:
+        mail_data.append({
+            'id': mail.id,
+            'content': mail.content,
+            'timestamp': mail.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_read': mail.is_read,  # Добавляем признак прочитанности
+            'has_parent': mail.parent is not None,  # Проверяем наличие родительского сообщения
+            'recipient': {
+                'firstname': mail.recipient.firstname,
+                'lastname': mail.recipient.lastname,
+            },
+            'sender': {
+                'firstname': mail.sender.firstname,
+                'lastname': mail.sender.lastname,
+            }
+        })
 
-    return JsonResponse({'detail': mail_recipient}, status=status.HTTP_200_OK)
+    return JsonResponse({'detail': mail_data}, status=200)
+
+
+@login_required
+def send_mail(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('username')
+        content = data.get('content')
+
+        correct_user = User.objects.filter(username=username).exists()
+
+        if correct_user:
+            user_sender = request.user
+            user_recipient = User.objects.get(username=username)
+
+            profile_sender = Profile.objects.get(user=user_sender)
+            profile_recipient = Profile.objects.get(user=user_recipient)
+
+            mail = Mail.objects.create(
+                sender=profile_sender,
+                recipient=profile_recipient,
+                content=content,
+                is_read=False,
+                is_deleted_sender=False,
+            )
+
+            mail.save()
+
+            return JsonResponse({'detail': 'Письмо успешно отправлено!'}, status=200)
+
+        else:
+            return JsonResponse({'detail': 'Такого пользователя не существует'}, status=400)
+    return JsonResponse({'error': 'Неверный запрос'}, status=400)
+
+@login_required
+def send_mail_parent(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        parent_id = data.get('parent')  # Получаем идентификатор родительского сообщения
+        username = data.get('username')
+        content = data.get('content')
+
+        correct_user = User.objects.filter(username=username).exists()
+
+        if correct_user:
+            user_sender = request.user
+            user_recipient = User.objects.get(username=username)
+            profile_sender = Profile.objects.get(user=user_sender)
+            profile_recipient = Profile.objects.get(user=user_recipient)
+
+            # Получаем объект родительского сообщения
+            parent_mail = Mail.objects.get(id=parent_id)
+
+            # Создаем новое сообщение
+            mail = Mail.objects.create(
+                sender=profile_sender,
+                recipient=profile_recipient,
+                content=content,
+                parent=parent_mail,  # Используем объект родительского сообщения
+                is_read=False,
+                is_deleted_sender=False,
+            )
+
+            mail.save()
+
+            return JsonResponse({'detail': 'Письмо успешно отправлено!'}, status=200)
+
+        else:
+            return JsonResponse({'detail': 'Такого пользователя не существует'}, status=400)
+    return JsonResponse({'error': 'Неверный запрос'}, status=400)
+
+
+@login_required
+def message_detail(request, mail_id):
+    try:
+        mail = Mail.objects.get(id=mail_id)
+        # Обновляем статус сообщения
+        mail.is_read = True
+        mail.save()
+
+        data = {
+            'id': mail.id,
+            'content': mail.content,
+            'sender': {
+                'firstname': mail.sender.user.profile.firstname,
+                'lastname': mail.sender.user.profile.lastname,
+                'username': mail.sender.user.username
+            },
+            'recipient': {
+                'firstname': mail.recipient.user.profile.firstname,
+                'lastname': mail.recipient.user.profile.lastname
+            },
+            'parent': {
+                'content': mail.parent.content if mail.parent else None
+            } if mail.parent else None
+        }
+        is_sender = request.user.profile == mail.sender
+        return JsonResponse({'detail': data, 'isSender': is_sender}, status=200)
+    except Mail.DoesNotExist:
+        return JsonResponse({'error': 'Сообщение не найдено'}, status=404)
+
+
 
 def mark_as_read(request):
     if request.method == 'POST':

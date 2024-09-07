@@ -8,10 +8,14 @@
 
     <section class="mail-detail-content">
            <div class="mail-detail-left">
+                    <div class="news-reaction-block">
                                  <button class="recipient_mail" data-username="{{ username }}">Входящие сообщения</button>
+                            </div>
+                    <div class="news-reaction-block">
                                  <button class="sender_mail" data-username="{{ username }}">Отправленные сообщения</button>
+                    </div>
                     <div class="separator-line"></div>
-
+                    <div class="news-reaction-block">
                           <button class="send_mail">Отправить сообщение</button>
 
                             <!-- Модальное окно -->
@@ -31,7 +35,7 @@
                                 </div>
                             </div>
 
-
+                    </div>
             </div>
         <div class="mail-detail-right mail-detail-text">
                         <div class="news-detail-text" id="mailbox-content">
@@ -157,31 +161,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModal = document.querySelector('.close');
 
     function updateMailboxContent(url, isSender) {
-    fetch(url)
-    .then(response => response.json())
-    .then(data => {
-        let mails = data.detail;
-        mailboxContent.innerHTML = ''; // Очищаем старое содержимое
-        if (mails.length > 0) {
-            mails.forEach(mail => {
-                let mailHtml;
-                if (isSender) {
-                    mailHtml = `<p data-id="${mail.id}" class="mail-item">${mail.content} для ${mail.recipient.firstname} ${mail.recipient.lastname}</p>`;
-                } else {
-                    let mailStyle = mail.is_read ? '' : 'font-weight: bold; color: red;';
-                    mailHtml = `<p data-id="${mail.id}" class="mail-item" style="${mailStyle}">${mail.content} от ${mail.sender.firstname} ${mail.sender.lastname}</p>`;
-                }
-                mailboxContent.innerHTML += mailHtml;
-            });
-        } else {
-            mailboxContent.innerHTML = '<p>Сообщений нет</p>';
-        }
-        addMailClickEvent();
-    })
-    .catch(error => {
-        console.error('Error fetching mails:', error);
-    });
-}
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let mails = data.detail;
+            mailboxContent.innerHTML = ''; // Очищаем старое содержимое
+            if (mails.length > 0) {
+                mails.forEach(mail => {
+                    let mailHtml;
+                    if (isSender) {
+                        mailHtml = `<p data-id="${mail.id}" class="mail-item">${mail.content} для ${mail.recipient.firstname} ${mail.recipient.lastname}</p>`;
+                        console.log('Mail details:', data);
+                        console.log('id:', mail.id);
+                    } else {
+                        mailHtml = `<p data-id="${mail.id}" class="mail-item">${mail.content} от ${mail.sender.firstname} ${mail.sender.lastname}</p>`;
+                        console.log('Mail details:', data);
+                        console.log('id:', mail.id);
+                    }
+                    mailboxContent.innerHTML += mailHtml;
+                });
+            } else {
+                mailboxContent.innerHTML = '<p>Сообщений нет</p>';
+            }
+            addMailClickEvent();
+        })
+        .catch(error => {
+            console.error('Error fetching mails:', error);
+        });
+    }
 
     function addMailClickEvent() {
     const mailItems = document.querySelectorAll('.mail-item');
@@ -194,27 +201,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(data => {
                     const mail = data.detail;
                     let modalHtml;
-                     if (mail.parent) {
-                        modalHtml += `<div class="mail-answer">
-                        <p class="btn-news">Ответ на сообщение: ${mail.parent.content}</p>
-                        </div>`;
-                    }
                     if (data.isSender) {
-                        modalHtml = `<div class="mail-answer">
-                            <p class="btn-news">Получатель: ${mail.recipient.firstname} ${mail.recipient.lastname}</p>
-                            <p class="btn-news">Сообщение: ${mail.content}</p>
-                            </div>
+                        modalHtml = `
+                            <p>Получатель: ${mail.recipient.firstname} ${mail.recipient.lastname}</p>
+                            <p>Сообщение: ${mail.content}</p>
                         `;
                     } else {
                         modalHtml = `
-                            <div class="mail-answer">
-                            <p class="btn-news">Отправитель: ${mail.sender.firstname} ${mail.sender.lastname}</p>
-                            <p class="btn-news">Сообщение: ${mail.content}</p>
-                            <button id="reply-button" class="btn_mail" >Ответить</button>
-                            </div>
+                            <p>Отправитель: ${mail.sender.firstname} ${mail.sender.lastname}</p>
+                            <p>Сообщение: ${mail.content}</p>
+                            <button id="reply-button">Ответить</button>
                         `;
                     }
-
                     modalBody.innerHTML = modalHtml;
                     modal.style.display = 'block';
 
@@ -253,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 }
 
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -267,9 +266,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return cookieValue;
     }
-
-    // Инициализация контента при загрузке страницы
-    updateMailboxContent("{% url 'recipient_mail' %}", false);
 
     recipientBtn.addEventListener('click', function() {
         updateMailboxContent("{% url 'recipient_mail' %}", false);
@@ -289,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
 
 </script>
 

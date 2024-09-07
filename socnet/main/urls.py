@@ -51,12 +51,20 @@ urlpatterns = [
     path('groups/group_delete/<int:pk>/', views.GroupDeleteView.as_view(), name='group_delete'),
 
 
+
     # path('<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
     # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
     # path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
     path('send-message/', views.SendMailView.as_view(), name='send_message'),
     path('mailbox/', views.UserMailView, name='mailbox'),
+    path('mailbox/sender_mail', views.sender_mail, name='sender_mail'),
+    path('mailbox/recipient_mail', views.recipient_mail, name='recipient_mail'),
+
+    path('mailbox/send_mail', views.send_mail, name='send_mail'),
+    path('mailbox/send_mail_parent', views.send_mail_parent, name='send_mail_parent'),
+    path('mailbox/message/<int:mail_id>/', views.message_detail, name='message_detail'),
+
     path('mark-as-read/', views.mark_as_read, name='mark_as_read'),
     path('update_status/', views.update_status, name='update_status'),
 
