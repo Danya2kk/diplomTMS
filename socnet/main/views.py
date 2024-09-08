@@ -1,60 +1,36 @@
 import json
 import re
 import logging
-from Tools.demo.mcast import sender
 from django.db import transaction
-from django.http import JsonResponse, Http404
-from django.contrib.contenttypes.models import ContentType
-from rest_framework.status import HTTP_200_OK
-
+from django.http import Http404
 from .filters import ProfileFilter, GroupFilter
-from .models import News, Tag, Comment, Reaction, Friendship
-from .forms import NewsForm, CommentForm, ReactionForm, MediaUploadForm
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib import messages
-from .models import Group, GroupMembership, Status
-from .forms import GroupCreateForm, GroupUpdateForm, GroupSearchForm
+from .forms import  MediaUploadForm
+from django.contrib.auth.mixins import  UserPassesTestMixin
+from .forms import GroupCreateForm, GroupSearchForm
 from django.utils import timezone
-from django.shortcuts import render, redirect
 from django.views import View
-from .forms import RegistrationForm, LoginForm
-from django.contrib.auth import login, authenticate, get_user_model
+from .forms import RegistrationForm
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import login as auth_login
-from django.contrib.auth import logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
-from django.contrib.messages import get_messages
 from django.template.loader import render_to_string
-from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView
 from rest_framework import status, viewsets
-from django.db.models import Count, Q, Prefetch
-from rest_framework.decorators import action, renderer_classes
-from rest_framework.renderers import JSONRenderer
+from django.db.models import Count, Prefetch
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from .forms import UpdateUserForm, UpdateProfileForm, AvatarUploadForm, UserPasswordChangeForm, CommentForm
-from .models import Profile, Friendship, Comment
+from .forms import UpdateUserForm, UpdateProfileForm, AvatarUploadForm, UserPasswordChangeForm
 from django.http import JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.contenttypes.models import ContentType
-from .models import News, Tag, Reaction
 from .serializers import *
-from .forms import NewsForm, ReactionForm
-from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import NewsForm
+from django.contrib.auth import authenticate, logout
 from django.contrib.auth.views import LoginView
-from django.http import HttpResponse, HttpResponseRedirect, request
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse, reverse_lazy
+from django.http import request
+from django.shortcuts import redirect, get_object_or_404
+from django.urls import reverse
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Case, When, IntegerField, Sum
@@ -66,7 +42,6 @@ from .forms import MailForm
 from .models import Mail
 from .forms import LoginUserForm
 from django.views.generic import ListView
-from django.core import serializers as serial
 
 # Create your views here.
 

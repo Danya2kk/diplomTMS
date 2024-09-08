@@ -1,9 +1,4 @@
 
-from django.urls import path, re_path
-from django.views.generic import TemplateView
-
-from . import views
-from django.contrib.auth.views import PasswordChangeDoneView
 from django.urls import path, include
 
 from main import views
@@ -50,13 +45,7 @@ urlpatterns = [
     path('groups/group_create/', views.GroupCreateView.as_view(), name='group_create'),
     path('groups/group_update/<int:pk>/', views.GroupUpdateView.as_view(), name='group_update'),
     path('groups/group_delete/<int:pk>/', views.GroupDeleteView.as_view(), name='group_delete'),
-
-
-
-    # path('<int:comment_pk>/delete/', views.comment_delete, name='comment_delete'),
-    # path('reaction/<int:object_id>/<str:model_name>/<str:reaction_type>/', views.add_reaction, name='add_reaction'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
-    # path('<int:content_type_id>/<int:object_id>/count/', views.reaction_count, name='reaction_count'),
     path('send-message/', views.SendMailView.as_view(), name='send_message'),
     path('mailbox/', views.UserMailView, name='mailbox'),
     path('mailbox/sender_mail', views.sender_mail, name='sender_mail'),
@@ -74,6 +63,4 @@ urlpatterns = [
 
     path('', include(router.urls)),
 
-
-    # re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
 ]

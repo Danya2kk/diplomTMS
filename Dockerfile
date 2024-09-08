@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Копируем файлы проекта в контейнер
 COPY pyproject.toml poetry.lock ./
-COPY socnet/ socnet/
+COPY socnet/ .
 
 # Устанавливаем Poetry и зависимости
 RUN pip install --upgrade pip
@@ -26,4 +26,4 @@ EXPOSE 8000
 RUN poetry run gunicorn --version
 
 # Команда для запуска приложения
-CMD ["poetry", "run", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "socnet.socnet.asgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["poetry", "run", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "socnet.asgi:application", "--bind", "0.0.0.0:8000"]

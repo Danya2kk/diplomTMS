@@ -1,16 +1,15 @@
 import sys
 
-from django import forms
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from .models import User, Group, Friendship
+from .models import Group, Friendship
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Profile, User, Mediafile, Comment, Interest, PrivacyLevel,Mail
 from .models import News, Tag, Reaction
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from PIL import Image
 from io import BytesIO
 
