@@ -94,6 +94,7 @@ uvicorn = {extras = ["standard"], version = "^0.30.6"}
 websockets = "^12.0"
 wsproto = "^1.2.0"
 django-filter = "^24.3"
+gunicorn = "^23.0.0"
 
 
 [build-system]
