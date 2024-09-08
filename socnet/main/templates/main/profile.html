@@ -11,11 +11,13 @@
 <div class="news-detail-container">
     <section class="news-detail-content">
         <!-- Содержимое профиля: изображение, описание,  -->
-        {% if avatar and avatar.file %}
-            <img src="{{ avatar.file.url }}" alt="Avatar" class="news-inner-image">
-        {% else %}
-            <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
-        {% endif %}
+        <div class="news-detail-text">
+            {% if avatar and avatar.file %}
+                <img src="{{ avatar.file.url }}" alt="Avatar" class="profile-image ">
+            {% else %}
+                <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="profile-image">
+            {% endif %}
+        </div>
         <div class="news-detail-text">
             <p>{{ profile.firstname }} {{ profile.lastname }}</p>
             {% if ban_exists_in %}
@@ -24,12 +26,12 @@
                 {% if restricted_view %}
                     <p>Пользователь скрыл информацию о себе</p>
                 {% else %}
-                    <p>Возраст: {{ profile.age }}</p>
-                    <p>Пол: {{ profile.gender }}</p>
-                    <p>Местоположение: {{ profile.location }}</p>
-                    <p>Ссылка: <a href="{{ profile.link }}">{{ profile.link }}</a></p>
-                    <p>Настройки: {{ profile.settings }}</p>
-                    <p>Интересы: {{ profile.interests.all|join:", " }}</p>
+                    <p>Возраст: {% if profile.age %}{{ profile.age }}{% endif %}</p>
+                    <p>Пол: {% if profile.gender %}{{ profile.gender }}{% endif %}</p>
+                    <p>Местоположение: {% if profile.location %}{{ profile.location }}{% endif %}</p>
+                    <p>Ссылка: {% if profile.link %}<a href="{{ profile.link }}">{{ profile.link }}</a>{% endif %}</p>
+                    <p>Настройки: {% if profile.settings %}{{ profile.settings }}{% endif %}</p>
+                    <p>Интересы: {% if profile.interests.all %}{{ profile.interests.all|join:", " }}{% endif %}</p>
                 {% endif %}
             {% endif %}
         </div>
@@ -62,7 +64,7 @@
             <div class="separator-line"></div>
 
            <!-- Кнопка для вызова модального окна -->
-                    <button id="inviteBtn" class="btn-news">Пригласить в группу</button>
+                    <button id="inviteBtn" class="btn-news add-font">Пригласить в группу</button>
 
                     <!-- Модальное окно (скрыто по умолчанию) -->
                     <div id="inviteModal" class="modal">
@@ -79,24 +81,21 @@
                         </select>
 
                         <!-- Кнопка для отправки приглашения -->
-                        <button id="sendInviteBtn" class="btn-news">Отправить приглашение</button>
+                        <button id="sendInviteBtn" class="btn-news add-font">Отправить приглашение</button>
                       </div>
                     </div>
             {% endif %}
 
             {% if is_owner %}
-                <div class="news-reaction-block">
                      <a class="btn-news" href="{% url 'update-profile' %}">Редактировать</a>
 
-
-                </div>
             {% else %}
                 <div class="news-reaction-block">
 
                     {% if is_status.is_busy %}
                         <p>Отправка сообщений запрещена (статус "Занят")</p>
                     {% else %}
-                     <a class="btn-news" href="{% url 'update-profile' %}">Отправить сообщение</a>
+                     <a class="btn-news add-font" href="{% url 'update-profile' %}">Отправить сообщение</a>
                      {% endif %}
                     {% if friendship_exists %}
                         <p>Этот человек Ваш друг!</p>
@@ -108,16 +107,16 @@
                             {% if is_status.do_not_disturb %}
                                 <p>Предложение дружбы и приглашения в группу заблокированы (статус "Не беспокоить")</p>
                             {% else %}
-                                <button class="btn-news" id="send-friend-request" data-profile-id="{{ profile.id }}">Предложить дружбу</button>
+                                <button class="btn-news add-font" id="send-friend-request" data-profile-id="{{ profile.id }}">Предложить дружбу</button>
                             {% endif %}
                     {% endif %}
                     {% if ban_exists_out %}
                          <p>Пользователь Вами заблокирован</p>
-                     <button type="button" class="btn-news unblock-people" data-url="{% url 'friendship-unblock-people' profile.id %}">
+                     <button type="button" class="btn-news unblock-people add-font" data-url="{% url 'friendship-unblock-people' profile.id %}">
                             Разблокировать
                         </button>
                     {% else %}
-                    <button type="button" class="btn-news block-people" data-url="{% url 'friendship-block-people' profile.id %}">
+                    <button type="button" class="btn-news block-people add-font" data-url="{% url 'friendship-block-people' profile.id %}">
                             Заблокировать пользователя
                         </button>
                     {% endif %}
@@ -130,8 +129,7 @@
 
     {% if is_owner %}
     <div class="comments-wrapper">
-        <button id="toggle-comments-btn" class="btn-comment-news">Показать запросы в друзья</button>
-
+        <button id="toggle-comments-btn" class="btn-comment-news add-font">Показать запросы в друзья</button>
 
     <div id="comments-section" class="comments-section">
 
@@ -144,12 +142,12 @@
                                     <div class="news-reaction-block">
                                         <a class="profile-name" href="{% url 'profile' request.profile_one.user.username %}"> {{ request.profile_one.firstname }} {{ request.profile_one.lastname }} </a>
 
-                                         <button type="button" class="btn-news accept-request" data-url="{% url 'friendship-accept-request' request.id %}">
+                                         <button type="button" class="btn-news add-font accept-request" data-url="{% url 'friendship-accept-request' request.id %}">
                                                  Принять
                                         </button>
 
                                     </form>
-                                        <button type="button" class="btn-news deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
+                                        <button type="button" class="btn-news add-font deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
                                                  Отклонить запрос
                                         </button>
                                     </div>
@@ -168,34 +166,40 @@
 
     {% endif %}
  </section>
-<div class="news-detail-container2">
-       <p class="btn-comment-news">Список друзей:</p>
-
-    {% if friends_profiles %}
-        {% for friend in friends_profiles %}
-            {% if friend.avatars %}
+<div class="news-detail-container">
+    <div id="friend-section">
+        <p class="btn-comment-news add-font sto">Список друзей:</p>
+        {% if friends_profiles %}
+            {% for friend in friends_profiles %}
+                <div class="friend-item">
+                    {% if friend.avatars %}
                         <a href="{% url 'profile' friend.user.username %}">
-                            <<img src="{{ friend.avatars.0.file.url }}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
+                            <img src="{{ friend.avatars.0.file.url }}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
                         </a>
-             {% else %}
+                    {% else %}
                         <a href="{% url 'profile' friend.user.username %}">
-                             <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
+                            <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
                         </a>
-             {% endif %}
-            <a class="profile-name" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
-        {% endfor %}
-    {% else %}
-         {% if is_owner %}
-                 <p>У вас нет друзей!</p>
-         {% else %}
+                    {% endif %}
+                    <a class="profile-name" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            {% if is_owner %}
+                <p>У вас нет друзей!</p>
+            {% else %}
                 <p>Друзей нет</p>
+            {% endif %}
         {% endif %}
-    {% endif %}
+    </div>
 </div>
+
+
+
 <section class="news-detail-content2">
 
     <div class="comments-wrapper2">
-             <button id="toggle-group-btn" class="btn-comment-news">Показать группы в которых состоит пользователь</button>
+             <button id="toggle-group-btn" class="btn-comment-news add-font">Показать группы в которых состоит пользователь</button>
 
     <div id="group-section" class="group-section">
 
@@ -321,30 +325,7 @@
 
 $(document).ready(function() {
     // Функция для установки ширины comments-wrapper и кнопки
-    function adjustContentWidth() {
-        // Получаем ширину контейнера .news-detail-content
-        var contentWidth = $('.news-detail-content').outerWidth();
 
-        // Устанавливаем эту ширину для comments-wrapper
-        $('.comments-wrapper').css('width', contentWidth + 'px');
-        $('.news-detail-container2').css('width', contentWidth + 'px');
-        $('.btn-comment-news').css('width', contentWidth + 'px');
-        $('.comments-wrapper2').css('width', contentWidth + 'px');
-
-
-        // Устанавливаем ширину кнопки на 100% от родительского контейнера
-        $('#toggle-comments-btn').css('width', '100%');
-        $('#toggle-group-btn').css('width', '100%');
-
-    }
-
-    // Вызываем функцию при загрузке страницы
-    adjustContentWidth();
-
-    // Вызываем функцию при изменении размера окна
-    $(window).resize(function() {
-        adjustContentWidth();
-    });
 
     // Скрипт для аккордеона запросов дружбы
     $('#toggle-comments-btn').click(function() {

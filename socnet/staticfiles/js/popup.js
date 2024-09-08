@@ -14,7 +14,7 @@ function showAjaxPopup(message) {
                 setTimeout(() => {
                     popup.style.display = 'none'; // Прячем полностью
                 }, 500);
-            }, 3000);
+            }, 8000);
         }, 100);
     }
 }
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Сброс страницы после показа сообщения
                 setTimeout(() => {
                     location.reload();
-                }, 2000); // Задержка в 2 секунды для отображения сообщения
+                }, 8000); // Задержка в 2 секунды для отображения сообщения
             }
         });
     }

@@ -3,22 +3,23 @@
 
 {% block content %}
 <h2 class="Auth_title"> Создание группы </h2>
-<div class="news-detail-container">
+<div class="news-container">
 
     <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <section class="news-detail-content2">
-        <div class="news-detail-text">
-             <div class="form-group">
-                <p>{{form.photo.label_tag }}</p>
+    <section class="news-container-content">
+
+        {% if user_form.errors %}
+            {% for key, value in user_form.errors.items %}
+                <strong class="error-message">{{ value }}</strong>
+            {% endfor %}
+        {% endif %}
+        <!-- Содержимое профиля: изображение, описание,  -->
+        <div class="form-group">
+                <p>{{ form.photo.label_tag }}</p>
                 <p>{{ form.photo }}</p>
-
-                  <button type="submit">Создать группу</button>
             </div>
-        </div>
-       <!-- Содержимое профиля: изображение, описание,  -->
-
-        <div class="news-detail-text">
+        <div class="news-container-text">
              <div class="form-group">
                 <p>{{ form.name.label_tag }}</p>
                 <p> {{ form.name }}</p>
@@ -32,14 +33,18 @@
                 <p>{{ form.group_type.label_tag }}</p>
                 <p>{{ form.group_type }}</p>
             </div>
-
             <div class="form-group">
                 <p>{{ form.rules.label_tag }}</p>
                 <p>{{ form.rules }}</p>
             </div>
 
-        </div>
 
+        </div>
+        <div class="news-container-text">
+            <button class="add-font" type="submit">Добавить группу</button>
+            <button class="add-font" type="button" onclick="window.location.href='{% url 'groups_list' %}'; return false;">Назад</button>
+
+        </div>
     </section>
      </form>
 </div>

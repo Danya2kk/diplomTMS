@@ -1,49 +1,47 @@
+{% extends 'main/layout.html' %}
 {% load static %}
 
-{% extends "base.html" %}
-
 {% block content %}
-    <h1>Почтовый ящик</h1>
+<h2 class="Auth_title"> Создание новости </h2>
+<div class="news-container">
 
-    <h2>Отправленные сообщения</h2>
-    <ul>
-        {% for message in sent_messages %}
-            <li>
-                <strong>Получатель:</strong> {{ message.recipient }}<br>
-                <strong>Содержание:</strong> {{ message.content }}<br>
-                <strong>Отправлено:</strong> {{ message.timestamp|date:"d.m.Y H:i" }}<br>
-                {% if message.is_read %}
-                    <span style="color: green;">Прочитано</span>
-                {% else %}
-                    <span style="color: red;">Не прочитано</span>
-                {% endif %}
-            </li>
-        {% empty %}
-            <li>Нет отправленных сообщений.</li>
-        {% endfor %}
-    </ul>
+    <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <section class="news-container-content">
 
-    <h2>Полученные сообщения</h2>
-    <ul>
-        {% for message in received_messages %}
-            <li>
-                <strong>От:</strong> {{ message.sender }}<br>
-                <strong>Содержание:</strong> {{ message.content }}<br>
-                <strong>Получено:</strong> {{ message.timestamp|date:"d.m.Y H:i" }}<br>
-                {% if message.is_read %}
-                    <span style="color: green;">Прочитано</span>
-                {% else %}
-                    <span style="color: red;">Не прочитано</span>
-                    <!-- Форма для пометки как прочитанное -->
-                    <form action="{% url 'mark_as_read' %}" method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="mail_id" value="{{ message.id }}">
-                        <button type="submit">Пометить как прочитанное</button>
-                    </form>
-                {% endif %}
-            </li>
-        {% empty %}
-            <li>Нет полученных сообщений.</li>
-        {% endfor %}
-    </ul>
+        {% if user_form.errors %}
+            {% for key, value in user_form.errors.items %}
+                <strong class="error-message">{{ value }}</strong>
+            {% endfor %}
+        {% endif %}
+        <!-- Содержимое профиля: изображение, описание,  -->
+        <div class="form-group">
+                <p>{{ form.image.label_tag }}</p>
+                <p>{{ form.image }}</p>
+            </div>
+        <div class="news-container-text">
+             <div class="form-group">
+                <p>{{ form.title.label_tag }}</p>
+                <p> {{ form.title }}</p>
+            </div>
+            <div class="form-group">
+                <p>{{ form.content.label_tag }}</p>
+                <p>{{ form.content }}</p>
+            </div>
+
+            <div class="form-group">
+                <p>{{ form.tags.label_tag }}</p>
+                <p>{{ form.tags }}</p>
+            </div>
+
+
+        </div>
+        <div class="news-container-text">
+            <button class="add-font" type="submit">Добавить новость</button>
+            <button class="add-font" type="button" onclick="window.location.href='{% url 'home' %}'; return false;">Назад</button>
+
+        </div>
+    </section>
+     </form>
+</div>
 {% endblock %}

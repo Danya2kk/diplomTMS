@@ -2,26 +2,21 @@
 {% load static %}
 
 {% block content %}
-
 <div>
-<div>{{ from.non_field_errors }}</div>
-<form method="post">
-{% csrf_token %}
-<div>
-    <h2 class="Auth_title"> Авторизация </h2>
-    <p >{{ form.username.label_tag}}</p>
-    <p>{{ form.username}}</p>
-</div>
-<div>
-<p>{{ form.password.label_tag}}</p>
-<p>{{ form.password}}</p>
-
-</div>
-
-<p><button type="submit">Войти</button></p>
-
-
-</form>
+    <div id="form-errors"></div>
+    <form id="login-form" method="post">
+        {% csrf_token %}
+        <div>
+            <h2 class="Auth_title">Авторизация</h2>
+            <p>{{ form.username.label_tag }}</p>
+            <p>{{ form.username }}</p>
+        </div>
+        <div>
+            <p>{{ form.password.label_tag }}</p>
+            <p>{{ form.password }}</p>
+        </div>
+        <p><button type="submit">Войти</button></p>
+    </form>
 </div>
 
 

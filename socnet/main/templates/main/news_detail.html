@@ -7,7 +7,7 @@
         <!-- Содержимое новости: изображение, описание, теги и т.д. -->
         <img src="{{ news_item.image.url }}" alt="Описание фото" class="news-inner-image">
         <div class="news-detail-text">
-            <p>{{ news_item.content }}</p>
+            <p>Новость: {{ news_item.content }}</p>
             <p>Тэги: {{ news_item.tags.all|join:", " }}</p>
             <p>Автор: {{ news_item.profile.firstname }} {{ news_item.profile.lastname }}</p>
             <p>Дата создания: {{ news_item.created_at }}</p>
@@ -39,7 +39,7 @@
 
 <div class="comments-wrapper">
     <!-- Кнопка для показа/скрытия комментариев -->
-    <button id="toggle-comments-btn" class="btn-comment-news">Показать комментарии</button>
+    <button id="toggle-comments-btn" class="btn-comment-news add-font">Показать комментарии</button>
 
     <!-- Область комментариев -->
     <div id="comments-section" class="comments-section">
@@ -47,7 +47,7 @@
 
         <div id="new-comment-form" class="comment-form" style="display:none;">
             <textarea id="new-comment-text" placeholder="Введите ваш комментарий"></textarea>
-            <button onclick="submitComment()">Отправить</button>
+            <button class="add-font" onclick="submitComment()">Отправить</button>
         </div>
 
         <!-- Включение HTML комментариев из partial_comments.html -->
@@ -57,26 +57,6 @@
 
 <script>
     $(document).ready(function() {
-
-      // Функция для установки ширины comments-wrapper и кнопки
-    function adjustContentWidth() {
-        // Получаем ширину контейнера .news-detail-content
-        var contentWidth = $('.news-detail-content').outerWidth();
-
-        // Устанавливаем эту ширину для comments-wrapper
-        $('.comments-wrapper').css('width', contentWidth + 'px');
-
-        // Устанавливаем ширину кнопки на 100% от родительского контейнера
-        $('#toggle-comments-btn').css('width', '100%');
-    }
-
-    // Вызываем функцию при загрузке страницы
-    adjustContentWidth();
-
-    // Вызываем функцию при изменении размера окна
-    $(window).resize(function() {
-        adjustContentWidth();
-    });
 
 
     // Реакции на новости

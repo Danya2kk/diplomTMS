@@ -1,5 +1,6 @@
 import json
-
+import re
+import logging
 from Tools.demo.mcast import sender
 from django.db import transaction
 from django.http import JsonResponse, Http404
@@ -69,22 +70,31 @@ from django.core import serializers as serial
 
 # Create your views here.
 
+logger = logging.getLogger(__name__)
 
 def index(request):
-    context = {
-        'title': 'Домашняя страница',
-
-    }
-    return redirect('news')
+    if request.user.is_authenticated:
+        # Если пользователь аутентифицирован, перенаправляем на страницу новостей
+        return redirect('news')
+    else:
+        # Если пользователь не аутентифицирован, перенаправляем на страницу входа
+        return redirect('login')
 
 
 def chat(request, pk):
-
     group_id = pk
     context = {
         'is_chat_page': 'true',
         'group_id': group_id,
     }
+    # Логируем активность пользователя с использованием try-except
+    try:
+        profile = Profile.objects.get(user=request.user)
+        log_user_activity(profile, ActivityLog_norest.GROUP, f"Пользователь открыл чат группы с ID {group_id}")
+    except Exception as e:
+        # Логируем ошибку
+        logger.error(f"Ошибка логирования активности: {str(e)}")
+
     return render(request, 'main/chat.html', context)
 
 
@@ -296,6 +306,13 @@ def profile_add_media(request):
         else:
             print(form.errors)
 
+        try:
+            log_user_activity(profile, ActivityLog_norest.PROFILE, "Пользователь добавил фотографию в профиль")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
         messages.success(request, 'Фотография успешно сохранена')
         return redirect('profile-photo', username=request.user.username)
 
@@ -338,6 +355,13 @@ def update_profile(request):
                     avatar.file_type = 'avatar'
                     avatar.save()
 
+            try:
+                log_user_activity(profile, ActivityLog_norest.PROFILE, "Пользователь обновил данные профиля")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
             messages.success(request, 'Ваш профиль успешно изменен!')
             return redirect('profile', username=request.user.username)
 
@@ -354,6 +378,7 @@ def update_profile(request):
         'profile_form': profile_form,
         'avatar_form': avatar_form,
         'avatar': avatar,
+        'username': request.user.username,
     }
 
     return render(request, 'main/profile_update.html', context)
@@ -372,6 +397,21 @@ class RegisterUser(FormView):
         user.set_password(form.cleaned_data['password'])
         user.save()
 
+        firstname = user.first_name
+        lastname = user.last_name
+
+        # Проверка имени
+        if not re.match("^[а-яА-Яa-zA-Z]+$", firstname):
+            message = 'В Имени допустимы только буквы!'
+            messages.error(self.request, f"Ошибка:\n{message}")
+            return self.form_invalid(form)
+
+        # Проверка фамилии
+        if not re.match("^[а-яА-Яa-zA-Z-]+$", lastname):
+            message = 'В Фамилии допустимы только буквы!'
+            messages.error(self.request, f"Ошибка:\n{message}")
+            return self.form_invalid(form)
+
         # Создание профиля для нового пользователя с обязательными полями
         profile = Profile.objects.create(
             user=user,
@@ -381,22 +421,44 @@ class RegisterUser(FormView):
 
         # Создание записи в StatusProfile
         StatusProfile.objects.create(
-            profile=profile,  # Используем только что созданный профиль
+            profile=profile,
             is_online=True,
             is_busy=False,
             do_not_disturb=False,
             last_updated=timezone.now()
         )
 
+        try:
+            create_notification(profile, Notification_norest.AUTHENTICATION, "Регистрация успешна")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования системных данных: {str(e)}")
+
+
         # Вход пользователя после регистрации
         auth_login(self.request, user)
-
+        messages.success(self.request, f"Вы успешно зарегистрированы")
         # Создание токена для пользователя
         token = Token.objects.create(user=user)
         self.request.session['token'] = token.key
 
+
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        # Получаем ошибки в формате JSON
+        errors = form.errors.as_json()
+        # Декодируем JSON-строку в словарь
+        errors_dict = json.loads(errors)
+        # Преобразуем ошибки в удобочитаемый формат
+        error_str = "\n".join(
+            [f"{key}: {', '.join(error['message'] for error in value)}" for key, value in errors_dict.items()])
+
+        # Выводим ошибки как сообщения
+        messages.error(self.request, f"Ошибка при регистрации:\n{error_str}")
+
+        # Возвращаем форму как невалидную
+        return super().form_invalid(form)
 
 @login_required
 @require_POST
@@ -421,7 +483,22 @@ def update_status(request):
     # Обновляем только измененный статус
     if status_type == 'is_busy':
         status_profile.is_busy = status_value
+
+        try:
+            log_user_activity(request.user.profile, ActivityLog_norest.PROFILE, "Пользователь изменил статус is_busy")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
     elif status_type == 'do_not_disturb':
+
+        try:
+            log_user_activity(request.user.profile, ActivityLog_norest.PROFILE, "Пользователь изменил статус do_not_disturb")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
         status_profile.do_not_disturb = status_value
 
     # Обновляем поле last_updated и сохраняем объект
@@ -433,11 +510,46 @@ def update_status(request):
 
 class UserPasswordChange(PasswordChangeView):
     form_class = UserPasswordChangeForm
-    success_url = reverse_lazy("password_change_done")
+    success_url = reverse_lazy("home")
     template_name = "main/password_change_form.html"
 
+    def form_valid(self, form):
+        # Сохранение нового пароля происходит автоматически через form.save()
+        user = form.save()
 
-class LoginUser(LoginView):  # логин через класс - проверка на валидность сразу встроена
+        # Получаем профиль пользователя
+        profile = Profile.objects.get(user=user)
+
+        try:
+            create_notification(profile, Notification_norest.AUTHENTICATION, "Пароль успешно изменен")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
+        # Сообщение об успешной смене пароля
+        messages.success(self.request, "Пароль успешно изменен.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Получаем ошибки в формате JSON
+        errors = form.errors.as_json()
+        # Декодируем JSON-строку в словарь
+        errors_dict = json.loads(errors)
+        # Преобразуем ошибки в удобочитаемый формат
+        error_str = "\n".join(
+            [f"{key}: {', '.join(error['message'] for error in value)}" for key, value in errors_dict.items()]
+        )
+
+        # Выводим ошибки как сообщения
+        messages.error(self.request, f"Ошибка при изменении пароля:\n{error_str}")
+
+        # Возвращаем форму как невалидную
+        return super().form_invalid(form)
+
+
+
+class LoginUser(LoginView):
     form_class = LoginUserForm
     template_name = 'main/login.html'
     extra_context = {'title': 'Авторизация'}
@@ -449,6 +561,15 @@ class LoginUser(LoginView):  # логин через класс - проверк
         if user is not None:
             auth_login(self.request, user)
 
+            profile = Profile.objects.get(user=user)
+
+            try:
+                create_notification(profile, Notification_norest.AUTHENTICATION, "Выход в систему!")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
             # Получение или создание токена
             token, _ = Token.objects.get_or_create(user=user)
             self.request.session['token'] = token.key
@@ -456,19 +577,46 @@ class LoginUser(LoginView):  # логин через класс - проверк
             return super().form_valid(form)
         return self.form_invalid(form)
 
+    def form_invalid(self, form):
+        # Получаем ошибки в формате JSON
+        errors = form.errors.as_json()
+        # Декодируем JSON-строку в словарь
+        errors_dict = json.loads(errors)
+        # Преобразуем ошибки в удобочитаемый формат
+        error_str = "\n".join(
+            [f"{key}: {', '.join(error['message'] for error in value)}" for key, value in errors_dict.items()])
+
+        # Выводим ошибки как сообщения
+        messages.error(self.request, f"Ошибка при авторизации:\n{error_str}")
+
+        # Возвращаем форму как невалидную
+        return super().form_invalid(form)
+
     def get_success_url(self):
         messages.success(self.request, 'Вы успешно авторизовались!')
         return reverse_lazy('home')
 
-
 class LogoutUser(View):
     def get(self, request):
+        # Получаем профиль текущего пользователя
+        if request.user.is_authenticated:
+
+
+            try:
+                profile = Profile.objects.get(user=request.user)
+                create_notification(profile, Notification_norest.AUTHENTICATION, "Выход из системы")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
+        # Выполняем логаут
         logout(request)
-        # request.session.flush()
+
+        # Выводим сообщение об успешном выходе
         messages.success(request, 'Вы успешно вышли из системы!')
 
         return redirect('home')
-
 
 def profile_list(request):
     # Создаем экземпляр фильтра с использованием GET параметров
@@ -511,14 +659,26 @@ def news_list_api(request):
     if filter_type == 'mine':
         news_items = News.objects.filter(profile=user).order_by('-created_at')
     elif filter_type == 'friends':
+        # Фильтруем друзей текущего пользователя через модель Friendship
+        # Предположим, статус дружбы 'Друзья' имеет name='Друзья'
+        friends_status = FriendshipStatus.objects.get(name='Друзья')
+
+        # Находим все дружеские связи, где текущий пользователь участвует
+        friendships_as_one = Friendship.objects.filter(profile_one=user, status=friends_status)
+        friendships_as_two = Friendship.objects.filter(profile_two=user, status=friends_status)
+
+        # Собираем идентификаторы профилей друзей
         friend_ids = set()
-        friendships_as_one = Friendship.objects.filter(profile_one=user.id, status='Друзья')
         for friendship in friendships_as_one:
-            friend_ids.add(friendship.profile_two)
-        friendships_as_two = Friendship.objects.filter(profile_two=user.id, status='Друзья')
+            if friendship.profile_two:  # Убеждаемся, что профили не NULL
+                friend_ids.add(friendship.profile_two.id)
         for friendship in friendships_as_two:
-            friend_ids.add(friendship.profile_one)
+            if friendship.profile_one:
+                friend_ids.add(friendship.profile_one.id)
+
+        # Фильтруем новости друзей
         news_items = News.objects.filter(profile_id__in=friend_ids).order_by('-created_at')
+
     else:  # filter_type == 'all'
         news_items = News.objects.all().order_by('-created_at')
 
@@ -591,8 +751,24 @@ def news_create(request):
 
             # Сохраняем теги, если они были выбраны
             form.save_m2m()  # Сохранение ManyToMany полей
+
+            try:
+                log_user_activity(profile, ActivityLog_norest.NEWS,"Пользователь добавил новость")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
             messages.success(request, 'Новость успешно добавлена!')
             return redirect('home')
+        else:
+            # Выводим ошибки формы в messages.error
+            errors = form.errors.as_json()
+            errors_dict = json.loads(errors)
+            error_str = "\n".join(
+                [f"{key}: {', '.join(error['message'] for error in value)}" for key, value in errors_dict.items()]
+            )
+            messages.error(request, f"Ошибка при добавлении новости:\n{error_str}")
     else:
         form = NewsForm()
 
@@ -614,8 +790,27 @@ def news_edit(request, pk):
         if form.is_valid():
             form.save()
             # form.save_m2m() больше не нужен, так как form.save() уже сохраняет m2m поля при наличии instance
+
+
+            try:
+                profile = Profile.objects.get(user=request.user)
+                log_user_activity(profile, ActivityLog_norest.NEWS, "Пользователь изменил новость")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
+
             messages.success(request, 'Новость успешно отредактирована!')
             return redirect('news_detail', pk=news_item.pk)
+        else:
+            # Выводим ошибки формы в messages.error
+            errors = form.errors.as_json()
+            errors_dict = json.loads(errors)
+            error_str = "\n".join(
+                [f"{key}: {', '.join(error['message'] for error in value)}" for key, value in errors_dict.items()]
+            )
+            messages.error(request, f"Ошибка при обновлении новости:\n{error_str}")
     else:
         form = NewsForm(instance=news_item)
 
@@ -630,6 +825,16 @@ def news_edit(request, pk):
 def news_delete(request, pk):
     news_item = News.objects.get(pk=pk)
     news_item.delete()
+
+    try:
+        profile = Profile.objects.get(user=request.user)
+        log_user_activity(profile, ActivityLog_norest.NEWS, "Пользователь удалил новость")
+    except Exception as e:
+        # Логируем ошибку
+        logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
+
     messages.success(request, 'Новость успешно удалена!')
     return redirect('home')
 
@@ -661,6 +866,15 @@ def reaction_toggle(request):
                     reaction.delete()
                     action = 'removed'
                     reaction_type = None
+
+                    try:
+                        profile = Profile.objects.get(user=user)
+                        log_user_activity(profile, ActivityLog_norest.NEWS, "Пользователь изменил реакцию")
+                    except Exception as e:
+                        # Логируем ошибку
+                        logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
                 else:
                     # Обновляем тип реакции
                     reaction.reaction_type = reaction_type
@@ -717,6 +931,16 @@ def add_comment(request, news_id):
             'root_comments': news_item.comments.filter(parent=None)
         })
 
+        profile = Profile.objects.get(user=request.user)
+
+        try:
+            log_user_activity(profile, ActivityLog_norest.NEWS, "Пользователь добавил комментарий")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
+        messages.success(request, 'Комментарий успешно добавлен!')
         return JsonResponse({'comments_html': comments_html})
 
 
@@ -835,7 +1059,15 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         friendship_status = FriendshipStatus.objects.get(name='Отправлен запрос')
         friendship = Friendship.objects.create(profile_one=profile_one, profile_two=profile_two,
                                                status=friendship_status)
-        # serializer = self.get_serializer(friendship)
+
+
+        try:
+            log_user_activity(profile_one, ActivityLog_norest.FRIEND, "Пользователь отправил запрос дружбы")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
 
         return JsonResponse({'detail': 'Запрос на дружбу отправлен'}, status=status.HTTP_200_OK)
 
@@ -855,8 +1087,15 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             friendship.status = FriendshipStatus.objects.get(name='Друзья')
             friendship.save()
 
-            return JsonResponse({'detail': 'Заявка на дружбу принята'}, status=status.HTTP_201_CREATED)
+            try:
+                profile = Profile.objects.get(user=request.user)
 
+                log_user_activity(profile, ActivityLog_norest.FRIEND, "Пользователь принял запрос дружбы")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+            return JsonResponse({'detail': 'Заявка на дружбу принята'}, status=status.HTTP_201_CREATED)
         except Friendship.DoesNotExist:
             return JsonResponse({'detail': 'Запрос дружбы не найден'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -880,6 +1119,12 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         friendship_status = FriendshipStatus.objects.get(name='Заблокирован')
         Friendship.objects.create(profile_one=profile_one, profile_two=profile_two, status=friendship_status)
 
+        try:
+            log_user_activity(profile_one, ActivityLog_norest.FRIEND, f"Пользователь заблокировал пользователя {profile_two}")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
         return JsonResponse({'detail': 'Пользователь заблокирован'}, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], url_path='unblock-people', url_name='unblock-people')
@@ -901,6 +1146,16 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         if existing_friendship:
             # Удаляем существующую блокировку
             existing_friendship.delete()
+
+            try:
+                log_user_activity(profile_one, ActivityLog_norest.FRIEND,
+                                  f"Пользователь разблокировал пользователя {profile_two}")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
+
             return JsonResponse({'detail': 'Пользователь успешно разблокирован'}, status=status.HTTP_200_OK)
         else:
             return JsonResponse({'detail': 'Пользователь не найден в списке заблокированных'},
@@ -916,6 +1171,15 @@ class FriendshipViewSet(viewsets.ModelViewSet):
                 return JsonResponse({'detail': 'Вы не можете отклонить этот запрос'}, status=status.HTTP_403_FORBIDDEN)
 
             friendship.delete()
+
+            try:
+                log_user_activity(profile, ActivityLog_norest.FRIEND,
+                                  f"Пользователь отклонил запрос дружбы")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
             return JsonResponse({'detail': 'Запрос на дружбу отклонен'}, status=status.HTTP_200_OK)
 
         except Friendship.DoesNotExist:
@@ -946,6 +1210,16 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
                 # Удаляем объект дружбы
                 friendship.delete()
+
+                try:
+                    profile = Profile.objects.get(user=request.user)
+                    log_user_activity(profile, ActivityLog_norest.FRIEND,
+                                      f"Пользователь удалил дружбу")
+                except Exception as e:
+                    # Логируем ошибку
+                    logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
 
                 return JsonResponse({'detail': 'Дружба успешно удалена.'}, status=status.HTTP_200_OK)
 
@@ -999,6 +1273,16 @@ class SendMailView(LoginRequiredMixin, FormView):
             return self.form_invalid(form)
 
         mail.save()
+
+        try:
+            profile = Profile.objects.get(user=request.user)
+            log_user_activity(profile, ActivityLog_norest.MAIL,
+                              f"Пользователь отправил почтовое сообщение")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
         return super().form_valid(form)
 
 
@@ -1054,6 +1338,8 @@ def sender_mail(request):
             }
         })
 
+
+
     return JsonResponse({'detail': mail_data}, status=200)
 
 @login_required
@@ -1086,33 +1372,52 @@ def recipient_mail(request):
 @login_required
 def send_mail(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get('username')
-        content = data.get('content')
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            content = data.get('content')
 
-        correct_user = User.objects.filter(username=username).exists()
+            # Проверка наличия обязательных полей
+            if not username or not content:
+                return JsonResponse({'error': 'Отсутствуют обязательные данные: username или content.'}, status=400)
 
-        if correct_user:
-            user_sender = request.user
-            user_recipient = User.objects.get(username=username)
+            # Проверка существования пользователя
+            correct_user = User.objects.filter(username=username).exists()
+            if correct_user:
+                user_sender = request.user
+                user_recipient = User.objects.get(username=username)
 
-            profile_sender = Profile.objects.get(user=user_sender)
-            profile_recipient = Profile.objects.get(user=user_recipient)
+                profile_sender = Profile.objects.get(user=user_sender)
+                profile_recipient = Profile.objects.get(user=user_recipient)
 
-            mail = Mail.objects.create(
-                sender=profile_sender,
-                recipient=profile_recipient,
-                content=content,
-                is_read=False,
-                is_deleted_sender=False,
-            )
+                mail = Mail.objects.create(
+                    sender=profile_sender,
+                    recipient=profile_recipient,
+                    content=content,
+                    is_read=False,
+                    is_deleted_sender=False,
+                )
 
-            mail.save()
+                mail.save()
 
-            return JsonResponse({'detail': 'Письмо успешно отправлено!'}, status=200)
+                try:
+                    log_user_activity(profile_sender, ActivityLog_norest.MAIL,
+                                      f"Пользователь отправил почтовое сообщение")
+                except Exception as e:
+                    # Логируем ошибку
+                    logger.error(f"Ошибка логирования активности: {str(e)}")
 
-        else:
-            return JsonResponse({'detail': 'Такого пользователя не существует'}, status=400)
+
+                return JsonResponse({'detail': 'Письмо успешно отправлено!'}, status=200)
+
+            else:
+                return JsonResponse({'detail': 'Такого пользователя не существует'}, status=400)
+
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'Пользователь не найден.'}, status=400)
+        except Profile.DoesNotExist:
+            return JsonResponse({'error': 'Профиль не найден.'}, status=400)
+
     return JsonResponse({'error': 'Неверный запрос'}, status=400)
 
 @login_required
@@ -1124,6 +1429,10 @@ def send_mail_parent(request):
         content = data.get('content')
 
         correct_user = User.objects.filter(username=username).exists()
+
+        # Проверка наличия обязательных полей
+        if not username or not content or not parent_id:
+            return JsonResponse({'error': 'Отсутствуют обязательные данные: username или content.'}, status=400)
 
         if correct_user:
             user_sender = request.user
@@ -1146,12 +1455,20 @@ def send_mail_parent(request):
 
             mail.save()
 
+            try:
+                log_user_activity(profile_sender, ActivityLog_norest.MAIL,
+                                  f"Пользователь отправил почтовое сообщение")
+            except Exception as e:
+                # Логируем ошибку
+                logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
+
             return JsonResponse({'detail': 'Письмо успешно отправлено!'}, status=200)
 
         else:
             return JsonResponse({'detail': 'Такого пользователя не существует'}, status=400)
     return JsonResponse({'error': 'Неверный запрос'}, status=400)
-
 
 @login_required
 def message_detail(request, mail_id):
@@ -1477,6 +1794,16 @@ def GroupInvite(request, username, pk):
             group=group,
             status=status_instance,  # Передаем объект Status
         )
+
+        try:
+            profile2 = Profile.objects.get(request.user)
+            log_user_activity(profile2, ActivityLog_norest.MAIL,
+                              f"Пользователь пригласил {profile} в группу")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
         return JsonResponse({'detail': 'Приглашение в группу успешно отправлено.'}, status=status.HTTP_200_OK)
 
 
@@ -1492,6 +1819,14 @@ def join_group(request, pk):
             group=group,
             status=status_instance
         )
+
+        try:
+            log_user_activity(request.user.profile, ActivityLog_norest.MAIL,
+                              f"Пользователь вступил в группу")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
         return JsonResponse({'detail': 'Вы успешно вступили в группу.'}, status=status.HTTP_200_OK)
 
     else:
@@ -1510,6 +1845,14 @@ def kik_group(request, username,pk):
     membership = GroupMembership.objects.get(profile=profile, group=group)
     if membership:
         membership.delete()
+
+        try:
+            log_user_activity(request.user.profile, ActivityLog_norest.MAIL,
+                              f"Пользователь исключил пользователя {profile.firstname} {profile.lastname} из группы")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
         return JsonResponse({'detail': f'Вы исключили пользователя {profile.firstname} {profile.lastname} из группы {group.name}.'}, status=status.HTTP_200_OK)
 
     else:
@@ -1522,6 +1865,16 @@ def leave_group(request, pk):
     membership = GroupMembership.objects.get(profile=request.user.profile, group=group)
     if membership:
         membership.delete()
+
+
+        try:
+            log_user_activity(request.user.profile, ActivityLog_norest.MAIL,
+                              f"Пользователь вышел из группы")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
         return JsonResponse({'detail': f'Вы покинули группу {group.name}.'}, status=status.HTTP_200_OK)
 
     else:
@@ -1551,11 +1904,35 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
             group=group,
             status=status_instance
         )
+
+        try:
+            log_user_activity(self.request.user.profile, ActivityLog_norest.GROUP,
+                              f"Пользователь создал группу")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+
         messages.success(self.request, f'Группа "{group_name}" успешно создана.')
         return super().form_valid(form)
 
     def get_success_url(self):
         return reverse('groups_list')
+
+    def form_invalid(self, form):
+        # Получаем ошибки в формате JSON
+        errors = form.errors.as_json()
+        # Декодируем JSON-строку в словарь
+        errors_dict = json.loads(errors)
+        # Преобразуем ошибки в удобочитаемый формат
+        error_str = "\n".join(
+            [f"{key}: {', '.join(error['message'] for error in value)}" for key, value in errors_dict.items()])
+
+        # Выводим ошибки как сообщения
+        messages.error(self.request, f"Ошибка при создании группы:\n{error_str}")
+
+        # Возвращаем форму как невалидную
+        return super().form_invalid(form)
 
 
 class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -1573,6 +1950,14 @@ class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             messages.error(self.request, f'Группа с таким именем "{group_name}" уже существует.')
             return self.form_invalid(form)
 
+        try:
+
+            log_user_activity(self.request.user.profile, ActivityLog_norest.GROUP,
+                              f"Пользователь изменил группу")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
         # Сохраняем форму
         response = super().form_valid(form)
         messages.success(self.request, f'Группа "{group_name}" успешно изменена.')
@@ -1580,6 +1965,21 @@ class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('groups_list')
+
+    def form_invalid(self, form):
+        # Получаем ошибки в формате JSON
+        errors = form.errors.as_json()
+        # Декодируем JSON-строку в словарь
+        errors_dict = json.loads(errors)
+        # Преобразуем ошибки в удобочитаемый формат
+        error_str = "\n".join(
+            [f"{key}: {', '.join(error['message'] for error in value)}" for key, value in errors_dict.items()])
+
+        # Выводим ошибки как сообщения
+        messages.error(self.request, f"Ошибка при обновлении группы:\n{error_str}")
+
+        # Возвращаем форму как невалидную
+        return super().form_invalid(form)
 
     def test_func(self):
 
@@ -1596,7 +1996,16 @@ class GroupDeleteView(LoginRequiredMixin, DeleteView):
             return JsonResponse({'error': 'У вас нет прав для удаления этой группы.'}, status=403)
 
         # Удаление группы
+
         self.object.delete()
+
+        try:
+            log_user_activity(self.request.user.profile, ActivityLog_norest.GROUP,
+                              f"Пользователь удалил группу")
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
         return JsonResponse({'message': 'Группа успешно удалена.'})
 
 
@@ -1635,3 +2044,22 @@ def accept_friend_request(request, username):
 
     messages.success(request, 'Запрос на дружбу принят.')
     return redirect('profile_detail', username=username)
+
+
+def log_user_activity(profile, action_type, *args):
+    description = ' '.join(map(str, args))  # Собираем описание из переданных аргументов
+    ActivityLog_norest.objects.create(
+        profile=profile,
+        action_type=action_type,
+        description=description,
+        timestamp=timezone.now()
+    )
+
+def create_notification(profile, notification_type, content):
+    Notification_norest.objects.create(
+        profile=profile,
+        notification_type=notification_type,
+        content=content,
+        timestamp=timezone.now(),
+        read=False
+    )

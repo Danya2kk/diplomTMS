@@ -7,8 +7,9 @@
 <div class="news-detail-container">
 
     <section class="news-detail-content">
-        <!-- Содержимое профиля: изображение, описание,  -->
-         <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="news-inner-image">
+        <div class="news-detail-text">
+            <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="profile-image">
+        </div>
         <div class="news-detail-text">
             <p>Название группы: {{ group.name }} </p>
             <p>Описание группы {{ group.description }} </p>
@@ -37,12 +38,12 @@
                         </div>
 
                         <!-- Кнопка удаления -->
-                     <button type="button" id="delete-group-btn" data-group-id="{{ group.id }}" class="btn-news">Удалить группу</button>
+                     <button type="button" id="delete-group-btn" data-group-id="{{ group.id }}" class="btn-news add-font">Удалить группу</button>
 
 
                 </div>
                 <div class="news-reaction-block">
-                     <button type="button" id="invite-to-group-btn" class="btn-news">
+                     <button type="button" id="invite-to-group-btn" class="btn-news add-font">
                             Пригласить в группу
                      </button>
 
@@ -52,15 +53,15 @@
                                 <span class="close">&times;</span>
                                 <h2>Пригласить пользователя в группу</h2>
                                 <input type="text_group" id="username-input" placeholder="Введите username того кого хотите пригласить в группу">
-                                <button id="send-invite-btn" class="btn-news">Отправить приглашение</button>
+                                <button id="send-invite-btn" class="btn-news add-font">Отправить приглашение</button>
                             </div>
                         </div>
                 </div>
             {% else %}
                {% if not is_member %}
                            {% if public_group %}
-                                <div class="news-reaction-block">
-                                    <button id="join-group-btn" class="btn-news">Вступить в группу</button>
+
+                                    <button id="join-group-btn" class="btn-news add-font">Вступить в группу</button>
                                  {% else %}
                                     {% if secret_group%}
                                      <p>Группа секретная. Как вы это видите- понятия не имею!</p>
@@ -69,14 +70,12 @@
                                     {% endif %}
                            {% endif %}
                  {% else %}
-                                    <div class="news-reaction-block">
-                                         <a class="btn-news" href="{% url 'chat' group.id %}">Чат группы</a>
-                                    </div>
-                                    <div class="news-reaction-block">
-                                             <button id="leave-group-btn" class="btn-news">Выйти из группы</button>
-                                     </div>
+
+                                         <a class="btn-news add-font" href="{% url 'chat' group.id %}">Чат группы</a>
+                                        <button id="leave-group-btn" class="btn-news add-font">Выйти из группы</button>
+
                  {% endif %}
-                </div>
+
             {% endif %}
 
 
@@ -85,71 +84,51 @@
 </div>
 
 <div class="news-detail-container2">
-    <p class="btn-comment-news">Список участников группы:</p>
+    <div id="friend-section">
+        <p class="btn-comment-news">Список участников группы:</p>
+                {% if group_members %}
 
-    {% if group_members %}
-        <div class="group-members-container">
-            {% for group_member in group_members %}
-                <div class="group-member">
-                    <!-- Контейнер для статуса участника -->
-                    <div class="group-member-status">
-                        <p>{{ group_member.status.name }}</p>
+                    <div class="group-members-container">
+                        {% for group_member in group_members %}
+                            <div class="group-member">
+                                <!-- Контейнер для статуса участника -->
+                                <div class="group-member-status">
+                                    <p>{{ group_member.status.name }}</p>
+                                </div>
+
+                                <!-- Контейнер для аватара участника -->
+                                <div class="group-member-avatar">
+                                    {% if group_member.profile.avatars %}
+                                        <a href="{% url 'profile' group_member.profile.user.username %}">
+                                            <img src="{{ group_member.profile.avatars.0.file.url }}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'profile' group_member.profile.user.username %}">
+                                            <img src="{% static 'images/nophoto.jpg' %}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Контейнер для имени участника -->
+                                <div class="group-member-name">
+                                    <a class="profile-group-name" href="{% url 'profile' group_member.profile.user.username %}">{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}</a>
+                                </div>
+
+                                {% if is_creator and group_member.status.name != 'admin' %}
+                                  <button class="kik-group-btn btn-news" data-username="{{ group_member.profile.user.username }}">Исключить</button>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
                     </div>
-
-                    <!-- Контейнер для аватара участника -->
-                    <div class="group-member-avatar">
-                        {% if group_member.profile.avatars %}
-                            <a href="{% url 'profile' group_member.profile.user.username %}">
-                                <img src="{{ group_member.profile.avatars.0.file.url }}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
-                            </a>
-                        {% else %}
-                            <a href="{% url 'profile' group_member.profile.user.username %}">
-                                <img src="{% static 'images/nophoto.jpg' %}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
-                            </a>
-                        {% endif %}
-                    </div>
-
-                    <!-- Контейнер для имени участника -->
-                    <div class="group-member-name">
-                        <a class="profile-group-name" href="{% url 'profile' group_member.profile.user.username %}">{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}</a>
-                    </div>
-
-                    {% if is_creator and group_member.status.name != 'admin' %}
-                      <button class="kik-group-btn btn-news" data-username="{{ group_member.profile.user.username }}">Исключить</button>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p>В группе пока нет людей</p>
-    {% endif %}
+                {% else %}
+                    <p>В группе пока нет людей</p>
+                {% endif %}
+    </div>
 </div>
 
 
 <script>
-     $(document).ready(function() {
-    // Функция для установки ширины comments-wrapper и кнопки
-    function adjustContentWidth() {
-        // Получаем ширину контейнера .news-detail-content
-        var contentWidth = $('.news-detail-content').outerWidth();
 
-        // Устанавливаем эту ширину для comments-wrapper
-        $('.comments-wrapper').css('width', contentWidth + 'px');
-        $('.news-detail-container2').css('width', contentWidth + 'px');
-        $('.btn-comment-news').css('width', contentWidth + 'px');
-
-
-        // Устанавливаем ширину кнопки на 100% от родительского контейнера
-        $('#toggle-comments-btn').css('width', '100%');
-    }
-
-    // Вызываем функцию при загрузке страницы
-    adjustContentWidth();
-
-    // Вызываем функцию при изменении размера окна
-    $(window).resize(function() {
-        adjustContentWidth();
-    });
 
     // Скрипт для аккордеона запросов дружбы
     $('#toggle-comments-btn').click(function() {

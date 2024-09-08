@@ -34,7 +34,6 @@ urlpatterns = [
 
     path('update', views.update_profile, name='update-profile'),
     path('password-change/', views.UserPasswordChange.as_view(), name='password_change'),
-    path('password-change/done', PasswordChangeDoneView.as_view(template_name='main/password_change_done.html'), name='password_change_done'),
     path('news/<int:pk>', views.news_detail, name='news_detail'),
     path('news', views.news_list, name='news'),
     path('api/news/', views.news_list_api, name='news_list_api'),

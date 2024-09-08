@@ -49,7 +49,7 @@ nav a:hover {
 
 .container {
     margin: 0 auto;
-    max-width: 1200px;
+    width: 80%;
     padding: 0 15px
 }
 
@@ -221,6 +221,8 @@ form input[type=file] {
     align-items: flex-start;
     display: flex;
     gap: 20px;
+    width: 80%;
+    margin: 0 auto; /* Центрирование по горизонтали */
     justify-content: center
 }
 
@@ -232,19 +234,22 @@ form input[type=file] {
 
 .news-detail-content {
     display: flex;
-    gap: 20px
+    flex-wrap: wrap;
 }
 
 .news-detail-text {
+    flex: 1 1 30%; /* Рекомендуется использовать `flex-basis` для начальной ширины */
+    max-width: 30%;
+    box-sizing: border-box; /* Учитывает паддинги и бордеры в ширину */
     border-radius: 10px;
-    flex-grow: 1;
-    padding: 20px
+    padding: 20px;
+    background-color: #000;
+    box-shadow: 0 0 10px 2px #ffdf00b3;
+    margin: 10px; /* Добавьте отступы, если это необходимо */
 }
 
-.news-detail-text,
-.separator-line {
-    background-color: #000;
-    box-shadow: 0 0 10px 2px #ffdf00b3
+.news-detail-text + .news-detail-text {
+    margin-left: 5px; /* Если нужно пространство между блоками */
 }
 
 .separator-line {
@@ -414,7 +419,7 @@ form input[type=file] {
     box-sizing: border-box;
     margin: 0 auto;
     padding: 10px;
-    width: auto
+    width: 80%;
 }
 
 #toggle-comments-btn {
@@ -662,14 +667,12 @@ form input[type=file] {
 }
 
 .news-detail-container2 {
-    align-items: center;
+    align-items: flex-start;
     display: flex;
-    flex-direction: column;
     gap: 20px;
-    justify-content: center;
-    margin: 0 auto;
-    max-width: 600px;
-    padding: 10px
+    width: 80%;
+    margin: 0 auto; /* Центрирование по горизонтали */
+    justify-content: center
 }
 
 .profile-name2 {
@@ -868,7 +871,7 @@ input[type=text_group] {
     box-sizing: border-box;
     margin: 0 auto;
     padding: 10px;
-    width: auto
+    width: 80%;
 }
 
 #toggle-group-btn {
@@ -898,8 +901,10 @@ input[type=text_group] {
     display: flex;
     flex-direction: raw;
     justify-content: center;
-    margin: 10px 0;
+    margin: 0 auto;
+    margin-bottom: 20px;
     padding: 20px;
+    width: 78%;
     text-align: center;
     text-decoration: none;
     transition: box-shadow .3s ease, transform .3s ease
@@ -1094,5 +1099,185 @@ input[type=text_group] {
     margin-bottom: 10px;
     padding: 10px
 }
+
+.btb-update {
+    background-color: #333;
+    border: 2px solid #333;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 2px #ffdf00b3;
+    color: #fff;
+    margin: 10px 0;
+    padding: 10px;
+    transition: box-shadow .3s ease;
+    width: 100%;
+    text-decoration: none; /* Убирает подчеркивание */
+    color: inherit; /* Убирает стандартный цвет гиперссылки, наследует цвет текста */
+}
+
+.btb-update {
+    cursor: pointer
+    width: 100%;
+}
+
+.btb-update:hover {
+    box-shadow: 0 0 15px 4px #ffdf00
+    text-decoration: none; /* Убирает подчеркивание при наведении, фокусе и нажатии */
+    color: inherit; /* Сохраняет цвет */
+}
+
+
+.add-font {
+    font-family: 'GreatVibes-Regular', sans-serif;
+    font-size: 20px;
+}
+
+#custom-prompt-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* затемнение фона */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #333; /* тёмный фон */
+    color: #fff; /* белый текст */
+    border-radius: 10px; /* закругление углов */
+    box-shadow: 0 0 10px 2px #ffdf00b3; /* жёлтая тень */
+    padding: 20px; /* отступы */
+    max-width: 80%; /* ограничение ширины */
+    text-align: center; /* центрирование текста */
+    position: relative; /* для позиционирования кнопок */
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #555; /* тёмный фон для текстовой области */
+    color: #fff; /* белый текст */
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 2px #ffdf00b3;
+    font-size: 16px;
+}
+
+button {
+    background: #555; /* тёмная кнопка */
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 2px #ffdf00b3;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 10px 20px;
+    margin-right: 10px;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+button:hover {
+    background: #777;
+    box-shadow: 0 0 15px 4px #ffdf00;
+    transform: scale(1.1); /* увеличение при наведении */
+}
+
+.sto {
+     width: 100%;
+}
+/* Контейнер для друзей */
+
+
+/* Колонки для друзей */
+#friend-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Пробел между элементами */
+    width: 100%;
+}
+
+.friend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px; /* Ширина элемента с друзьями */
+    text-align: center;
+}
+
+.friend-item img {
+    border-radius: 50%;
+}
+
+.profile-image {
+    max-width: 90%; /* Убедитесь, что изображение не выходит за пределы блока */
+    height: auto;
+}
+
+
+.news-detail-content3 {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+
+.news-container {
+    display: flex;
+    width: 80%;
+    margin: 0 auto; /* Центрирование по горизонтали */
+}
+
+.news-container-content {
+    display: flex;
+    width: 100%;
+}
+
+.news-container-text {
+    flex: 1 1 30%; /* Рекомендуется использовать `flex-basis` для начальной ширины */
+    max-width: 30%;
+    box-sizing: border-box; /* Учитывает паддинги и бордеры в ширину */
+    border-radius: 10px;
+    padding: 20px;
+    background-color: #000;
+    box-shadow: 0 0 10px 2px #ffdf00b3;
+    margin: 10px; /* Добавьте отступы, если это необходимо */
+}
+
+#status-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Выровнять элементы по левому краю */
+    gap: 10px; /* Добавить промежуток между чекбоксами, если нужно */
+}
+
+#status-form label {
+    display: flex;
+    align-items: center; /* Выровнять текст и чекбокс по вертикали */
+}
+
+#status-form input[type="checkbox"] {
+    margin-right: 5px; /* Добавить отступ справа от чекбокса */
+}
+
+
+@media (max-width: 768px) {
+    .news-detail-container,
+    .news-detail-container2,
+    .comments-wrapper2,
+    .comments-wrapper {
+        width: 90%;
+    }
+    .news-detail-text {
+        flex: 1 1 100%; /* При меньшем экране блоки занимают 100% ширины */
+        min-width: 100%; /* Гарантирует, что блоки занимают полную ширину на маленьких экранах */
+    }
+
+}
+
+
 
 /*# sourceMappingURL=main.54b50635.css.map*/

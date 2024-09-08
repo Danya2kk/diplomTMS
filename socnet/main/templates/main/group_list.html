@@ -17,8 +17,8 @@
         <h3 class="Auth_title"> Фильтры </h3>
         <form method="get" action="{% url 'groups_list' %}">
             {{ filterset.form.as_p }}
-            <button type="submit" class="btn-filter-list">Применить фильтр</button>
-            <button class="btn-filter-list"> <a href="{% url 'groups_list' %}" class="no-markers" >Сбросить фильтры</a></button>
+            <button type="submit" class="btn-filter-list add-font">Применить фильтр</button>
+            <button class="btn-filter-list add-font"> <a href="{% url 'groups_list' %}" class="no-markers" >Сбросить фильтры</a></button>
         </form>
     </div>
 
