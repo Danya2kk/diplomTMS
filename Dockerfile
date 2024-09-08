@@ -13,11 +13,17 @@ RUN pip install --upgrade pip
 RUN pip install poetry
 RUN poetry install --no-root
 
+# Устанавливаем зависимости вручную (если требуется)
+RUN poetry add gunicorn
+
 # Копируем остальные файлы проекта
 COPY . .
 
 # Открываем порт для приложения
 EXPOSE 8000
 
+# Проверяем установку gunicorn
+RUN poetry run gunicorn --version
+
 # Команда для запуска приложения
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "socnet.asgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["poetry", "run", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "socnet.socnet.asgi:application", "--bind", "0.0.0.0:8000"]
