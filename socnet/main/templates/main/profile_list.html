@@ -12,10 +12,10 @@
         <h3 class="Auth_title"> Фильтры </h3>
         <form method="get" action="{% url 'profile_list' %}">
             {{ profile_filter.form.as_p }}  <!-- Используем форму для отображения полей -->
-            <button type="submit" class="btn-filter-list">Применить фильтр</button>
-            <button class="btn-filter-list"> <a href="{% url 'profile_list' %}" class="no-markers" >Сбросить фильтры</a></button>
+            <button type="submit" class="btn-filter-list add-font">Применить фильтр</button>
+            <button class="btn-filter-list add-font"> <a href="{% url 'profile_list' %}" class="no-markers" >Сбросить фильтры</a></button>
         </form>
-    </div>
+
 
     <div class="profiles-list">
         {% for profile in profile_items %}

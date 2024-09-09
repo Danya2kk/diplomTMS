@@ -64,8 +64,9 @@
             <div class="separator-line"></div>
 
            <!-- Кнопка для вызова модального окна -->
+                     {% if not is_owner %}
                     <button id="inviteBtn" class="btn-news add-font">Пригласить в группу</button>
-
+                    {% endif %}
                     <!-- Модальное окно (скрыто по умолчанию) -->
                     <div id="inviteModal" class="modal">
                       <div class="modal-content">
