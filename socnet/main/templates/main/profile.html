@@ -96,7 +96,7 @@
                     {% if is_status.is_busy %}
                         <p>Отправка сообщений запрещена (статус "Занят")</p>
                     {% else %}
-                     <a class="btn-news add-font" href="{% url 'update-profile' %}">Отправить сообщение</a>
+                     <a class="btn-news add-font" href="{% url 'send_mail' %}">Отправить сообщение</a>
                      {% endif %}
                     {% if friendship_exists %}
                         <p>Этот человек Ваш друг!</p>
