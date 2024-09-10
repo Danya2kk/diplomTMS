@@ -1,22 +1,22 @@
 @font-face {
-    font-family: 'AmaticSC-Regular';
-    src: url('/static/fonts/AmaticSC-Regular.woff2') format('woff2');
+    font-family: 'AmaticSC-Bold';
+    src: url('/static/fonts/AmaticSC-Bold.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
 }
 
 body {
-    background-color: #000000; /* Черный фон для всего сайта */
-    color: #ffffff; /* Белый цвет текста по умолчанию */
-    font-family: 'AmaticSC-Regular', sans-serif;
+    background-color: #d3e2df; /* Черный фон для всего сайта */
+    color: #0e0d0d; /* Белый цвет текста по умолчанию */
+    font-family: 'AmaticSC-Bold', sans-serif;
     font-size: 20px;
 }
 
 nav a {
-    background-color: #333;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px hsla(313, 44%, 83%, 0.702);
+    color: #ffffff;
     display: inline-block;
     margin-right: 15px;
     padding: 10px 15px;
@@ -25,15 +25,15 @@ nav a {
 }
 
 nav a:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #e0b6dbb3;
     transform: scale(1.3)
 }
 
 .container .welcom {
-    background-color: #333;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px hsla(313, 44%, 83%, 0.702);
+    color: #ffffff;
     display: flex;
     justify-content: center;
     margin-right: 15px;
@@ -44,8 +44,8 @@ nav a:hover {
 }
 
 .container .welcom:hover {
-    box-shadow: 0 0 15px 4px #ffdf00
-}
+    box-shadow: 0 0 15px 4px #e0b6dbb3
+}  
 
 .container {
     margin: 0 auto;
@@ -75,7 +75,7 @@ nav a:hover {
 }
 
 h2 {
-    color: #fff
+    color: #0e0d0d
 }
 
 form {
@@ -94,11 +94,11 @@ form input[type=password],
 form input[type=text],
 form select,
 form textarea {
-    background-color: #333;
-    border: 2px solid #333;
+    background-color: #7ca5db;
+    border: 2px solid #ffffff;
     border-radius: 5px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     margin: 10px 0;
     max-width: 300px;
     padding: 10px;
@@ -111,7 +111,7 @@ form button {
 }
 
 form button:hover {
-    box-shadow: 0 0 15px 4px #ffdf00
+    box-shadow: 0 0 15px 4px #9dd5ebb3
 }
 
 form textarea {
@@ -127,31 +127,31 @@ form select[multiple] {
 
 form select option,
 form select[multiple] {
-    background-color: #333;
-    color: #fff
+    background-color: #7ca5db;
+    color: #0e0d0d
 }
 
 form label {
-    color: #fff;
+    color: #0e0d0d;
     margin-bottom: 5px;
     transition: color .3s ease
 }
 
 form label:hover {
-    color: #ffdf00
+    color: #9dd5ebb3
 }
 
 form input[type=file] {
-    background-color: #333;
-    border: 2px solid #333;
+    background-color: #7ca5db;
+    border: 2px solid #ffffff;
     border-radius: 5px;
-    color: #fff;
+    color: #0e0d0d;
     padding: 10px;
     transition: box-shadow .3s ease
 }
 
 .Auth_title {
-    color: #ffdf00;
+    color: #0e0d0d;
     margin-bottom: 20px;
     text-align: center
 }
@@ -180,7 +180,7 @@ form input[type=file] {
 }
 
 .news-title {
-    color: #fff;
+    color: #0e0d0d;
     display: block;
     font-weight: 700;
     margin-top: 8px;
@@ -195,11 +195,11 @@ form input[type=file] {
 }
 
 .btn-custom {
-    background-color: #333;
+    background-color: #7ca5db;
     border: none;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     cursor: pointer;
     display: inline-block;
     margin-right: 15px;
@@ -209,12 +209,12 @@ form input[type=file] {
 }
 
 .btn-custom:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #82c9e6b3;
     transform: scale(1.3)
 }
 
 .btn-custom.active {
-    box-shadow: 0 0 15px 4px #ffdf00, 0 0 0 2px #ffdf00
+    box-shadow: 0 0 15px 4px #9dd5ebb3, 0 0 0 2px #9dd5ebb3
 }
 
 .news-detail-container {
@@ -235,6 +235,14 @@ form input[type=file] {
 .news-detail-content {
     display: flex;
     flex-wrap: wrap;
+    margin: 0 auto;
+}
+
+.news-detail-content2 {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 0 auto;
 }
 
 .news-detail-text {
@@ -243,8 +251,8 @@ form input[type=file] {
     box-sizing: border-box; /* Учитывает паддинги и бордеры в ширину */
     border-radius: 10px;
     padding: 20px;
-    background-color: #000;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
+    background-color: #687565;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     margin: 10px; /* Добавьте отступы, если это необходимо */
 }
 
@@ -259,7 +267,7 @@ form input[type=file] {
 }
 
 .news-reaction-block {
-    background-color: #000;
+    background-color: #7ca5db;
     margin-top: 20px;
     padding: 20px
 }
@@ -267,25 +275,29 @@ form input[type=file] {
 .btn-news,
 .news-reaction-block {
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3
+    box-shadow: 0 0 10px 2px #9dd5ebb3
 }
 
-.btn-news {
-    background-color: #333;
+/* Стили для всех элементов с классом .btn-news */
+.btn-news,
+.btn-news:link,
+.btn-news:visited {
+    background-color: #7ca5db;
     border: none;
-    color: #fff;
+    color: #ffffff;
     cursor: pointer;
     display: inline-block;
     margin-bottom: 15px;
     margin-right: 15px;
     padding: 10px 15px;
-    text-decoration: none;
-    transition: box-shadow .3s ease, transform .3s ease
+    text-decoration: none; /* Убираем подчеркивание для ссылок */
+    transition: box-shadow .3s ease, transform .3s ease;
 }
 
 .btn-news:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
-    transform: scale(1.3)
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
+    color:black;
+    transform: scale(1.3);
 }
 
 .btn-add-news {
@@ -299,10 +311,10 @@ form input[type=file] {
 }
 
 .tooltip .tooltiptext {
-    background-color: #333;
+    background-color: #7ca5db;
     border-radius: 6px;
     bottom: 125%;
-    color: #fff;
+    color: #0e0d0d;
     left: 50%;
     margin-left: -110px;
     opacity: 0;
@@ -321,10 +333,10 @@ form input[type=file] {
 }
 
 #success-popup {
-    background-color: #333;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     display: none;
     left: 50%;
     padding: 20px;
@@ -372,33 +384,33 @@ form input[type=file] {
 }
 
 .reaction-img {
-    height: 50px;
+    height: 40px;
     object-fit: contain;
-    width: 50px
+    width: 40px
 }
 
 .reaction-btn.active .reaction-img {
     filter: brightness(1.4);
-    transform: scale(1.4)
+    transform: scale(1.5)
 }
 
 .reaction-btn.active {
-    color: #ffdf00
+    color: #0e0d0d
 }
 
 .news-divider {
-    background: linear-gradient(90deg, #ffdf00b3, #ffdf0000);
+    background: linear-gradient(90deg, #9dd5ebb3, #ffdf0000);
     border: 0;
     height: 1px;
     margin: 20px 0
 }
 
 .btn-comment-news {
-    background-color: #333;
+    background-color: #7ca5db;
     border: none;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     cursor: pointer;
     display: inline-block;
     margin-bottom: 15px;
@@ -411,7 +423,7 @@ form input[type=file] {
 }
 
 .btn-comment-news:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1)
 }
 
@@ -448,11 +460,11 @@ form input[type=file] {
 }
 
 .btn-comment {
-    background-color: #333;
+    background-color: #7ca5db;
     border: none;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     cursor: pointer;
     display: inline-block;
     margin-bottom: 15px;
@@ -465,7 +477,7 @@ form input[type=file] {
 }
 
 .btn-comment:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1)
 }
 
@@ -475,11 +487,11 @@ form input[type=file] {
 }
 
 .comment-form textarea {
-    background-color: #333;
+    background-color: #7ca5db;
     border: none;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     margin-right: 15px;
     padding: 10px;
     resize: none;
@@ -492,11 +504,11 @@ form input[type=file] {
 }
 
 .comment-form button {
-    background-color: #333;
+    background-color: #7ca5db;
     border: none;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #ffffff;
     cursor: pointer;
     padding: 10px;
     transition: box-shadow .3s ease, transform .3s ease;
@@ -504,7 +516,7 @@ form input[type=file] {
 }
 
 .comment-form button:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1)
 }
 
@@ -514,6 +526,7 @@ form input[type=file] {
     margin-right: 30px
 }
 
+
 .news-detail-content2 {
     display: flex;
     gap: 20px;
@@ -521,7 +534,7 @@ form input[type=file] {
 }
 
 .error-message {
-    color: red;
+    color: #0e0d0d;
     font-weight: 700
 }
 
@@ -534,7 +547,7 @@ form input[type=file] {
 
 .profile-detail-content {
     align-items: flex-start;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     box-sizing: border-box;
     display: flex;
     gap: 20px;
@@ -565,16 +578,23 @@ form input[type=file] {
     justify-content: flex-start
 }
 
+.profile-detail-right2 {
+    display: flex;
+    flex: 1 1;
+    flex-direction: column;
+    justify-content: flex-start
+}
+
 .profile-detail-text {
     padding: 10px
 }
 
 .profile-detail-text,
 .profile-name {
-    background-color: #000;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d
 }
 
 .profile-name {
@@ -585,16 +605,16 @@ form input[type=file] {
 }
 
 .profile-name:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1)
 }
 
 .alert,
 .popup {
-    background-color: #333;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     display: none;
     left: 50%;
     max-width: 80%;
@@ -623,16 +643,16 @@ form input[type=file] {
 .alert.error,
 .alert.info,
 .alert.success {
-    background-color: #333
+    background-color: #7ca5db
 }
 
 .alert button,
 .popup button {
-    background: #555;
+    background: #ffffff;
     border: none;
     border-radius: 5px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     cursor: pointer;
     font-size: 16px;
     padding: 10px 20px;
@@ -641,8 +661,8 @@ form input[type=file] {
 
 .alert button:hover,
 .popup button:hover {
-    background: #777;
-    box-shadow: 0 0 15px 4px #ffdf00;
+    background: #ffffff;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1)
 }
 
@@ -651,7 +671,7 @@ form input[type=file] {
 }
 
 .popup .close {
-    color: #fff;
+    color: #0e0d0d;
     cursor: pointer;
     font-size: 24px;
     font-weight: 700;
@@ -661,7 +681,7 @@ form input[type=file] {
 }
 
 .no-markers {
-    color: #fff;
+    color: #0e0d0d;
     list-style-type: none;
     text-decoration: none
 }
@@ -686,46 +706,59 @@ form input[type=file] {
 }
 
 .btn-filter {
-    background-color: #0c0c0c;
+    background-color: #7ca5db;
     border: none;
-    color: #fff;
+    color: #0e0d0d;
     cursor: pointer;
     padding: 10px 20px
 }
 
 .btn-filter:hover {
-    background-color: #0c0c0c;
-    box-shadow: 0 0 15px 4px #ffdf00
+    background-color: #7ca5db;
+    box-shadow: 0 0 15px 4px #9dd5ebb3
 }
 
 .profile-container-wrapper {
     display: flex;
     justify-content: center;
-    margin: 20px
+    margin: 20px;
+    width: 80%;
 }
 
 .profile-container-list {
-    display: flex;
-    justify-content: space-between;
-    max-width: 1200px;
-    width: 100%
+    flex: 1 1 40%; /* Рекомендуется использовать `flex-basis` для начальной ширины */
+    max-width: 40%;
+    box-sizing: border-box; /* Учитывает паддинги и бордеры в ширину */
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    margin: 10px; /* Добавьте отступы, если это необходимо */
 }
 
 .filters-list {
-    flex: 1 1;
-    margin-right: 50px
+    width: 35%; /* Ширина контейнера для фильтров */
+    box-shadow: 0 0 10px 1px #9dd5ebb3;
 }
 
+.profile-list-container {
+    width: 65%; /* Ширина контейнера для списка групп */
+    box-shadow: 0 0 10px 1px #9dd5ebb3;
+}
+
+.profile-list-container {
+    display: flex;
+    flex-direction: column;
+}
 .profiles-list {
     flex: 3 1
 }
 
 .btn-filter-list,
 .btn-reset-list {
-    background-color: #0c0c0c;
+    background-color: #7ca5db;
     border: none;
     border-radius: 5px;
-    color: #fff;
+    color: #0e0d0d;
     display: inline-block;
     margin-top: 10px;
     padding: 10px 15px;
@@ -733,7 +766,7 @@ form input[type=file] {
 }
 
 .btn-reset-list {
-    background-color: #6c757d
+    background-color: #7ca5db;
 }
 
 .center-text {
@@ -744,11 +777,11 @@ form input[type=file] {
 }
 
 input[type=text_group] {
-    background-color: #333;
-    border: 2px solid #333;
+    background-color: #7ca5db;
+    border: 2px solid #ffffff;
     border-radius: 5px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     margin: 10px 0;
     max-width: 300px;
     padding: 10px;
@@ -779,10 +812,10 @@ input[type=text_group] {
 
 .profile-group-name {
     word-wrap: break-word;
-    background-color: #000;
+    background-color: #7ca5db;
     border-radius: 5px;
-    box-shadow: 0 0 5px 1px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 5px 1px #9dd5ebb3;
+    color: #0e0d0d;
     cursor: pointer;
     font-size: 14px;
     max-width: 100%;
@@ -793,12 +826,12 @@ input[type=text_group] {
 }
 
 .profile-group-name:hover {
-    box-shadow: 0 0 10px 2px #ffdf00;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     transform: scale(1.05)
 }
 
 .modal {
-    background-color: #00000080;
+    background-color: #7ca5db;
     display: none;
     height: 100%;
     left: 0;
@@ -810,23 +843,25 @@ input[type=text_group] {
 }
 
 .close {
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #e22121;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     float: right;
+    border-radius: 5px;
     font-size: 28px
 }
 
 .close:focus,
 .close:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
-    color: #000;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
+    color: #0e0d0d;
+    border-radius: 5px;
     transform: scale(1.1)
 }
 
 #group-select {
     border: 2px solid #333;
     border-radius: 5px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     font-size: 16px;
     margin: 10px 0 30px;
     max-width: 100%;
@@ -837,12 +872,12 @@ input[type=text_group] {
 
 #group-select,
 #group-select option {
-    background-color: #333;
-    color: #fff
+    background-color: #7ca5db;
+    color: #0e0d0d
 }
 
 #confirm-delete-modal {
-    background-color: #00000080;
+    background-color: #7ca5db;
     display: none;
     height: 100%;
     left: 0;
@@ -854,10 +889,10 @@ input[type=text_group] {
 }
 
 .modal-content {
-    background: #555;
+    background: #ffffff;
     border: none;
     border-radius: 5px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     cursor: pointer;
     font-size: 16px;
     margin: 15% auto;
@@ -894,10 +929,10 @@ input[type=text_group] {
 
 .btn_photo {
     align-items: center;
-    background-color: #000;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     display: flex;
     flex-direction: raw;
     justify-content: center;
@@ -923,7 +958,7 @@ input[type=text_group] {
 }
 
 .modal_photo {
-    background-color: #000c;
+    background-color: #7ca5db;
     display: none;
     height: 100%;
     left: 0;
@@ -942,7 +977,7 @@ input[type=text_group] {
 }
 
 .close {
-    color: #f1f1f1;
+    color: #0e0d0d;
     font-size: 40px;
     font-weight: 700;
     position: absolute;
@@ -952,14 +987,14 @@ input[type=text_group] {
 
 .close:focus,
 .close:hover {
-    color: #bbb;
+    color: #0e0d0d;
     cursor: pointer;
     text-decoration: none
 }
 
 .mail-detail-content {
     align-items: flex-start;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     box-sizing: border-box;
     display: flex;
     gap: 20px;
@@ -997,10 +1032,10 @@ input[type=text_group] {
 
 .mail-detail-text,
 .mail-name {
-    background-color: #000;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d
 }
 
 .mail-name {
@@ -1011,16 +1046,16 @@ input[type=text_group] {
 }
 
 .mail-name:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1)
 }
 
 .btn_mail {
     align-items: center;
-    background-color: #000;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     display: flex;
     flex-direction: raw;
     justify-content: center;
@@ -1032,7 +1067,7 @@ input[type=text_group] {
 }
 
 .btn_mail:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1)
 }
 
@@ -1047,10 +1082,10 @@ input[type=text_group] {
 .send_mail,
 .sender_mail {
     align-items: center;
-    background-color: #000;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     display: flex;
     flex-direction: raw;
     justify-content: center;
@@ -1064,16 +1099,16 @@ input[type=text_group] {
 .recipient_mail:hover,
 .send_mail:hover,
 .sender_mail:hover {
-    box-shadow: 0 0 15px 4px #ffdf00;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1)
 }
 
 .chat-container {
     align-items: center;
-    background-color: #000;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1082,9 +1117,9 @@ input[type=text_group] {
 }
 
 #chat-log {
-    background-color: #1a1a1a;
+    background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: inset 0 0 10px 2px #ffdf0080;
+    box-shadow: inset 0 0 10px 2px #9dd5ebb3;
     flex-grow: 1;
     margin-bottom: 20px;
     overflow-y: auto;
@@ -1093,19 +1128,19 @@ input[type=text_group] {
 }
 
 #chat-log div {
-    background-color: #2b2b2b;
+    background-color: #7ca5db;
     border-radius: 5px;
-    box-shadow: 0 0 5px 1px #ffdf004d;
+    box-shadow: 0 0 5px 1px #9dd5ebb3;
     margin-bottom: 10px;
     padding: 10px
 }
 
 .btb-update {
-    background-color: #333;
-    border: 2px solid #333;
+    background-color: #7ca5db;
+    border: 2px solid #ffffff;
     border-radius: 5px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #ffffff;
     margin: 10px 0;
     padding: 10px;
     transition: box-shadow .3s ease;
@@ -1115,19 +1150,19 @@ input[type=text_group] {
 }
 
 .btb-update {
-    cursor: pointer
+    cursor: pointer;
     width: 100%;
 }
 
 .btb-update:hover {
-    box-shadow: 0 0 15px 4px #ffdf00
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     text-decoration: none; /* Убирает подчеркивание при наведении, фокусе и нажатии */
-    color: inherit; /* Сохраняет цвет */
+    color: black; /* Сохраняет цвет */
 }
 
 
 .add-font {
-    font-family: 'AmaticSC-Regular', sans-serif;
+    font-family: 'AmaticSC-Bold', sans-serif;
     font-size: 20px;
 }
 
@@ -1145,10 +1180,10 @@ input[type=text_group] {
 }
 
 .modal-content {
-    background-color: #333; /* тёмный фон */
-    color: #fff; /* белый текст */
+    background-color:#ffffff; /* тёмный фон */
+    color: #0e0d0d; /* белый текст */
     border-radius: 10px; /* закругление углов */
-    box-shadow: 0 0 10px 2px #ffdf00b3; /* жёлтая тень */
+    box-shadow: 0 0 10px 2px #9dd5ebb3; /* жёлтая тень */
     padding: 20px; /* отступы */
     max-width: 80%; /* ограничение ширины */
     text-align: center; /* центрирование текста */
@@ -1159,20 +1194,20 @@ textarea {
     width: 100%;
     padding: 10px;
     margin-bottom: 20px;
-    background-color: #555; /* тёмный фон для текстовой области */
-    color: #fff; /* белый текст */
+    background-color: #7ca5db; /* тёмный фон для текстовой области */
+    color: #0e0d0d; /* белый текст */
     border: none;
     border-radius: 5px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     font-size: 16px;
 }
 
 button {
-    background: #555; /* тёмная кнопка */
+
     border: none;
     border-radius: 5px;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
-    color: #fff;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #ffffff;
     cursor: pointer;
     font-size: 16px;
     padding: 10px 20px;
@@ -1181,8 +1216,8 @@ button {
 }
 
 button:hover {
-    background: #777;
-    box-shadow: 0 0 15px 4px #ffdf00;
+    background: #ffffff;
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     transform: scale(1.1); /* увеличение при наведении */
 }
 
@@ -1242,8 +1277,8 @@ button:hover {
     box-sizing: border-box; /* Учитывает паддинги и бордеры в ширину */
     border-radius: 10px;
     padding: 20px;
-    background-color: #000;
-    box-shadow: 0 0 10px 2px #ffdf00b3;
+    background-color: #7ca5db;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     margin: 10px; /* Добавьте отступы, если это необходимо */
 }
 
@@ -1263,6 +1298,112 @@ button:hover {
     margin-right: 5px; /* Добавить отступ справа от чекбокса */
 }
 
+.news-container-text2 {
+    flex: 1 1 30%; /* Рекомендуется использовать `flex-basis` для начальной ширины */
+    max-width: 30%;
+    box-sizing: border-box; /* Учитывает паддинги и бордеры в ширину */
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    margin: 10px; /* Добавьте отступы, если это необходимо */
+}
+
+
+/* Скрываем стандартный input для файла */
+input[type="file"] {
+    display: none;
+  }
+  
+  /* Стили для кастомной кнопки выбора файла */
+  .file-upload-label {
+    display: inline-block;
+    background: #7ca5db;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .file-upload-label:hover {
+    background-color: #5f88c6;
+  }
+
+.add-color {
+    color: white;
+}
+
+.add-bg:hover {
+    background: #ffffff;
+    color: #000;
+}
+
+
+/* Стиль для контейнера с подсказкой */
+.tooltip2 {
+    position: relative;
+    display: inline-block;
+}
+
+/* Скрытая подсказка по умолчанию */
+.tooltip2 .tooltiptext2 {
+    visibility: hidden;
+    width: 150px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Положение подсказки */
+    left: 50%;
+    margin-left: -75px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* Отображение подсказки при наведении */
+.tooltip2:hover .tooltiptext2 {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+.profile-detail-content2 {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Отступы между группами */
+}
+
+.filters-list {
+    width: 35%; /* Ширина контейнера для фильтров */
+}
+
+.profile-list-container {
+    width: 65%; /* Ширина контейнера для списка групп */
+}
+
+.profile-list-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-detail-content2 .profile-detail-left2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 200px; /* Ширина блока с изображением */
+    flex: 1 1 200px; /* Ширина блока */
+    padding: 5px;
+}
+
+.profile-detail-content2 .profile-detail-right2 {
+    display: flex;
+    flex-direction: column;
+    width: 300px; /* Ширина блока с изображением */
+    flex: 1 1 300px; /* Ширина блока */
+    padding: 5px;
+}
 
 @media (max-width: 768px) {
     .news-detail-container,

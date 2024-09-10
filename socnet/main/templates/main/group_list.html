@@ -3,50 +3,48 @@
 {% load custom_filters %}
 
 {% block content %}
-<h2 class="Auth_title">Список групп  </h2>
+<h2 class="Auth_title">Список групп</h2>
 
-
-<div  class="profile-container-wrapper">
-
-<div class="profile-container-list">
+<div class="news-detail-container">
+    <!-- Контейнер для фильтров -->
     <div class="filters-list">
-        <h3 class="Auth_title"> Работа с группами </h3>
         <div class="center-text">
-                     <a class="btn-news" href="{% url 'group_create' %}">Создать группу</a>
+            <a class="btn-news add-color" href="{% url 'group_create' %}">Создать группу</a>
         </div>
-        <h3 class="Auth_title"> Фильтры </h3>
+        <h3 class="Auth_title">Фильтры</h3>
         <form method="get" action="{% url 'groups_list' %}">
             {{ filterset.form.as_p }}
-            <button type="submit" class="btn-filter-list add-font">Применить фильтр</button>
-            <button class="btn-filter-list add-font"> <a href="{% url 'groups_list' %}" class="no-markers" >Сбросить фильтры</a></button>
+            <button type="submit" class="btn-filter-list add-font add-color">Применить фильтр</button>
+            <button class="btn-filter-list add-font"><a href="{% url 'groups_list' %}" class="no-markers add-color">Сбросить фильтры</a></button>
         </form>
     </div>
 
-    <div class="profiles-list">
-         {% for group in groups %}
-            <section class="profile-detail-content">
-                <!-- Левый блок с аватаром и именем -->
-                    <div class="profile-detail-left">
-                              <a href="{% url 'group' group.id %}">
-                                <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="news-inner-image">
+    <!-- Контейнер для списка групп -->
+    <div class="profile-list-container">
+        <div class="profile-detail-content2">
+            {% for group in groups %}
+                <section class="profile-detail-content2">
+                    <!-- Левый блок с аватаром и именем -->
+                    <div class="profile-detail-left2">
+                        <a href="{% url 'group' group.id %}">
+                            <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="news-inner-image">
+                        </a>
+                        <div class="profile-detail-left2">
+                            <a class="profile-name add-color" href="{% url 'group' group.id %}">
+                                {{ group.name }}
                             </a>
-
-                            <div class="profile-detail-left">
-                                     <a class="profile-name" href="{% url 'group' group.id %}">
-                                             {{ group.name }}
-                                     </a>
-                             </div>
+                        </div>
                     </div>
-                <!-- Правый блок с деталями профиля -->
-                <div class="profile-detail-right profile-detail-text">
-                          <p>Описание: {{ group.description }}</p>
+                    <!-- Правый блок с деталями профиля -->
+                    <div class="profile-detail-right2 profile-detail-text add-color">
+                        <p>Описание: {{ group.description }}</p>
                         <p>Тип группы: {{ group.get_group_type_display }}</p>
                         <p>Основатель: {{ group.creator }}</p>
                         <p>Правила группы: {{ group.rules }}</p>
-                </div>
-            </section>
-        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
     </div>
-</div>
 </div>
 {% endblock %}

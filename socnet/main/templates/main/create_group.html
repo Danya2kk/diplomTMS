@@ -15,11 +15,14 @@
             {% endfor %}
         {% endif %}
         <!-- Содержимое профиля: изображение, описание,  -->
-        <div class="form-group">
+        <div class="news-container-text2">
+        <div class="custom-file-upload">
                 <p>{{ form.photo.label_tag }}</p>
-                <p>{{ form.photo }}</p>
+                <label for="file-upload" class="file-upload-label">Выберите файл</label>
+                {{ form.photo }}
             </div>
-        <div class="news-container-text">
+            </div>
+        <div class="news-container-text2">
              <div class="form-group">
                 <p>{{ form.name.label_tag }}</p>
                 <p> {{ form.name }}</p>
@@ -40,7 +43,7 @@
 
 
         </div>
-        <div class="news-container-text">
+        <div class="news-container-text2">
             <button class="add-font" type="submit">Добавить группу</button>
             <button class="add-font" type="button" onclick="window.location.href='{% url 'groups_list' %}'; return false;">Назад</button>
 

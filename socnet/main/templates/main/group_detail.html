@@ -3,25 +3,25 @@
 {% load custom_filters %}
 
 {% block content %}
-<h2 class="Auth_title">Группа {{ group.name }} </h2>
+<h2 class="Auth_title">Группа: "{{ group.name }}" </h2>
 <div class="news-detail-container">
 
     <section class="news-detail-content">
-        <div class="news-detail-text">
+        <div class="news-container-text2">
             <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="profile-image">
         </div>
-        <div class="news-detail-text">
+        <div class="news-container-text2">
             <p>Название группы: {{ group.name }} </p>
             <p>Описание группы {{ group.description }} </p>
             <p>Тип группы: {{ group.group_type }} </p>
             <p>Основатель: {{ group.creator }}</p>
             <p>Правила группы: {{ group.rules }}</p>
         </div>
-        <div class="news-detail-text">
+        <div class="news-container-text2">
             <div class="separator-line"></div>
             {% if is_creator %}
                      <div>
-                                         <a class="btn-news" href="{% url 'chat' group.id %}">Чат группы</a>
+                                         <a class="btn-news add-font add-bg add-color" href="{% url 'chat' group.id %}">Чат группы</a>
                       </div>
                 <div>
                      <button type="button" id="invite-to-group-btn" class="btn-news add-font">
@@ -39,7 +39,7 @@
                         </div>
                 </div>
                 <div>
-                     <a class="btn-news" href="{% url 'group_update' group.id %}">Редактировать группу</a>
+                     <a class="btn-news add-font add-bg" href="{% url 'group_update' group.id %}">Редактировать группу</a>
                 </div>
 
                 <div>
@@ -86,7 +86,7 @@
 
 <div class="news-detail-container2">
     <div id="friend-section">
-        <p class="btn-comment-news">Список участников группы:</p>
+        <p class="btn-comment-news add-color">Список участников группы:</p>
                 {% if group_members %}
 
                     <div class="group-members-container">
@@ -116,7 +116,7 @@
                                 </div>
 
                                 {% if is_creator and group_member.status.name != 'admin' %}
-                                  <button class="kik-group-btn btn-news" data-username="{{ group_member.profile.user.username }}">Исключить</button>
+                                  <button class="kik-group-btn btn-news add-font" data-username="{{ group_member.profile.user.username }}">Исключить</button>
                                 {% endif %}
                             </div>
                         {% endfor %}

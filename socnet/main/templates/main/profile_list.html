@@ -5,23 +5,23 @@
 {% block content %}
 <h2 class="Auth_title"> Список пользователей соц. сети </h2>
 
-<div  class="profile-container-wrapper">
+<div class="news-detail-container">
 
-<div class="profile-container-list">
     <div class="filters-list">
         <h3 class="Auth_title"> Фильтры </h3>
         <form method="get" action="{% url 'profile_list' %}">
             {{ profile_filter.form.as_p }}  <!-- Используем форму для отображения полей -->
-            <button type="submit" class="btn-filter-list add-font">Применить фильтр</button>
-            <button class="btn-filter-list add-font"> <a href="{% url 'profile_list' %}" class="no-markers" >Сбросить фильтры</a></button>
+            <button type="submit" class="btn-filter-list add-font add-color">Применить фильтр</button>
+            <button class="btn-filter-list add-font"> <a href="{% url 'profile_list' %}" class="no-markers add-color" >Сбросить фильтры</a></button>
         </form>
     </div>
 
-    <div class="profiles-list">
+   <div class="profile-list-container">
+       <div class="profile-detail-content2">
         {% for profile in profile_items %}
-            <section class="profile-detail-content">
+            <section class="profile-detail-content2">
                 <!-- Левый блок с аватаром и именем -->
-                <div class="profile-detail-left">
+               <div class="profile-detail-left2">
                     {% with avatars|get_item:profile.id as avatar %}
                         {% if avatar %}
                             <a href="{% url 'profile' profile.user.username %}">
@@ -33,14 +33,14 @@
                             </a>
                         {% endif %}
                     {% endwith %}
-                    <div class="profile-detail-left">
+                   <div class="profile-detail-left2">
                         <a class="profile-name" href="{% url 'profile' profile.user.username %}">
                             {{ profile.firstname }} {{ profile.lastname }}
                         </a>
                     </div>
                 </div>
                 <!-- Правый блок с деталями профиля -->
-                <div class="profile-detail-right profile-detail-text">
+                <div class="profile-detail-right2 profile-detail-text add-color">
                     <p>Возраст: {{ profile.age }}</p>
                     <p>Пол: {{ profile.gender }}</p>
                     <p>Местоположение: {{ profile.location }}</p>

@@ -5,20 +5,20 @@
 <h2 class="Auth_title">Профиль {{ username }} </h2>
 
  <div class="btn_photo">
-        <a href="{% url 'profile' username %}" class="btn-news">Профиль</a>
-        <a href="{% url 'profile-photo' username %}" class="btn-news">Фотографии</a>
+        <a href="{% url 'profile' username %}" class="btn-news add-bg">Профиль</a>
+        <a href="{% url 'profile-photo' username %}" class="btn-news add-bg">Фотографии</a>
 </div>
 <div class="news-detail-container">
     <section class="news-detail-content">
         <!-- Содержимое профиля: изображение, описание,  -->
-        <div class="news-detail-text">
+        <div class="news-container-text2">
             {% if avatar and avatar.file %}
                 <img src="{{ avatar.file.url }}" alt="Avatar" class="profile-image ">
             {% else %}
                 <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="profile-image">
             {% endif %}
         </div>
-        <div class="news-detail-text">
+        <div class="news-container-text2">
             <p>{{ profile.firstname }} {{ profile.lastname }}</p>
             {% if ban_exists_in %}
                  <p>Данные скрыты. Пользователь Вас заблокировал</p>
@@ -34,22 +34,24 @@
                 {% endif %}
             {% endif %}
         </div>
-        <div class="news-detail-text">
+        <div class="news-container-text2">
             {% if is_owner %}
                 <p>Уровень приватности:</p> <p>{{ profile.privacy.name }}: {{ profile.privacy.description }}</p>
 
                  <form id="status-form">
-                                <label>
-                                    <input type="checkbox" id="is_busy_checkbox"
-                                           {% if is_status and is_status.is_busy %}checked{% endif %}>
-                                    Занят
-                                </label>
+                                <label class="tooltip2">
+                                        <input type="checkbox" id="is_busy_checkbox"
+                                               {% if is_status and is_status.is_busy %}checked{% endif %}>
+                                        Занят
+                                        <span class="tooltiptext2">Отметьте, если не хотите получать сообщения!</span>
+                                    </label>
 
-                                <label>
-                                    <input type="checkbox" id="do_not_disturb_checkbox"
-                                           {% if is_status and is_status.do_not_disturb %}checked{% endif %}>
-                                    Не беспокоить
-                                </label>
+                                    <label class="tooltip2">
+                                        <input type="checkbox" id="do_not_disturb_checkbox"
+                                               {% if is_status and is_status.do_not_disturb %}checked{% endif %}>
+                                        Не беспокоить
+                                        <span class="tooltiptext2">Отметьте, если не хотите приглашения в друзья и в группы!</span>
+                                    </label>
                             </form>
             {% else %}
                   {% if is_status and is_status.is_online %}
@@ -90,14 +92,14 @@
             {% endif %}
 
             {% if is_owner %}
-                     <a class="btn-news" href="{% url 'update-profile' %}">Редактировать</a>
+                     <a class="btn-news add-bg" href="{% url 'update-profile' %}">Редактировать</a>
 
             {% else %}
 
 
                     {% if friendship_exists %}
                         <p>Этот человек Ваш друг!</p>
-                        <button type="button" class="btn-news delete-friend add-font" data-url="{% url 'friendship-delete-friend' profile.id %}">
+                        <button type="button" class="btn-news delete-friend add-font add-bg" data-url="{% url 'friendship-delete-friend' profile.id %}">
                             Удалить из друзей
                         </button>
                     {% else %}
@@ -173,7 +175,7 @@
  </section>
 <div class="news-detail-container">
     <div id="friend-section">
-        <p class="btn-comment-news add-font sto">Список друзей:</p>
+        <p class="btn-comment-news add-font sto add-bg">Список друзей:</p>
         {% if friends_profiles %}
             {% for friend in friends_profiles %}
                 <div class="friend-item">
@@ -186,7 +188,7 @@
                             <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
                         </a>
                     {% endif %}
-                    <a class="profile-name" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
+                    <a class="btn-news add-font add-bg" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
                 </div>
             {% endfor %}
         {% else %}
@@ -207,25 +209,24 @@
              <button id="toggle-group-btn" class="btn-comment-news add-font">Показать группы в которых состоит пользователь</button>
 
     <div id="group-section" class="group-section">
-
-                {% if group_list %}
-                    <div class="friend-requests">
-                        <ul>
-                            {% for group in group_list %}
-                                <li class="no-markers">
-
-                                    <div class="news-reaction-block">
-                                        <a class="profile-name" href="{% url 'group' group.id %}"> {{group.group.name }} </a>
-                                     </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% else %}
-                    <p>Пользователь пока не состоит ни в одной группе</p>
-                {% endif %}
-
-     </div>
+    {% if group_list %}
+        <div class="friend-requests">
+            <ul>
+                {% for membership in group_list %}
+                    <li class="no-markers">
+                            <a class="btn-news add-font add-bg" href="{% url 'group' membership.group.id %}"> {{ membership.group.name }} </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+         {% if is_owner %}
+        <p>Вы пока не состоите ни в одной группе</p>
+         {% else %}
+        <p>Пользователь пока не состоит ни в одной группе</p>
+         {% endif %}
+    {% endif %}
+</div>
 
     </div>
 
