@@ -20,29 +20,10 @@
         <div class="news-detail-text">
             <div class="separator-line"></div>
             {% if is_creator %}
-                     <div class="news-reaction-block">
+                     <div>
                                          <a class="btn-news" href="{% url 'chat' group.id %}">Чат группы</a>
                       </div>
-                <div class="news-reaction-block">
-                     <a class="btn-news" href="{% url 'group_update' group.id %}">Редактировать группу</a>
-                </div>
-
-                <div class="news-reaction-block">
-                    <!-- Модальное окно -->
-                        <div id="confirm-delete-modal" style="display: none;">
-                            <div class="modal-content">
-                                <p>Вы уверены, что хотите удалить эту группу?</p>
-                                <button id="confirm-delete-yes">Да</button>
-                                <button id="confirm-delete-no">Нет</button>
-                            </div>
-                        </div>
-
-                        <!-- Кнопка удаления -->
-                     <button type="button" id="delete-group-btn" data-group-id="{{ group.id }}" class="btn-news add-font">Удалить группу</button>
-
-
-                </div>
-                <div class="news-reaction-block">
+                <div>
                      <button type="button" id="invite-to-group-btn" class="btn-news add-font">
                             Пригласить в группу
                      </button>
@@ -57,6 +38,26 @@
                             </div>
                         </div>
                 </div>
+                <div>
+                     <a class="btn-news" href="{% url 'group_update' group.id %}">Редактировать группу</a>
+                </div>
+
+                <div>
+                    <!-- Модальное окно -->
+                        <div id="confirm-delete-modal" style="display: none;">
+                            <div class="modal-content">
+                                <p>Вы уверены, что хотите удалить эту группу?</p>
+                                <button id="confirm-delete-yes">Да</button>
+                                <button id="confirm-delete-no">Нет</button>
+                            </div>
+                        </div>
+
+                        <!-- Кнопка удаления -->
+                     <button type="button" id="delete-group-btn" data-group-id="{{ group.id }}" class="btn-news add-font">Удалить группу</button>
+
+
+                </div>
+
             {% else %}
                {% if not is_member %}
                            {% if public_group %}

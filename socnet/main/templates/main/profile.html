@@ -30,7 +30,6 @@
                     <p>Пол: {% if profile.gender %}{{ profile.gender }}{% endif %}</p>
                     <p>Местоположение: {% if profile.location %}{{ profile.location }}{% endif %}</p>
                     <p>Ссылка: {% if profile.link %}<a href="{{ profile.link }}">{{ profile.link }}</a>{% endif %}</p>
-                    <p>Настройки: {% if profile.settings %}{{ profile.settings }}{% endif %}</p>
                     <p>Интересы: {% if profile.interests.all %}{{ profile.interests.all|join:", " }}{% endif %}</p>
                 {% endif %}
             {% endif %}
@@ -38,11 +37,7 @@
         <div class="news-detail-text">
             {% if is_owner %}
                 <p>Уровень приватности:</p> <p>{{ profile.privacy.name }}: {{ profile.privacy.description }}</p>
-                {% if is_status and is_status.is_online %}
-                    <p>Пользователь онлайн</p>
-                {% else %}
-                    <p>Пользователь офлайн</p>
-                {% endif %}
+
                  <form id="status-form">
                                 <label>
                                     <input type="checkbox" id="is_busy_checkbox"
@@ -56,8 +51,15 @@
                                     Не беспокоить
                                 </label>
                             </form>
+            {% else %}
+                  {% if is_status and is_status.is_online %}
+                    <p>Пользователь онлайн</p>
+                {% else %}
+                    <p>Пользователь офлайн</p>
+                {% endif %}
 
             {% endif %}
+
 
 
             {% if is_admin_groups %}
@@ -91,16 +93,11 @@
                      <a class="btn-news" href="{% url 'update-profile' %}">Редактировать</a>
 
             {% else %}
-                <div class="news-reaction-block">
 
-                    {% if is_status.is_busy %}
-                        <p>Отправка сообщений запрещена (статус "Занят")</p>
-                    {% else %}
-                     <a class="btn-news add-font" href="{% url 'send_mail' %}">Отправить сообщение</a>
-                     {% endif %}
+
                     {% if friendship_exists %}
                         <p>Этот человек Ваш друг!</p>
-                        <button type="button" class="btn-news delete-friend" data-url="{% url 'friendship-delete-friend' profile.id %}">
+                        <button type="button" class="btn-news delete-friend add-font" data-url="{% url 'friendship-delete-friend' profile.id %}">
                             Удалить из друзей
                         </button>
                     {% else %}
@@ -111,6 +108,7 @@
                                 <button class="btn-news add-font" id="send-friend-request" data-profile-id="{{ profile.id }}">Предложить дружбу</button>
                             {% endif %}
                     {% endif %}
+
                     {% if ban_exists_out %}
                          <p>Пользователь Вами заблокирован</p>
                      <button type="button" class="btn-news unblock-people add-font" data-url="{% url 'friendship-unblock-people' profile.id %}">
@@ -121,7 +119,13 @@
                             Заблокировать пользователя
                         </button>
                     {% endif %}
-                </div>
+
+                    {% if is_status.is_busy %}
+                        <p>Отправка сообщений запрещена (статус "Занят")</p>
+                    {% else %}
+                     <a class="btn-news add-font" href="{% url 'send_mail' %}">Отправить сообщение</a>
+                     {% endif %}
+
             {% endif %}
         </div>
     </section>

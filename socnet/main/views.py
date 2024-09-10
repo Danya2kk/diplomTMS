@@ -559,7 +559,7 @@ class LoginUser(LoginView):
         errors_dict = json.loads(errors)
         # Преобразуем ошибки в удобочитаемый формат
         error_str = "\n".join(
-            [f"{key}: {', '.join(error['message'] for error in value)}" for key, value in errors_dict.items()])
+            [f"{', '.join(error['message'] for error in value)}" for value in errors_dict.items()])
 
         # Выводим ошибки как сообщения
         messages.error(self.request, f"Ошибка при авторизации:\n{error_str}")
