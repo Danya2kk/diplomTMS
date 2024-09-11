@@ -12,7 +12,7 @@
             <a class="btn-news add-color" href="{% url 'group_create' %}">Создать группу</a>
         </div>
         <h3 class="Auth_title">Фильтры</h3>
-        <form method="get" action="{% url 'groups_list' %}">
+        <form method="get" action="{% url 'groups_list' %}" class="filter-form">
             {{ filterset.form.as_p }}
             <button type="submit" class="btn-filter-list add-font add-color">Применить фильтр</button>
             <button class="btn-filter-list add-font"><a href="{% url 'groups_list' %}" class="no-markers add-color">Сбросить фильтры</a></button>

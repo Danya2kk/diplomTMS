@@ -35,3 +35,16 @@ class GroupFilter(filters.FilterSet):
     class Meta:
         model = Group
         fields = ['name', 'description', 'group_type', 'creator']
+
+class NewsFilter(filters.FilterSet):
+    title = filters.CharFilter(field_name='title', lookup_expr='icontains', label='Название новости')
+    content = filters.CharFilter(field_name='content', lookup_expr='icontains', label='Текст новости')
+    created_at = filters.CharFilter(field_name='created_at', lookup_expr='icontains', label='Автор новости')
+    tags = filters.ModelMultipleChoiceFilter(
+        field_name='tags',
+        queryset=Tag.objects.all(),
+        label='Тэги'
+    )
+    class Meta:
+        model = News
+        fields = ['title', 'content', 'created_at', 'tags']

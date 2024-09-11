@@ -6,7 +6,12 @@
 }
 
 body {
-    background-color: #d3e2df; /* Черный фон для всего сайта */
+    background-image: url('/static/images/back.jpeg'); /* Указываем путь к изображению */
+    background-size: cover; /* Изображение будет масштабироваться, чтобы покрыть весь экран */
+    background-position: center; /* Центрируем изображение */
+    background-repeat: no-repeat; /* Избегаем повторения изображения */
+    background-attachment: fixed; /* Изображение фиксируется и не прокручивается с контентом */
+    /*background-color: #d3e2df;  Черный фон для всего сайта */
     color: #0e0d0d; /* Белый цвет текста по умолчанию */
     font-family: 'AmaticSC-Bold', sans-serif;
     font-size: 20px;
@@ -25,7 +30,7 @@ nav a {
 }
 
 nav a:hover {
-    box-shadow: 0 0 15px 4px #e0b6dbb3;
+    box-shadow: 0 0 15px 4px rgba(207, 228, 231, 0.702);
     transform: scale(1.3)
 }
 
@@ -229,7 +234,7 @@ form input[type=file] {
 .news-inner-image {
     border-radius: 10px;
     height: auto;
-    max-width: 300px
+    max-width: 250px
 }
 
 .news-detail-content {
@@ -1372,11 +1377,13 @@ input[type="file"] {
 .profile-detail-content2 {
     display: flex;
     flex-wrap: wrap;
+    padding: 5px;
     gap: 20px; /* Отступы между группами */
 }
 
 .filters-list {
     width: 35%; /* Ширина контейнера для фильтров */
+    padding: 10px;
 }
 
 .profile-list-container {
@@ -1403,6 +1410,28 @@ input[type="file"] {
     width: 300px; /* Ширина блока с изображением */
     flex: 1 1 300px; /* Ширина блока */
     padding: 5px;
+}
+
+.filter-form {
+    width: 100%; /* Ширина формы 100% от родительского контейнера */
+    max-width: 300px; /* Максимальная ширина полей формы */
+}
+
+.filter-form input[type=text],
+.filter-form input[type=email],
+.filter-form input[type=number],
+.filter-form select,
+.filter-form textarea {
+    width: 100%; /* Поля формы занимают всю ширину контейнера */
+    max-width: 100%; /* Поля не будут превышать ширину контейнера */
+    padding: 10px; /* Внутренний отступ */
+    background-color: #7ca5db;
+    border: 2px solid #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #0e0d0d;
+    margin: 0; /* Убираем внешние отступы */
+    box-sizing: border-box; /* Учитываем padding и border */
 }
 
 @media (max-width: 768px) {

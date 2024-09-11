@@ -3,7 +3,7 @@ import re
 import logging
 from django.db import transaction
 from django.http import Http404
-from .filters import ProfileFilter, GroupFilter
+from .filters import ProfileFilter, GroupFilter, NewsFilter
 from .forms import  MediaUploadForm
 from django.contrib.auth.mixins import  UserPassesTestMixin
 from .forms import GroupCreateForm, GroupSearchForm
@@ -623,6 +623,27 @@ def news_list(request):
         'news_items': news_items,
     }
     return render(request, 'main/news_list.html', context)
+
+
+class news_listView(LoginRequiredMixin, ListView):
+    model = News
+    template_name = 'main/news_list.html'
+    context_object_name = 'news'
+
+    def get_context_data(self, **kwargs):
+        # Получаем контекст данных из суперкласса ListView
+        context = super().get_context_data(**kwargs)
+
+        # Создаем экземпляр фильтра с данными из запроса и передаем в него queryset
+        filterset = NewsFilter(self.request.GET, queryset=self.get_queryset())
+
+        # Добавляем фильтр в контекст
+        context['filterset'] = filterset
+
+        # Заменяем queryset на отфильтрованный
+        context['news'] = filterset.qs
+
+        return context
 
 
 @require_GET
