@@ -3,11 +3,11 @@
 
 {% block content %}
 <h2 class="Auth_title"> Редактирование профиля </h2>
-<div class="news-detail-container">
+<div class="news-container">
 
     <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <section class="news-detail-content2">
+    <section class="news-container-content">
 
         {% if user_form.errors %}
             {% for key, value in user_form.errors.items %}
@@ -19,7 +19,7 @@
                 <p>{{ avatar_form.file.label_tag }}</p>
                 <p>{{ avatar_form.file }}</p>
             </div>
-        <div class="news-detail-text">
+        <div class="news-container-text">
              <div class="form-group">
                 <p>{{ user_form.username.label_tag }}</p>
                 <p> {{ user_form.username }}</p>
@@ -70,22 +70,17 @@
                 </div>
 
         </div>
-        <div class="news-detail-text">
-            <button type="submit">Сохранить изменения</button>
-            <button type="reset">Сбросить</button>
+        <div class="news-container-text">
+            <button class="add-font" type="submit">Сохранить изменения</button>
+            <button class="add-font" type="reset">Сбросить</button>
 
             <div class="separator-line"></div>
-                <div class="news-reaction-block">
-                     <p><a href="{% url 'password_change' %}">Сменить пароль</a></p>
-                </div>
-                 <form action="{% url 'my_profile' %}">
-                    {% csrf_token %}
-                    <button>Назад</button>
-                </form>
+                     <p><a class="btb-update" href="{% url 'password_change' %}">Сменить пароль</a></p>
+            <div class="separator-line"></div>
+            <button class="add-font" type="button" onclick="window.location.href='{% url 'profile' username %}'; return false;">Назад</button>
 
         </div>
     </section>
      </form>
 </div>
-<script src="{% static 'js/popup.js' %}"></script>
 {% endblock %}

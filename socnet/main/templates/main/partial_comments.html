@@ -3,12 +3,12 @@
     <div class="comment">
         <p><strong>{{ comment.author.firstname }} {{ comment.author.lastname }}:</strong> {{ comment.text }}</p>
         <p class="comment-date">{{ comment.created_at }}</p>
-        <a class="btn-comment" href="javascript:void(0);" onclick="toggleCommentForm('reply-form-{{ comment.id }}');">Ответить</a>
+        <a class="btn-comment add-font" href="javascript:void(0);" onclick="toggleCommentForm('reply-form-{{ comment.id }}');">Ответить</a>
 
         <!-- Форма добавления ответа на комментарий -->
         <div id="reply-form-{{ comment.id }}" class="comment-form reply" style="display:none;">
             <textarea id="reply-text-{{ comment.id }}" placeholder="Введите ваш ответ"></textarea>
-            <button class="btn-comment" onclick="submitComment({{ comment.id }})">Отправить</button>
+            <button class="btn-comment add-font" onclick="submitComment({{ comment.id }})">Отправить</button>
         </div>
 
         <!-- Ответы на комментарий -->
@@ -16,12 +16,12 @@
             <div class="comment reply">
                 <p><strong>{{ reply.author.firstname }} {{ reply.author.lastname }}:</strong> {{ reply.text }}</p>
                 <p class="comment-date">{{ reply.created_at }}</p>
-                <a class="btn-comment" href="javascript:void(0);" onclick="toggleCommentForm('reply-form-{{ reply.id }}');">Ответить</a>
+                <a class="btn-comment add-font" href="javascript:void(0);" onclick="toggleCommentForm('reply-form-{{ reply.id }}');">Ответить</a>
 
                 <!-- Форма добавления ответа на ответ -->
                 <div id="reply-form-{{ reply.id }}" class="comment-form reply" style="display:none;">
                     <textarea id="reply-text-{{ reply.id }}" placeholder="Введите ваш ответ"></textarea>
-                    <button class="btn-comment" onclick="submitComment({{ reply.id }})">Отправить</button>
+                    <button class="btn-comment add-font" onclick="submitComment({{ reply.id }})">Отправить</button>
                 </div>
             </div>
         {% endfor %}

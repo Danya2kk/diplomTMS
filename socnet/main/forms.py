@@ -1,13 +1,17 @@
-from django import forms
-from .models import User, Group, Friendship
+import sys
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
+
+from .models import Group, Friendship
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Profile, User, Mediafile, Comment, Interest, PrivacyLevel,Mail
 from .models import News, Tag, Reaction
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-
+from django.contrib.auth.forms import AuthenticationForm
+from PIL import Image
+from io import BytesIO
 
 class RegistrationForm(forms.ModelForm):
     password = forms.CharField(
@@ -27,6 +31,12 @@ class RegistrationForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'placeholder': 'Введите email', 'class': 'form-input'}),
             'first_name': forms.TextInput(attrs={'placeholder': 'Введите имя', 'class': 'form-input'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Введите фамилию', 'class': 'form-input'}),
+        }
+        labels = {
+            'username': 'Логин',
+            'email': 'Email',
+            'first_name': 'Имя',
+            'last_name': 'Фамилия',
         }
 
     def clean(self):
@@ -121,23 +131,67 @@ class UpdateProfileForm(forms.ModelForm):
 
 
 class AvatarUploadForm(forms.ModelForm):
-
     file = forms.ImageField(
-        label='Аватар',  # Метка для поля file
-        required=False  # Поле не обязательно
+        label='Аватар',
+        required=False
     )
-    # file = forms.FileField(required=False)
+
+    class Meta:
+        model = Mediafile
+        fields = ['file']
+
+    def save(self, profile=None, *args, **kwargs):
+        avatar = super().save(commit=False)
+
+        # Установим профиль, если он передан
+        if profile:
+            avatar.profile = profile
+
+        # Если изображение загружено
+        if self.cleaned_data.get('file'):
+            image = self.cleaned_data['file']
+            img = Image.open(image)
+
+            # Приведение изображения к размеру 300x300 пикселей
+            img = img.resize((250, 250), Image.Resampling.LANCZOS)
+
+            # Преобразование изображения обратно в файл для сохранения
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=90)
+            output.seek(0)
+
+            # Создаем новое изображение для сохранения в модели
+            avatar.file = InMemoryUploadedFile(output, 'ImageField', f"{image.name.split('.')[0]}.jpg", 'image/jpeg', sys.getsizeof(output), None)
+
+        avatar.save()
+        return avatar
+
+
+class MediaUploadForm(forms.ModelForm):
+    file = forms.ImageField(
+        label='Фотография',
+        # required=False
+    )
 
     class Meta:
         model = Mediafile
         fields = ['file']
 
 
-class UserPasswordChangeForm(PasswordChangeForm):
-    old_password = forms.CharField(label='Старый пароль', widget=forms.PasswordInput(attrs={'class': 'form-input'}))
-    new_password1 = forms.CharField(label='Новый пароль', widget=forms.PasswordInput(attrs={'class': 'form-input'}))
-    new_password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput(attrs={'class': 'form-input'}))
 
+class UserPasswordChangeForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        label='Старый пароль',
+        widget=forms.PasswordInput(attrs={'class': 'form-input'})
+    )
+    new_password1 = forms.CharField(
+        label='Новый пароль',
+        widget=forms.PasswordInput(attrs={'class': 'form-input'})
+    )
+    new_password2 = forms.CharField(
+        label='Повторить пароль',
+        widget=forms.PasswordInput(attrs={'class': 'form-input'})
+    )
 
 class NewsForm(forms.ModelForm):
     title = forms.CharField(
@@ -150,7 +204,6 @@ class NewsForm(forms.ModelForm):
     )
     image = forms.ImageField(
         label='Изображение',  # Метка для поля image
-        required=False  # Поле не обязательно
     )
     # tags = forms.ModelMultipleChoiceField(
     #     queryset=Tag.objects.all(),
@@ -248,19 +301,55 @@ class FriendshipSearchForm(forms.Form):
 
 
 class GroupCreateForm(forms.ModelForm):
+
+    name = forms.CharField(
+        label='Название',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите название группы', 'class': 'form-input'})
+    )
+    description = forms.CharField(
+        label='Описание группы',
+        widget=forms.Textarea(attrs={'placeholder': 'Введите описание группы', 'class': 'form-input'})
+    )
+
+    group_type = forms.ChoiceField(
+        label='Тип группы',
+        choices=Group.GROUP_TYPES,
+        widget=forms.Select(attrs={'class': 'form-checkbox'}),  # Чекбоксы для множественного выбора
+    )
+    photo = forms.ImageField(
+        label='Изображение',  # Метка для поля image
+    )
+
+    rules = forms.CharField(
+        label='Правила группы',
+        widget=forms.Textarea(attrs={'placeholder': 'Укажите правила группы', 'class': 'form-input'})
+    )
     class Meta:
         model = Group
         fields = ['name', 'description', 'photo', 'group_type', 'rules']
-        widgets = {
-            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'rules': forms.Textarea(attrs={'rows': 3}),
-            'group_type': forms.Select(attrs={'class': 'form-control'}),
-        }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, *kwargs)
-        self.fields['creator'].initial = kwargs.get('user').profile
+    def save(self, *args, **kwargs):
+        group = super().save(commit=False)
 
+        # Если изображение загружено
+        if self.cleaned_data.get('photo'):
+            image = self.cleaned_data['photo']
+            img = Image.open(image)
+
+            # Приведение изображения к размеру 500x500 пикселей
+            img = img.resize((250, 250), Image.Resampling.LANCZOS)
+
+            # Преобразование изображения обратно в файл для сохранения
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=90)  # Сохраняем с качеством 90%
+            output.seek(0)
+
+            # Создаем новое изображение для сохранения в модели
+            group.photo = InMemoryUploadedFile(output, 'ImageField', f"{image.name.split('.')[0]}.jpg", 'image/jpeg',
+                                               sys.getsizeof(output), None)
+
+        group.save()
+        return group
 
 class GroupUpdateForm(forms.ModelForm):
     class Meta:
@@ -271,6 +360,7 @@ class GroupUpdateForm(forms.ModelForm):
             'rules': forms.Textarea(attrs={'rows': 3}),
             # 'group_type': forms.Select(choices=GROUP_TYPES),
         }
+
 
 
 class GroupSearchForm(forms.Form):

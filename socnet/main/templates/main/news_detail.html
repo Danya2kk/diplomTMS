@@ -5,22 +5,24 @@
 <div class="news-detail-container">
     <section class="news-detail-content">
         <!-- Содержимое новости: изображение, описание, теги и т.д. -->
+        <div class="news-container-text2">
         <img src="{{ news_item.image.url }}" alt="Описание фото" class="news-inner-image">
-        <div class="news-detail-text">
-            <p>{{ news_item.content }}</p>
+            </div>
+        <div class="news-container-text2">
+            <p>Новость: {{ news_item.content }}</p>
             <p>Тэги: {{ news_item.tags.all|join:", " }}</p>
             <p>Автор: {{ news_item.profile.firstname }} {{ news_item.profile.lastname }}</p>
             <p>Дата создания: {{ news_item.created_at }}</p>
         </div>
-        <div class="news-detail-text">
-            <a class="btn-news" href="{% url 'news_create' %}">Добавить новость</a>
+        <div class="news-container-text2">
+            <a class="btn-news add-bg" href="{% url 'news_create' %}">Добавить новость</a>
             {% if is_owner %}
-                <a class="btn-news" href="{% url 'news_edit' news_item.pk %}">Редактировать</a>
-                <a class="btn-news" href="{% url 'news_delete' news_item.pk %}">Удалить</a>
+                <a class="btn-news add-bg" href="{% url 'news_edit' news_item.pk %}">Редактировать</a>
+                <a class="btn-news add-bg" href="{% url 'news_delete' news_item.pk %}">Удалить</a>
             {% endif %}
             <div class="separator-line"></div>
             {% if is_owner %}
-                <div class="news-reaction-block">
+
                     <p>Реакция на новость</p>
                     <button class="reaction-btn {% if user_reaction == 'like' %}active{% endif %}" data-object-id="{{ news_item.id }}" data-model-name="news" data-reaction-type="like">
                         <img class="reaction-img" src="{% static 'images/like.gif' %}" alt="Like">
@@ -28,8 +30,8 @@
                     <button class="reaction-btn {% if user_reaction == 'dislike' %}active{% endif %}" data-object-id="{{ news_item.id }}" data-model-name="news" data-reaction-type="dislike">
                         <img class="reaction-img" src="{% static 'images/dislike.gif' %}" alt="Dislike">
                     </button>
-                </div>
-                <div class="news-reaction-block">
+                <div class="separator-line"></div>
+                <div>
                     <p>Средний рейтинг: <span id="total-score">{{ total_score }}</span></p>
                 </div>
             {% endif %}
@@ -39,15 +41,15 @@
 
 <div class="comments-wrapper">
     <!-- Кнопка для показа/скрытия комментариев -->
-    <button id="toggle-comments-btn" class="btn-comment-news">Показать комментарии</button>
+    <button id="toggle-comments-btn" class="btn-comment-news add-font">Показать комментарии</button>
 
     <!-- Область комментариев -->
     <div id="comments-section" class="comments-section">
-        <a class="btn-comment" href="javascript:void(0);" onclick="toggleCommentForm('new-comment-form');">Добавить комментарий</a>
+        <a class="btn-comment add-bg" href="javascript:void(0);" onclick="toggleCommentForm('new-comment-form');">Добавить комментарий</a>
 
         <div id="new-comment-form" class="comment-form" style="display:none;">
             <textarea id="new-comment-text" placeholder="Введите ваш комментарий"></textarea>
-            <button onclick="submitComment()">Отправить</button>
+            <button class="add-font add-bg" onclick="submitComment()">Отправить</button>
         </div>
 
         <!-- Включение HTML комментариев из partial_comments.html -->
@@ -55,30 +57,8 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="{% static 'js/popup.js' %}"></script>
 <script>
-$(document).ready(function() {
-
-      // Функция для установки ширины comments-wrapper и кнопки
-    function adjustContentWidth() {
-        // Получаем ширину контейнера .news-detail-content
-        var contentWidth = $('.news-detail-content').outerWidth();
-
-        // Устанавливаем эту ширину для comments-wrapper
-        $('.comments-wrapper').css('width', contentWidth + 'px');
-
-        // Устанавливаем ширину кнопки на 100% от родительского контейнера
-        $('#toggle-comments-btn').css('width', '100%');
-    }
-
-    // Вызываем функцию при загрузке страницы
-    adjustContentWidth();
-
-    // Вызываем функцию при изменении размера окна
-    $(window).resize(function() {
-        adjustContentWidth();
-    });
+    $(document).ready(function() {
 
 
     // Реакции на новости
@@ -176,6 +156,7 @@ $(document).ready(function() {
         });
     };
 });
+
 </script>
 
 

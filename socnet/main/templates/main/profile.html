@@ -2,15 +2,23 @@
 {% load static %}
 
 {% block content %}
+<h2 class="Auth_title">Профиль {{ username }} </h2>
+
+ <div class="center_btn">
+        <a href="{% url 'profile' username %}" class="btn-news add-bg">Профиль</a>
+        <a href="{% url 'profile-photo' username %}" class="btn-news add-bg">Фотографии</a>
+</div>
 <div class="news-detail-container">
     <section class="news-detail-content">
         <!-- Содержимое профиля: изображение, описание,  -->
-        {% if avatar and avatar.file %}
-            <img src="{{ avatar.file.url }}" alt="Avatar" class="news-inner-image">
-        {% else %}
-            <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
-        {% endif %}
-        <div class="news-detail-text">
+        <div class="news-container-text2">
+            {% if avatar and avatar.file %}
+                <img src="{{ avatar.file.url }}" alt="Avatar" class="profile-image ">
+            {% else %}
+                <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="profile-image">
+            {% endif %}
+        </div>
+        <div class="news-container-text2">
             <p>{{ profile.firstname }} {{ profile.lastname }}</p>
             {% if ban_exists_in %}
                  <p>Данные скрыты. Пользователь Вас заблокировал</p>
@@ -18,79 +26,117 @@
                 {% if restricted_view %}
                     <p>Пользователь скрыл информацию о себе</p>
                 {% else %}
-                    <p>Возраст: {{ profile.age }}</p>
-                    <p>Пол: {{ profile.gender }}</p>
-                    <p>Местоположение: {{ profile.location }}</p>
-                    <p>Ссылка: <a href="{{ profile.link }}">{{ profile.link }}</a></p>
-                    <p>Настройки: {{ profile.settings }}</p>
-                    <p>Интересы: {{ profile.interests.all|join:", " }}</p>
+                    <p>Возраст: {% if profile.age %}{{ profile.age }}{% endif %}</p>
+                    <p>Пол: {% if profile.gender %}{{ profile.gender }}{% endif %}</p>
+                    <p>Местоположение: {% if profile.location %}{{ profile.location }}{% endif %}</p>
+                    <p>Ссылка: {% if profile.link %}<a href="{{ profile.link }}">{{ profile.link }}</a>{% endif %}</p>
+                    <p>Интересы: {% if profile.interests.all %}{{ profile.interests.all|join:", " }}{% endif %}</p>
                 {% endif %}
             {% endif %}
         </div>
-        <div class="news-detail-text">
+        <div class="news-container-text2">
             {% if is_owner %}
                 <p>Уровень приватности:</p> <p>{{ profile.privacy.name }}: {{ profile.privacy.description }}</p>
-            {% endif %}
-            <div class="separator-line"></div>
-            {% if is_owner %}
-                <div class="news-reaction-block">
-                     <a class="btn-news" href="{% url 'update-profile' %}">Редактировать</a>
-                </div>
+
+                 <form id="status-form">
+                                <label class="tooltip2">
+                                        <input type="checkbox" id="is_busy_checkbox"
+                                               {% if is_status and is_status.is_busy %}checked{% endif %}>
+                                        Занят
+                                        <span class="tooltiptext2">Отметьте, если не хотите получать сообщения!</span>
+                                    </label>
+
+                                    <label class="tooltip2">
+                                        <input type="checkbox" id="do_not_disturb_checkbox"
+                                               {% if is_status and is_status.do_not_disturb %}checked{% endif %}>
+                                        Не беспокоить
+                                        <span class="tooltiptext2">Отметьте, если не хотите приглашения в друзья и в группы!</span>
+                                    </label>
+                            </form>
             {% else %}
-                <div class="news-reaction-block">
-                     <a class="btn-news" href="{% url 'update-profile' %}">Отправить сообщение</a>
+                  {% if is_status and is_status.is_online %}
+                    <p>Пользователь онлайн</p>
+                {% else %}
+                    <p>Пользователь офлайн</p>
+                {% endif %}
+
+            {% endif %}
+
+
+
+            {% if is_admin_groups %}
+            <div class="separator-line"></div>
+
+           <!-- Кнопка для вызова модального окна -->
+                     {% if not is_owner %}
+                    <button id="inviteBtn" class="btn-news add-font">Пригласить в группу</button>
+                    {% endif %}
+                    <!-- Модальное окно (скрыто по умолчанию) -->
+                    <div id="inviteModal" class="modal">
+                      <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h2>Выберите группу для приглашения</h2>
+
+                        <!-- Выбор группы -->
+                        <label for="group-select">Группа:</label>
+                        <select id="group-select">
+                          {% for group in is_admin_groups %}
+                            <option value="{{ group.group.id }}" class="btn">{{ group.group.name }}</option>
+                          {% endfor %}
+                        </select>
+
+                        <!-- Кнопка для отправки приглашения -->
+                        <button id="sendInviteBtn" class="btn-news add-font">Отправить приглашение</button>
+                      </div>
+                    </div>
+            {% endif %}
+
+            {% if is_owner %}
+                     <a class="btn-news add-bg" href="{% url 'update-profile' %}">Редактировать</a>
+
+            {% else %}
+
 
                     {% if friendship_exists %}
                         <p>Этот человек Ваш друг!</p>
-                        <button type="button" class="btn-news delete-friend" data-url="{% url 'friendship-delete-friend' profile.id %}">
+                        <button type="button" class="btn-news delete-friend add-font add-bg" data-url="{% url 'friendship-delete-friend' profile.id %}">
                             Удалить из друзей
                         </button>
                     {% else %}
-                     <button class="btn-news" id="send-friend-request" data-profile-id="{{ profile.id }}">Предложить дружбу</button>
+
+                            {% if is_status.do_not_disturb %}
+                                <p>Предложение дружбы и приглашения в группу заблокированы (статус "Не беспокоить")</p>
+                            {% else %}
+                                <button class="btn-news add-font" id="send-friend-request" data-profile-id="{{ profile.id }}">Предложить дружбу</button>
+                            {% endif %}
                     {% endif %}
+
                     {% if ban_exists_out %}
                          <p>Пользователь Вами заблокирован</p>
-                     <button type="button" class="btn-news unblock-people" data-url="{% url 'friendship-unblock-people' profile.id %}">
+                     <button type="button" class="btn-news unblock-people add-font" data-url="{% url 'friendship-unblock-people' profile.id %}">
                             Разблокировать
                         </button>
                     {% else %}
-                    <button type="button" class="btn-news block-people" data-url="{% url 'friendship-block-people' profile.id %}">
+                    <button type="button" class="btn-news block-people add-font" data-url="{% url 'friendship-block-people' profile.id %}">
                             Заблокировать пользователя
                         </button>
                     {% endif %}
-                </div>
+
+                    {% if is_status.is_busy %}
+                        <p>Отправка сообщений запрещена (статус "Занят")</p>
+                    {% else %}
+                     <a class="btn-news add-font" href="{% url 'send_mail' %}">Отправить сообщение</a>
+                     {% endif %}
+
             {% endif %}
         </div>
     </section>
 </div>
-
-<div class="news-detail-container2">
-       <p class="btn-comment-news">Список друзей:</p>
-
-    {% if friends_profiles %}
-        {% for friend in friends_profiles %}
-            {% if friend.avatars %}
-                        <a href="{% url 'profile' friend.user.username %}">
-                            <<img src="{{ friend.avatars.0.file.url }}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
-                        </a>
-             {% else %}
-                        <a href="{% url 'profile' friend.user.username %}">
-                             <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
-                        </a>
-             {% endif %}
-            <a class="profile-name" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
-        {% endfor %}
-    {% else %}
-        <p>У вас нет друзей!</p>
-    {% endif %}
-</div>
-
 <section class="news-detail-content">
 
     {% if is_owner %}
     <div class="comments-wrapper">
-        <button id="toggle-comments-btn" class="btn-comment-news">Показать запросы в друзья</button>
-
+        <button id="toggle-comments-btn" class="btn-comment-news add-font">Показать запросы в друзья</button>
 
     <div id="comments-section" class="comments-section">
 
@@ -103,12 +149,12 @@
                                     <div class="news-reaction-block">
                                         <a class="profile-name" href="{% url 'profile' request.profile_one.user.username %}"> {{ request.profile_one.firstname }} {{ request.profile_one.lastname }} </a>
 
-                                         <button type="button" class="btn-news accept-request" data-url="{% url 'friendship-accept-request' request.id %}">
+                                         <button type="button" class="btn-news add-font accept-request" data-url="{% url 'friendship-accept-request' request.id %}">
                                                  Принять
                                         </button>
 
                                     </form>
-                                        <button type="button" class="btn-news deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
+                                        <button type="button" class="btn-news add-font deny-friend-request" data-url="{% url 'friendship-deny-request' request.id %}">
                                                  Отклонить запрос
                                         </button>
                                     </div>
@@ -126,38 +172,180 @@
     </div>
 
     {% endif %}
+ </section>
+<div class="news-detail-container">
+    <div id="friend-section">
+        <p class="btn-comment-news add-font sto add-bg">Список друзей:</p>
+        {% if friends_profiles %}
+            {% for friend in friends_profiles %}
+                <div class="friend-item">
+                    {% if friend.avatars %}
+                        <a href="{% url 'profile' friend.user.username %}">
+                            <img src="{{ friend.avatars.0.file.url }}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
+                        </a>
+                    {% else %}
+                        <a href="{% url 'profile' friend.user.username %}">
+                            <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
+                        </a>
+                    {% endif %}
+                    <a class="btn-news add-font add-bg" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            {% if is_owner %}
+                <p>У вас нет друзей!</p>
+            {% else %}
+                <p>Друзей нет</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+
+
+<section class="news-detail-content2">
+
+    <div class="comments-wrapper2">
+             <button id="toggle-group-btn" class="btn-comment-news add-font">Показать группы в которых состоит пользователь</button>
+
+    <div id="group-section" class="group-section">
+    {% if group_list %}
+        <div class="friend-requests">
+            <ul>
+                {% for membership in group_list %}
+                    <li class="no-markers">
+                            <a class="btn-news add-font add-bg" href="{% url 'group' membership.group.id %}"> {{ membership.group.name }} </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+         {% if is_owner %}
+        <p>Вы пока не состоите ни в одной группе</p>
+         {% else %}
+        <p>Пользователь пока не состоит ни в одной группе</p>
+         {% endif %}
+    {% endif %}
+</div>
+
+    </div>
+
 </section>
-<script src="{% static 'js/popup.js' %}"></script>
 <script>
+     document.addEventListener("DOMContentLoaded", function() {
+    var inviteBtn = document.getElementById("sendInviteBtn");
+
+    if (inviteBtn) {
+        inviteBtn.addEventListener("click", function() {
+            var groupId = document.getElementById("group-select").value;
+            var username = "user";  // Передаем имя пользователя через шаблон
+
+            console.log("Group ID:", groupId);
+            console.log("Username:", username);
+
+            // Закрытие модального окна
+            var modal = document.getElementById("inviteModal");
+            if (modal) {
+                modal.style.display = "none";
+            }
+
+            // Отправляем POST-запрос с username и pk (id группы)
+                fetch(`/groups/invite/${username}/${groupId}/`, {
+                      method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            'X-CSRFToken': csrftoken,
+                            'Accept': 'application/json'
+                      },
+              body: JSON.stringify({
+                username: username,
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000); // Задержка в 2 секунды для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => console.error('Ошибка:', error));
+        });
+    }
+    // Логика открытия/закрытия модального окна
+  var modal = document.getElementById("inviteModal");
+  var btn = document.getElementById("inviteBtn");
+  var span = document.getElementsByClassName("close")[0];
+
+  btn.onclick = function() {
+    modal.style.display = "block";
+  }
+
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+});
+
+
+
+
+     $(document).ready(function() {
+        // Обработчик изменения чекбокса "Занят"
+        $('#is_busy_checkbox').change(function() {
+            updateStatus('is_busy', $(this).is(':checked'));
+        });
+
+        // Обработчик изменения чекбокса "Не беспокоить"
+        $('#do_not_disturb_checkbox').change(function() {
+            updateStatus('do_not_disturb', $(this).is(':checked'));
+        });
+
+        // Функция для отправки AJAX-запроса
+        function updateStatus(statusType, statusValue) {
+            $.ajax({
+                url: '{% url "update_status" %}',  // URL, который вы добавили в urls.py
+                type: 'POST',
+                data: {
+                    'status_type': statusType,
+                    'status_value': statusValue,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    console.log(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+    });
+
 $(document).ready(function() {
     // Функция для установки ширины comments-wrapper и кнопки
-    function adjustContentWidth() {
-        // Получаем ширину контейнера .news-detail-content
-        var contentWidth = $('.news-detail-content').outerWidth();
 
-        // Устанавливаем эту ширину для comments-wrapper
-        $('.comments-wrapper').css('width', contentWidth + 'px');
-        $('.news-detail-container2').css('width', contentWidth + 'px');
-        $('.btn-comment-news').css('width', contentWidth + 'px');
-
-
-        // Устанавливаем ширину кнопки на 100% от родительского контейнера
-        $('#toggle-comments-btn').css('width', '100%');
-    }
-
-    // Вызываем функцию при загрузке страницы
-    adjustContentWidth();
-
-    // Вызываем функцию при изменении размера окна
-    $(window).resize(function() {
-        adjustContentWidth();
-    });
 
     // Скрипт для аккордеона запросов дружбы
     $('#toggle-comments-btn').click(function() {
         $('#comments-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
             var isVisible = $('#comments-section').is(':visible');
             $('#toggle-comments-btn').text(isVisible ? 'Скрыть запросы дружбы' : 'Показать запросы дружбы');
+        });
+    });
+
+    // Скрипт для аккордеона групп
+    $('#toggle-group-btn').click(function() {
+        $('#group-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
+            var isVisible = $('#group-section').is(':visible');
+            $('#toggle-group-btn').text(isVisible ? 'Скрыть  группы в которых состоит пользователь' : 'Показать группы в которых состоит пользователь');
         });
     });
 
@@ -349,6 +537,7 @@ $(document).ready(function() {
         });
     });
 });
+
 </script>
 
 {% endblock %}

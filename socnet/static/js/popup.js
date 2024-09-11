@@ -1,42 +1,53 @@
-$(document).ready(function() {
-    // Функция для показа всплывающего окна с сообщением
-    function showPopup(message, popupId) {
-        const popup = document.getElementById(popupId);
-        const popupMessage = popup.querySelector('.popup-message');
-        if (popup && popupMessage) {
-            popupMessage.textContent = message;
-            popup.style.display = 'block';
-            popup.classList.remove('fade-out');
-            popup.classList.add('fade-in');
+console.log("popup.js загружен");
 
-            // Скрыть сообщение через 3 секунды
+function showAjaxPopup(message) {
+    const popup = document.getElementById('ajax-popup');
+    const popupMessage = document.getElementById('ajax-popup-message');
+
+    if (popup && popupMessage) {
+        popupMessage.textContent = message;
+        popup.style.display = 'block'; // Показываем окно
+
+        setTimeout(() => {
+            popup.style.opacity = 1; // Показать плавно
             setTimeout(() => {
-                popup.classList.remove('fade-in');
-                popup.classList.add('fade-out');
+                popup.style.opacity = 0; // Скрыть плавно
                 setTimeout(() => {
-                    popup.style.display = 'none';
-                }, 500); // Задержка для анимации исчезновения
-            }, 3000); // Задержка до начала исчезновения
-        }
+                    popup.style.display = 'none'; // Прячем полностью
+                }, 500);
+            }, 3000);
+        }, 100);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Получаем все сообщения из блока
+    const djangoMessagesContainer = document.getElementById('django-messages');
+    if (djangoMessagesContainer) {
+        const messages = djangoMessagesContainer.querySelectorAll('.alert');
+        messages.forEach(function(messageElement) {
+            const message = messageElement.textContent.trim();
+            if (message) {
+                showAjaxPopup(message);
+                // Сброс страницы после показа сообщения
+                setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 2 секунды для отображения сообщения
+            }
+        });
     }
 
-    // Проверяем наличие сообщений из Django
-    $('#django-messages .alert').each(function() {
-        // Показываем сообщение
-        showPopup($(this).text(), 'success-popup');
-
-        // Удаляем сообщение из DOM через 3 секунды (для улучшения производительности)
-        setTimeout(() => {
-            $(this).remove();
-        }, 3000); // Убедитесь, что это значение совпадает с задержкой в showPopup
-    });
-
     // Закрытие всплывающего окна
-    $('#close-popup').click(function() {
-        $('#success-popup').fadeOut();
-    });
-
-    $('#close-ajax-popup').click(function() {
-        $('#ajax-popup').fadeOut();
-    });
+    const closeAjaxButton = document.getElementById('close-ajax-popup');
+    if (closeAjaxButton) {
+        closeAjaxButton.addEventListener('click', function() {
+            const popup = document.getElementById('ajax-popup');
+            if (popup) {
+                popup.style.opacity = 0;
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                }, 500);
+            }
+        });
+    }
 });

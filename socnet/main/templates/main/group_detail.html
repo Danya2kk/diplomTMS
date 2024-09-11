@@ -1,0 +1,549 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<h2 class="Auth_title">Группа: "{{ group.name }}" </h2>
+<div class="news-detail-container">
+
+    <section class="news-detail-content">
+        <div class="news-container-text2">
+            <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="profile-image">
+        </div>
+        <div class="news-container-text2">
+            <p>Название группы: {{ group.name }} </p>
+            <p>Описание группы {{ group.description }} </p>
+            <p>Тип группы: {{ group.group_type }} </p>
+            <p>Основатель: {{ group.creator }}</p>
+            <p>Правила группы: {{ group.rules }}</p>
+        </div>
+        <div class="news-container-text2">
+            <div class="separator-line"></div>
+            {% if is_creator %}
+                     <div>
+                                         <a class="btn-news add-font add-bg add-color" href="{% url 'chat' group.id %}">Чат группы</a>
+                      </div>
+                <div>
+                     <button type="button" id="invite-to-group-btn" class="btn-news add-font">
+                            Пригласить в группу
+                     </button>
+
+                        <!-- Модальное окно -->
+                        <div id="invite-modal" class="popup">
+                            <div class="popup-content">
+                                <span class="close">&times;</span>
+                                <h2>Пригласить пользователя в группу</h2>
+                                <input type="text_group" id="username-input" placeholder="Введите username того кого хотите пригласить в группу">
+                                <button id="send-invite-btn" class="btn-news add-font">Отправить приглашение</button>
+                            </div>
+                        </div>
+                </div>
+                <div>
+                     <a class="btn-news add-font add-bg" href="{% url 'group_update' group.id %}">Редактировать группу</a>
+                </div>
+
+                <div>
+                    <!-- Модальное окно -->
+                        <div id="confirm-delete-modal" style="display: none;">
+                            <div class="modal-content">
+                                <p>Вы уверены, что хотите удалить эту группу?</p>
+                                <button id="confirm-delete-yes">Да</button>
+                                <button id="confirm-delete-no">Нет</button>
+                            </div>
+                        </div>
+
+                        <!-- Кнопка удаления -->
+                     <button type="button" id="delete-group-btn" data-group-id="{{ group.id }}" class="btn-news add-font">Удалить группу</button>
+
+
+                </div>
+
+            {% else %}
+               {% if not is_member %}
+                           {% if public_group %}
+
+                                    <button id="join-group-btn" class="btn-news add-font">Вступить в группу</button>
+                                 {% else %}
+                                    {% if secret_group%}
+                                     <p>Группа секретная. Как вы это видите- понятия не имею!</p>
+                                    {% else %}
+                                   <p>Группа закрытая. По вопросу вступления в группу обратитесь к администратору</p>
+                                    {% endif %}
+                           {% endif %}
+                 {% else %}
+
+                                         <a class="btn-news add-font" href="{% url 'chat' group.id %}">Чат группы</a>
+                                        <button id="leave-group-btn" class="btn-news add-font">Выйти из группы</button>
+
+                 {% endif %}
+
+            {% endif %}
+
+
+        </div>
+    </section>
+</div>
+
+<div class="news-detail-container2">
+    <div id="friend-section">
+        <p class="btn-comment-news add-color">Список участников группы:</p>
+                {% if group_members %}
+
+                    <div class="group-members-container">
+                        {% for group_member in group_members %}
+                            <div class="group-member">
+                                <!-- Контейнер для статуса участника -->
+                                <div class="group-member-status">
+                                    <p>{{ group_member.status.name }}</p>
+                                </div>
+
+                                <!-- Контейнер для аватара участника -->
+                                <div class="group-member-avatar">
+                                    {% if group_member.profile.avatars %}
+                                        <a href="{% url 'profile' group_member.profile.user.username %}">
+                                            <img src="{{ group_member.profile.avatars.0.file.url }}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'profile' group_member.profile.user.username %}">
+                                            <img src="{% static 'images/nophoto.jpg' %}" alt="{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}" width="80">
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Контейнер для имени участника -->
+                                <div class="group-member-name">
+                                    <a class="profile-group-name" href="{% url 'profile' group_member.profile.user.username %}">{{ group_member.profile.firstname }} {{ group_member.profile.lastname }}</a>
+                                </div>
+
+                                {% if is_creator and group_member.status.name != 'admin' %}
+                                  <button class="kik-group-btn btn-news add-font" data-username="{{ group_member.profile.user.username }}">Исключить</button>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>В группе пока нет людей</p>
+                {% endif %}
+    </div>
+</div>
+
+
+<script>
+
+
+    // Скрипт для аккордеона запросов дружбы
+    $('#toggle-comments-btn').click(function() {
+        $('#comments-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
+            var isVisible = $('#comments-section').is(':visible');
+            $('#toggle-comments-btn').text(isVisible ? 'Скрыть запросы дружбы' : 'Показать запросы дружбы');
+        });
+    });
+
+    // Обработка отправки запроса на дружбу
+    var sendFriendRequestButton = document.getElementById('send-friend-request');
+    if (sendFriendRequestButton) {
+        sendFriendRequestButton.addEventListener('click', function () {
+            var profileId = this.getAttribute('data-profile-id');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch('/friendships/send_request/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ profile_id: profileId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail); // Отображение сообщения
+                    sendFriendRequestButton.textContent = 'Запрос отправлен';
+                    sendFriendRequestButton.disabled = true;
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    }
+
+    document.querySelectorAll('.accept-request').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
+
+    document.querySelectorAll('.block-people').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
+
+
+    document.querySelectorAll('.unblock-people').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
+
+    document.querySelectorAll('.delete-friend').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
+
+    // Обработка отклонения запроса
+    document.querySelectorAll('.deny-friend-request').forEach(button => {
+        button.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    this.closest('li').remove();
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    });
+});
+
+
+
+
+    // Обработка вступления в группу
+    document.querySelectorAll('.join-group-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            var groupId = {{ group.id }};
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(`/groups/join/${groupId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                    location.reload();
+                }, 2000); // Задержка в 1 секунду для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    })
+
+
+
+    $(document).ready(function() {
+    // Открытие модального окна
+    $('#invite-to-group-btn').click(function() {
+        $('#invite-modal').removeClass('fade-out').addClass('fade-in').show();
+    });
+
+    // Закрытие модального окна
+    $('.close').click(function() {
+        $('#invite-modal').removeClass('fade-in').addClass('fade-out');
+        setTimeout(() => $('#invite-modal').hide(), 500); // Задержка для плавного исчезновения
+    });
+
+    // Закрытие модального окна при клике вне его
+    $(window).click(function(event) {
+        if ($(event.target).is('#invite-modal')) {
+            $('.close').click(); // Используем обработчик для закрытия
+        }
+    });
+
+    // Обработка отправки приглашения
+    $('#send-invite-btn').click(function() {
+        var username = $('#username-input').val().trim();
+        var groupId = {{ group.id }};
+
+        if (username === '') {
+            showAjaxPopup('Пожалуйста, введите имя пользователя.');
+            return;
+        }
+
+        var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch(`/groups/invite/${username}/${groupId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            showAjaxPopup(data.detail);
+            if (data.status === 200) {
+                $('#invite-modal').removeClass('fade-in').addClass('fade-out');
+                setTimeout(() => $('#invite-modal').hide(), 500); // Задержка для плавного исчезновения
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxPopup('Произошла ошибка. Проверьте консоль для подробностей.');
+        });
+    });
+});
+
+
+// Обработка выхода из группы
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const leaveGroupBtn = document.getElementById('leave-group-btn');
+
+    if (leaveGroupBtn) {  // Проверяем, существует ли элемент
+        leaveGroupBtn.addEventListener('click', function() {
+            var groupId = {{ group.id }};
+            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(`/groups/group_leave/${groupId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    showAjaxPopup(data.detail);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000); // Задержка в 2 секунды для отображения сообщения
+                } else {
+                    showAjaxPopup('Неизвестная ошибка');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+                showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
+            });
+        });
+    }
+});
+
+// Обработка исключения из группы
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.kik-group-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                var groupId = {{ group.id }};  // Проверь, доступна ли переменная group.id
+                var username = this.getAttribute('data-username');  // Получаем username из data-атрибута
+                var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                // Проверь, что ты получаешь правильный username и groupId
+                console.log('Username:', username);
+                console.log('Group ID:', groupId);
+
+                fetch(`/groups/group_kik/${username}/${groupId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.detail) {
+                        showAjaxPopup(data.detail);
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000); // Задержка в 2 секунды для отображения сообщения
+                    } else {
+                        showAjaxPopup('Неизвестная ошибка');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error.message);
+                    showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
+                });
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const deleteButton = document.getElementById('delete-group-btn');
+    const modal = document.getElementById('confirm-delete-modal');
+    const confirmYesButton = document.getElementById('confirm-delete-yes');
+    const confirmNoButton = document.getElementById('confirm-delete-no');
+    var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    let groupIdToDelete;
+
+    // Показать модальное окно при нажатии на кнопку удаления
+    deleteButton.addEventListener('click', function(event) {
+        event.preventDefault();
+        groupIdToDelete = this.getAttribute('data-group-id');
+        modal.style.display = 'block';
+    });
+
+    // Обработчик подтверждения удаления
+    confirmYesButton.addEventListener('click', function() {
+        fetch(`/groups/group_delete/${groupIdToDelete}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                        'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '/groups_list/';
+            } else {
+                showAjaxPopup('Ошибка при удалении группы.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxPopup('Произошла ошибка.');
+        });
+
+        modal.style.display = 'none';
+    });
+
+    // Обработчик отмены удаления
+    confirmNoButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+});
+
+
+</script>
+
+{% endblock %}

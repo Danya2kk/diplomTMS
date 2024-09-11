@@ -133,6 +133,9 @@ class Group(models.Model):
     creator = models.ForeignKey(Profile, on_delete=models.CASCADE)
     rules = models.TextField(blank=True)
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class Status(models.Model):
     ADMIN = 'admin'
@@ -145,7 +148,7 @@ class Status(models.Model):
     name = models.CharField(max_length=20, choices=STATUS_CHOICES, default=USER)
 
     def __str__(self):
-        return dict(self.STATUS_CHOICES).get(self.name, self.name)
+        return f'{self.name} '
 
 
 class GroupMembership(models.Model):
@@ -156,6 +159,9 @@ class GroupMembership(models.Model):
 
     class Meta:
         unique_together = ('profile', 'group')
+
+    def __str__(self):
+        return f'{self.profile} {self.group} {self.status} {self.joined_at}'
 
 
 class Tag(models.Model):
@@ -172,6 +178,9 @@ class News(models.Model):
     profile = models.ForeignKey(Profile, related_name='news_posts', on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag, related_name='news_posts', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
 
 
 class Comment(models.Model):
@@ -225,6 +234,7 @@ class StatusProfile(models.Model):
 
 class Chat(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
+    messages = models.TextField()
     profile = models.ForeignKey(Profile, related_name='chat_message', on_delete=models.CASCADE)
     group = models.ForeignKey(Group, related_name='chat_members', on_delete=models.CASCADE)
 
@@ -269,6 +279,44 @@ class ActivityLog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
 
+class Notification_norest(models.Model):
+    AUTHENTICATION = 'AUTHENTICATION'
+    OTHER = 'OTHER'
+
+    NOTIFICATION_CHOICES = [
+        (AUTHENTICATION, 'AUTHENTICATION'),
+        (OTHER, 'OTHER'),
+    ]
+
+    profile = models.ForeignKey(Profile, related_name='system_notifications', on_delete=models.CASCADE)
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_CHOICES)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    read = models.BooleanField(default=False)
+
+
+class ActivityLog_norest(models.Model):
+    NEWS = 'NEWS'
+    GROUP = 'GROUP'
+    PROFILE = 'PROFILE'
+    MAIL = 'MAIL'
+    FRIEND = 'FRIEND'
+
+    ACTION_CHOICES = [
+        (NEWS, 'NEWS'),
+        (GROUP, 'GROUP'),
+        (PROFILE, 'PROFILE'),
+        (MAIL, 'MAIL'),
+        (FRIEND, 'FRIEND'),
+    ]
+
+    profile = models.ForeignKey(Profile, related_name='user_activities', on_delete=models.CASCADE)
+    action_type = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    description = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+
+
 class ArchivedMail(models.Model):
     sender = models.ForeignKey(Profile, related_name='archived_sent_messages', on_delete=models.CASCADE)
     recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='archived_received_messages')
@@ -276,6 +324,7 @@ class ArchivedMail(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='archived_replies')
     is_read = models.BooleanField(default=False)
+    is_deleted_sender = models.BooleanField(default=False)
     archived_at = models.DateTimeField(auto_now_add=True)
 
 

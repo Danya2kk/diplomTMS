@@ -16,6 +16,7 @@ import os.path
 import os
 
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,7 +43,7 @@ SECRET_KEY = 'django-insecure-sw(omc%atk^)6&-ny+21_@nuemx(co6_ogjgjywrka9y+!)5+=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -73,6 +74,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    # Наше middleware
+    'main.middleware.UserActivityMiddleware',
 
 ]
 
@@ -125,11 +128,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-    ),
-}
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -142,6 +141,9 @@ USE_I18N = True
 USE_TZ = True
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
@@ -189,4 +191,52 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
 
+
+CELERY_BEAT_SCHEDULE = {
+    'archive-chat-daily': {
+        'task': 'socnet.tasks.archive_chat',
+        'schedule': crontab(hour=0, minute=0),  # каждый день в полночь
+    },
+    'archive-mail-weekly': {
+        'task': 'socnet.tasks.archive_mail',
+        'schedule': crontab(0, 0, day_of_week='sunday'),  # каждое воскресенье в полночь
+        # 'schedule': crontab(minute='*/1'),  # Каждую минуту
+    },
+    'clean-mail-every-six-months': {
+        'task': 'socnet.tasks.clean_mail',
+        'schedule': crontab(0, 0, day_of_month='1', month_of_year='*/6'),  # 1-го числа каждые 6 месяцев
+    },
+    'update-online-status-every-5-minutes': {
+        'task': 'your_app_name.tasks.update_online_status',
+        'schedule': crontab(minute='*/5'),  # Выполнять каждые 5 минут
+    },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',  # Уровень логирования для всех сообщений в консоли
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',  # Общий уровень логирования для Django
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',  # Скрыть SQL-запросы (используется WARNING вместо DEBUG)
+            'propagate': False,
+        },
+    },
+}

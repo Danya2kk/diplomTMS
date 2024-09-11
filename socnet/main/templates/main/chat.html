@@ -4,8 +4,10 @@
 {% block title %}  {% endblock %}
 {% block content %}
 
+<div id="app" data-group-id="{{ group_id }}">
+    <div id="django-content"></div>
+</div>
 
-<h2> Мы в чате </h2>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const appElement = document.getElementById('app');
