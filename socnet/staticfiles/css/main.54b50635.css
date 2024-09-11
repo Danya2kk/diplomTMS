@@ -6,7 +6,7 @@
 }
 
 body {
-    background-image: url('/static/images/back.jpeg'); /* Указываем путь к изображению */
+    background-image: url('/static/images/back2.jpeg'); /* Указываем путь к изображению */
     background-size: cover; /* Изображение будет масштабироваться, чтобы покрыть весь экран */
     background-position: center; /* Центрируем изображение */
     background-repeat: no-repeat; /* Избегаем повторения изображения */
