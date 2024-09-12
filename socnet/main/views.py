@@ -361,15 +361,17 @@ def update_profile(request):
 
 
 class RegisterUser(FormView):
-    template_name = 'main/registration.html'
+    """Регистрация нового пользователя"""
+    template_name = "main/registration.html"
     form_class = RegistrationForm
-    success_url = '/'
+    success_url = "/"
 
     @transaction.atomic
     def form_valid(self, form):
+        """Обрабатывает валидную форму регистрации"""
         # Сохранение пользователя
         user = form.save(commit=False)
-        user.set_password(form.cleaned_data['password'])
+        user.set_password(form.cleaned_data["password"])
         user.save()
 
         firstname = user.first_name
@@ -377,13 +379,13 @@ class RegisterUser(FormView):
 
         # Проверка имени
         if not re.match("^[а-яА-Яa-zA-Z]+$", firstname):
-            message = 'В Имени допустимы только буквы!'
+            message = "В Имени допустимы только буквы!"
             messages.error(self.request, f"Ошибка:\n{message}")
             return self.form_invalid(form)
 
         # Проверка фамилии
         if not re.match("^[а-яА-Яa-zA-Z-]+$", lastname):
-            message = 'В Фамилии допустимы только буквы!'
+            message = "В Фамилии допустимы только буквы!"
             messages.error(self.request, f"Ошибка:\n{message}")
             return self.form_invalid(form)
 
@@ -409,18 +411,17 @@ class RegisterUser(FormView):
             # Логируем ошибку
             logger.error(f"Ошибка логирования системных данных: {str(e)}")
 
-
         # Вход пользователя после регистрации
         auth_login(self.request, user)
-        messages.success(self.request, f"Вы успешно зарегистрированы")
+        messages.success(self.request, "Вы успешно зарегистрированы")
         # Создание токена для пользователя
         token = Token.objects.create(user=user)
-        self.request.session['token'] = token.key
-
+        self.request.session["token"] = token.key
 
         return super().form_valid(form)
 
     def form_invalid(self, form):
+        """Обрабатывает невалидную форму регистрации"""
         # Получаем ошибки в формате JSON
         errors = form.errors.as_json()
         # Декодируем JSON-строку в словарь
@@ -434,6 +435,7 @@ class RegisterUser(FormView):
 
         # Возвращаем форму как невалидную
         return super().form_invalid(form)
+
 
 @login_required
 @require_POST
