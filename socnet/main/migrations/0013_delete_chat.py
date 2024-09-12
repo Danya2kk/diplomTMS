@@ -6,11 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('main', '0012_archivedmail_is_deleted_sender'),
+        ("main", "0012_archivedmail_is_deleted_sender"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='Chat',
+            name="Chat",
         ),
     ]

@@ -85,7 +85,7 @@ virtualenv = "20.26.3"
 wcwidth = "0.2.13"
 zipp = "3.19.2"
 redis = "^5.0.8"
-drf-spectacular = "^0.27.2"
+drf-spectacular = {extras = ["swagger-ui"], version = "^0.27.2"}
 django-celery-beat = "^2.6.0"
 pillow = "^10.4.0"
 django-cors-headers = "^4.4.0"
@@ -95,6 +95,10 @@ websockets = "^12.0"
 wsproto = "^1.2.0"
 django-filter = "^24.3"
 gunicorn = "^23.0.0"
+black = "^24.8.0"
+isort = "^5.13.2"
+spectacular = "^0.4.0"
+swagger-ui = "^0.1.2"
 
 
 [build-system]

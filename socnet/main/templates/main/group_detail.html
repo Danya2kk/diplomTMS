@@ -466,9 +466,6 @@
                 var username = this.getAttribute('data-username');  // Получаем username из data-атрибута
                 var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                // Проверь, что ты получаешь правильный username и groupId
-                console.log('Username:', username);
-                console.log('Group ID:', groupId);
 
                 fetch(`/groups/group_kik/${username}/${groupId}/`, {
                     method: 'POST',

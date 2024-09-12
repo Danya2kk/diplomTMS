@@ -1,8 +1,13 @@
+
 from django_filters import rest_framework as filters
 from .models import *
 
 
 class FriendshipFilter(filters.FilterSet):
+    '''
+    Фильтр дружбы
+    '''
+
     status = filters.ModelChoiceFilter(queryset=FriendshipStatus.objects.all())
     profile_one = filters.ModelChoiceFilter(field_name='profile_one', queryset=Profile.objects.all())
     profile_two = filters.ModelChoiceFilter(field_name='profile_two', queryset=Profile.objects.all())
@@ -13,6 +18,10 @@ class FriendshipFilter(filters.FilterSet):
 
 
 class ProfileFilter(filters.FilterSet):
+    '''
+    Фильтр профиля
+    '''
+
     firstname = filters.CharFilter(field_name='firstname', lookup_expr='icontains', label='Имя')
     lastname = filters.CharFilter(field_name='lastname', lookup_expr='icontains', label='Фамилия')
     location = filters.CharFilter(field_name='location', lookup_expr='icontains', label='Местоположение')
@@ -28,6 +37,10 @@ class ProfileFilter(filters.FilterSet):
         fields = ['firstname', 'lastname', 'gender', 'location', 'interests']
 
 class GroupFilter(filters.FilterSet):
+    '''
+    Фильтр группы
+    '''
+
     name = filters.CharFilter(field_name='name', lookup_expr='icontains', label='Название')
     description = filters.CharFilter(field_name='description', lookup_expr='icontains', label='Описание')
     group_type = filters.ChoiceFilter(field_name='group_type', choices=Group.GROUP_TYPES, label='Тип группы')
@@ -37,6 +50,10 @@ class GroupFilter(filters.FilterSet):
         fields = ['name', 'description', 'group_type', 'creator']
 
 class NewsFilter(filters.FilterSet):
+    '''
+    Фильтр новостей
+    '''
+
     title = filters.CharFilter(field_name='title', lookup_expr='icontains', label='Название новости')
     content = filters.CharFilter(field_name='content', lookup_expr='icontains', label='Текст новости')
     created_at = filters.CharFilter(field_name='created_at', lookup_expr='icontains', label='Автор новости')

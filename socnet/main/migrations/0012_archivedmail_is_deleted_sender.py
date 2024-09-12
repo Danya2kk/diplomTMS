@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('main', '0011_merge_20240903_2034'),
+        ("main", "0011_merge_20240903_2034"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='archivedmail',
-            name='is_deleted_sender',
+            model_name="archivedmail",
+            name="is_deleted_sender",
             field=models.BooleanField(default=False),
         ),
     ]

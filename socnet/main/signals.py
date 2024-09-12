@@ -1,12 +1,10 @@
 from django.db.models.signals import post_save
-from .models import User
 from django.dispatch import receiver
 
-from .models import Profile
+from .models import Profile, User
 
-
-'''Добавить сигналы, чтобы профиль автоматически создавался при регистрации
- (но в модели Profile нужно разрешить чтобы поля были пустыми)'''
+"""Добавить сигналы, чтобы профиль автоматически создавался при регистрации
+ (но в модели Profile нужно разрешить чтобы поля были пустыми)"""
 #
 #
 # @receiver(post_save, sender=User)

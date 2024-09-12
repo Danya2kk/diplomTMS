@@ -275,8 +275,6 @@
                 var groupId = document.getElementById("group-select").value;
                 var username = "user";  // Передаем имя пользователя через шаблон
 
-                console.log("Group ID:", groupId);
-                console.log("Username:", username);
 
                 // Закрытие модального окна
                 var modal = document.getElementById("inviteModal");
@@ -361,7 +359,6 @@
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
                 success: function(response) {
-                    console.log(response);
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);

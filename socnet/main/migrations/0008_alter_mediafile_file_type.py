@@ -6,13 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('main', '0007_chat'),
+        ("main", "0007_chat"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='mediafile',
-            name='file_type',
-            field=models.CharField(choices=[('avatar', 'Avatar'), ('video', 'Video'), ('other', 'Other'), ('image', 'Image')], max_length=50),
+            model_name="mediafile",
+            name="file_type",
+            field=models.CharField(
+                choices=[
+                    ("avatar", "Avatar"),
+                    ("video", "Video"),
+                    ("other", "Other"),
+                    ("image", "Image"),
+                ],
+                max_length=50,
+            ),
         ),
     ]

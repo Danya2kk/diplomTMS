@@ -1,7 +1,10 @@
-from celery import shared_task
-from .models import Mail, Chat, ArchivedMail, ArchiveChat, StatusProfile
-from django.utils import timezone
 from datetime import timedelta
+
+from .models import ArchiveChat, ArchivedMail, Chat, Mail, StatusProfile
+
+from django.utils import timezone
+from celery import shared_task
+
 
 
 @shared_task
@@ -9,9 +12,7 @@ def archive_chat():
     chats = Chat.objects.all()
     for chat in chats:
         ArchiveChat.objects.create(
-            created_at=chat.created_at,
-            profile=chat.profile,
-            group=chat.group
+            created_at=chat.created_at, profile=chat.profile, group=chat.group
         )
     chats.delete()
 
@@ -27,7 +28,7 @@ def archive_mail():
             timestamp=mail.timestamp,
             parent=mail.parent,
             is_read=mail.is_read,
-            is_deleted_sender=mail.is_deleted_sender
+            is_deleted_sender=mail.is_deleted_sender,
         )
     mails.delete()
 
@@ -44,9 +45,10 @@ def clean_mail():
             timestamp=mail.timestamp,
             parent=mail.parent,
             is_read=mail.is_read,
-            is_deleted_sender=mail.is_deleted_sender
+            is_deleted_sender=mail.is_deleted_sender,
         )
     mails_to_delete.delete()
+
 
 @shared_task
 def update_online_status():
@@ -54,7 +56,9 @@ def update_online_status():
     time_threshold = timezone.now() - timedelta(minutes=5)
 
     # Фильтруем профили, где last_updated старше порогового времени
-    profiles_to_update = StatusProfile.objects.filter(last_updated__lt=time_threshold, is_online=True)
+    profiles_to_update = StatusProfile.objects.filter(
+        last_updated__lt=time_threshold, is_online=True
+    )
 
     # Обновляем статус is_online на False для этих профилей
     profiles_to_update.update(is_online=False)

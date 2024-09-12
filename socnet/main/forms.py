@@ -1,42 +1,52 @@
 import sys
-
-from django.core.files.uploadedfile import InMemoryUploadedFile
-
-from .models import Group, Friendship
-from django import forms
-from django.contrib.auth import authenticate
-from django.contrib.auth.forms import PasswordChangeForm
-from .models import Profile, User, Mediafile, Comment, Interest, PrivacyLevel,Mail
-from .models import News, Tag, Reaction
-from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm
-from PIL import Image
 from io import BytesIO
+
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.contrib.auth import authenticate, get_user_model
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
+from django import forms
+
+from .models import (Comment, Friendship, Group, Interest, Mail, Mediafile,
+                     News, PrivacyLevel, Profile, Reaction, Tag, User)
+
 
 class RegistrationForm(forms.ModelForm):
     password = forms.CharField(
-        label='Пароль',
-        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль', 'class': 'form-input'})
+        label="Пароль",
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "Введите пароль", "class": "form-input"}
+        ),
     )
     password_confirm = forms.CharField(
-        label='Повторите пароль',
-        widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль', 'class': 'form-input'})
+        label="Повторите пароль",
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "Повторите пароль", "class": "form-input"}
+        ),
     )
 
     class Meta:
         model = get_user_model()
-        fields = ['username', 'email', 'first_name', 'last_name']
+        fields = ["username", "email", "first_name", "last_name"]
         widgets = {
-            'username': forms.TextInput(attrs={'placeholder': 'Введите логин', 'class': 'form-input'}),
-            'email': forms.EmailInput(attrs={'placeholder': 'Введите email', 'class': 'form-input'}),
-            'first_name': forms.TextInput(attrs={'placeholder': 'Введите имя', 'class': 'form-input'}),
-            'last_name': forms.TextInput(attrs={'placeholder': 'Введите фамилию', 'class': 'form-input'}),
+            "username": forms.TextInput(
+                attrs={"placeholder": "Введите логин", "class": "form-input"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"placeholder": "Введите email", "class": "form-input"}
+            ),
+            "first_name": forms.TextInput(
+                attrs={"placeholder": "Введите имя", "class": "form-input"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"placeholder": "Введите фамилию", "class": "form-input"}
+            ),
         }
         labels = {
-            'username': 'Логин',
-            'email': 'Email',
-            'first_name': 'Имя',
-            'last_name': 'Фамилия',
+            "username": "Логин",
+            "email": "Email",
+            "first_name": "Имя",
+            "last_name": "Фамилия",
         }
 
     def clean(self):
@@ -45,15 +55,18 @@ class RegistrationForm(forms.ModelForm):
         password_confirm = cleaned_data.get("password_confirm")
 
         if password and password_confirm and password != password_confirm:
-            self.add_error('password_confirm', "Пароли не совпадают")
+            self.add_error("password_confirm", "Пароли не совпадают")
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])  # Устанавливаем зашифрованный пароль
+        user.set_password(
+            self.cleaned_data["password"]
+        )  # Устанавливаем зашифрованный пароль
         if commit:
             user.save()
         return user
+
 
 class LoginForm(forms.Form):
     username = forms.CharField()
@@ -61,8 +74,8 @@ class LoginForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        username = cleaned_data.get('username')
-        password = cleaned_data.get('password')
+        username = cleaned_data.get("username")
+        password = cleaned_data.get("password")
 
         user = authenticate(username=username, password=password)
         if not user:
@@ -71,74 +84,104 @@ class LoginForm(forms.Form):
 
 
 class UpdateUserForm(forms.ModelForm):
-    username = forms.CharField(required=True, label='Логин', widget=forms.TextInput(attrs={'class': 'form-input'}))
+    username = forms.CharField(
+        required=True,
+        label="Логин",
+        widget=forms.TextInput(attrs={"class": "form-input"}),
+    )
 
     class Meta:
         model = User
-        fields = ['username']
+        fields = ["username"]
 
 
 class UpdateProfileForm(forms.ModelForm):
     firstname = forms.CharField(
-        label='Имя',
-        widget=forms.TextInput(attrs={'placeholder': 'Введите имя', 'class': 'form-input'})
+        label="Имя",
+        widget=forms.TextInput(
+            attrs={"placeholder": "Введите имя", "class": "form-input"}
+        ),
     )
     lastname = forms.CharField(
-        label='Фамилия',
-        widget=forms.TextInput(attrs={'placeholder': 'Введите фамилию', 'class': 'form-input'})
+        label="Фамилия",
+        widget=forms.TextInput(
+            attrs={"placeholder": "Введите фамилию", "class": "form-input"}
+        ),
     )
     age = forms.IntegerField(
-        label='Возраст',
-        widget=forms.NumberInput(attrs={'placeholder': 'Введите возраст', 'class': 'form-input'}),
+        label="Возраст",
+        widget=forms.NumberInput(
+            attrs={"placeholder": "Введите возраст", "class": "form-input"}
+        ),
         required=False,
     )
     gender = forms.CharField(
-        label='Пол',
-        widget=forms.TextInput(attrs={'placeholder': 'Введите пол', 'class': 'form-input'}),
+        label="Пол",
+        widget=forms.TextInput(
+            attrs={"placeholder": "Введите пол", "class": "form-input"}
+        ),
         required=False,
     )
     location = forms.CharField(
-        label='Местонахождение',
-        widget=forms.TextInput(attrs={'placeholder': 'Введите местонахождение', 'class': 'form-input'}),
+        label="Местонахождение",
+        widget=forms.TextInput(
+            attrs={"placeholder": "Введите местонахождение", "class": "form-input"}
+        ),
         required=False,
     )
     link = forms.CharField(
-        label='Ссылка на другие профили',
-        widget=forms.TextInput(attrs={'placeholder': 'Введите ссылку на другие профили', 'class': 'form-input'}),
+        label="Ссылка на другие профили",
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Введите ссылку на другие профили",
+                "class": "form-input",
+            }
+        ),
         required=False,
     )
     settings = forms.CharField(
-        label='Настройки',
-        widget=forms.TextInput(attrs={'placeholder': 'Введите настройки', 'class': 'form-input'}),
+        label="Настройки",
+        widget=forms.TextInput(
+            attrs={"placeholder": "Введите настройки", "class": "form-input"}
+        ),
         required=False,
     )
     interests = forms.ModelMultipleChoiceField(
         queryset=Interest.objects.all(),
-        label='Интересы',
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),  # Чекбоксы для множественного выбора
-        required=False
+        label="Интересы",
+        widget=forms.CheckboxSelectMultiple(
+            attrs={"class": "form-checkbox"}
+        ),  # Чекбоксы для множественного выбора
+        required=False,
     )
     privacy = forms.ModelChoiceField(
         queryset=PrivacyLevel.objects.all(),
-        label='Уровень приватности',
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        required=False
+        label="Уровень приватности",
+        widget=forms.Select(attrs={"class": "form-select"}),
+        required=False,
     )
 
     class Meta:
         model = Profile
-        fields = ['firstname', 'lastname', 'age', 'gender', 'location', 'link', 'settings', 'privacy', 'interests']
+        fields = [
+            "firstname",
+            "lastname",
+            "age",
+            "gender",
+            "location",
+            "link",
+            "settings",
+            "privacy",
+            "interests",
+        ]
 
 
 class AvatarUploadForm(forms.ModelForm):
-    file = forms.ImageField(
-        label='Аватар',
-        required=False
-    )
+    file = forms.ImageField(label="Аватар", required=False)
 
     class Meta:
         model = Mediafile
-        fields = ['file']
+        fields = ["file"]
 
     def save(self, profile=None, *args, **kwargs):
         avatar = super().save(commit=False)
@@ -148,8 +191,8 @@ class AvatarUploadForm(forms.ModelForm):
             avatar.profile = profile
 
         # Если изображение загружено
-        if self.cleaned_data.get('file'):
-            image = self.cleaned_data['file']
+        if self.cleaned_data.get("file"):
+            image = self.cleaned_data["file"]
             img = Image.open(image)
 
             # Приведение изображения к размеру 300x300 пикселей
@@ -157,11 +200,18 @@ class AvatarUploadForm(forms.ModelForm):
 
             # Преобразование изображения обратно в файл для сохранения
             output = BytesIO()
-            img.save(output, format='JPEG', quality=90)
+            img.save(output, format="JPEG", quality=90)
             output.seek(0)
 
             # Создаем новое изображение для сохранения в модели
-            avatar.file = InMemoryUploadedFile(output, 'ImageField', f"{image.name.split('.')[0]}.jpg", 'image/jpeg', sys.getsizeof(output), None)
+            avatar.file = InMemoryUploadedFile(
+                output,
+                "ImageField",
+                f"{image.name.split('.')[0]}.jpg",
+                "image/jpeg",
+                sys.getsizeof(output),
+                None,
+            )
 
         avatar.save()
         return avatar
@@ -169,171 +219,173 @@ class AvatarUploadForm(forms.ModelForm):
 
 class MediaUploadForm(forms.ModelForm):
     file = forms.ImageField(
-        label='Фотография',
+        label="Фотография",
         # required=False
     )
 
     class Meta:
         model = Mediafile
-        fields = ['file']
-
+        fields = ["file"]
 
 
 class UserPasswordChangeForm(PasswordChangeForm):
     old_password = forms.CharField(
-        label='Старый пароль',
-        widget=forms.PasswordInput(attrs={'class': 'form-input'})
+        label="Старый пароль", widget=forms.PasswordInput(attrs={"class": "form-input"})
     )
     new_password1 = forms.CharField(
-        label='Новый пароль',
-        widget=forms.PasswordInput(attrs={'class': 'form-input'})
+        label="Новый пароль", widget=forms.PasswordInput(attrs={"class": "form-input"})
     )
     new_password2 = forms.CharField(
-        label='Повторить пароль',
-        widget=forms.PasswordInput(attrs={'class': 'form-input'})
+        label="Повторить пароль",
+        widget=forms.PasswordInput(attrs={"class": "form-input"}),
     )
+
 
 class NewsForm(forms.ModelForm):
     title = forms.CharField(
-        label='Название',  # Метка для поля title
-        widget=forms.TextInput(attrs={'placeholder': 'Введите название новости'})
+        label="Название",  # Метка для поля title
+        widget=forms.TextInput(attrs={"placeholder": "Введите название новости"}),
     )
     content = forms.CharField(
-        label='Содержание',  # Метка для поля content
-        widget=forms.Textarea(attrs={'placeholder': 'Введите содержание новости'})
+        label="Содержание",  # Метка для поля content
+        widget=forms.Textarea(attrs={"placeholder": "Введите содержание новости"}),
     )
     image = forms.ImageField(
-        label='Изображение',  # Метка для поля image
+        label="Изображение",  # Метка для поля image
     )
-    # tags = forms.ModelMultipleChoiceField(
-    #     queryset=Tag.objects.all(),
-    #     label='Тэги',  # Метка для поля tags
-    #     # widget=forms.SelectMultiple(attrs={'class': 'form-control'}),  # Можно добавить класс или другие атрибуты
-    #     widget=forms.SelectMultiple(),
-    #     required=False
-    # )
 
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        label='Тэги',
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),  # Чекбоксы для множественного выбора
-        required=False
+        label="Тэги",
+        widget=forms.CheckboxSelectMultiple(
+            attrs={"class": "form-checkbox"}
+        ),  # Чекбоксы для множественного выбора
+        required=False,
     )
 
     class Meta:
         model = News
-        fields = ['title', 'content', 'image', 'tags']  # Добавьте все нужные поля
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #
-    #     # Устанавливаем значение по умолчанию для поля `tags`
-    #     if not self.instance.pk:  # Если объект ещё не сохранен (новый объект)
-    #         first_tag = Tag.objects.first()
-    #         if first_tag:
-    #             self.fields['tags'].initial = [first_tag]  # Список значений по умолчанию
+        fields = ["title", "content", "image", "tags"]  # Добавьте все нужные поля
 
 
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ['text', 'parent']  # Включить поле 'parent' для поддержки ответов
+        fields = ["text", "parent"]  # Включить поле 'parent' для поддержки ответов
         widgets = {
-            'text': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
-            'parent': forms.HiddenInput()  # Скрыть поле 'parent' в форме
+            "text": forms.Textarea(attrs={"rows": 4, "cols": 40}),
+            "parent": forms.HiddenInput(),  # Скрыть поле 'parent' в форме
         }
 
 
 class ReactionForm(forms.ModelForm):
     class Meta:
         model = Reaction
-        fields = ['reaction_type']
+        fields = ["reaction_type"]
         widgets = {
-            'reaction_type': forms.RadioSelect,
+            "reaction_type": forms.RadioSelect,
         }
 
+
 class LoginUserForm(AuthenticationForm):
-    username = forms.CharField(label='Логин',
-                               widget=forms.TextInput(attrs={'class': 'form-input'}))
-    password = forms.CharField(label='Пароль',
-                               widget=forms.PasswordInput(attrs={'class': 'form-input'}))
+    username = forms.CharField(
+        label="Логин", widget=forms.TextInput(attrs={"class": "form-input"})
+    )
+    password = forms.CharField(
+        label="Пароль", widget=forms.PasswordInput(attrs={"class": "form-input"})
+    )
 
     class Meta:
         # так делать правильнее чем через поля формы т.к страхует при изменения модели юзера
         model = get_user_model()
-        fields = ['username', 'password']
+        fields = ["username", "password"]
+
 
 class MailForm(forms.ModelForm):
     class Meta:
         model = Mail
-        fields = ['recipient', 'content', 'parent']  # 'parent' для возможности ответа на сообщение
+        fields = [
+            "recipient",
+            "content",
+            "parent",
+        ]  # 'parent' для возможности ответа на сообщение
         widgets = {
-            'content': forms.Textarea(attrs={'placeholder': 'Введите сообщение...'}),
-
+            "content": forms.Textarea(attrs={"placeholder": "Введите сообщение..."}),
         }
 
 
 class FriendshipCreateForm(forms.ModelForm):
     class Meta:
         model = Friendship
-        fields = ['profile_two', 'description']
+        fields = ["profile_two", "description"]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
+            "description": forms.Textarea(attrs={"rows": 3}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['profile_two'].queryset = Profile.objects.exclude(user=self.instance.profile_one.user)
+        self.fields["profile_two"].queryset = Profile.objects.exclude(
+            user=self.instance.profile_one.user
+        )
 
 
 class FriendshipUpdateForm(forms.ModelForm):
     class Meta:
         model = Friendship
-        fields = ['status', 'description']
+        fields = ["status", "description"]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
-            'status': forms.Select(attrs={'class': 'form-control'}),
+            "description": forms.Textarea(attrs={"rows": 3}),
+            "status": forms.Select(attrs={"class": "form-control"}),
         }
 
 
 class FriendshipSearchForm(forms.Form):
-    search_term = forms.CharField(label='Поиск', required=False)
+    search_term = forms.CharField(label="Поиск", required=False)
 
 
 class GroupCreateForm(forms.ModelForm):
 
     name = forms.CharField(
-        label='Название',
-        widget=forms.TextInput(attrs={'placeholder': 'Введите название группы', 'class': 'form-input'})
+        label="Название",
+        widget=forms.TextInput(
+            attrs={"placeholder": "Введите название группы", "class": "form-input"}
+        ),
     )
     description = forms.CharField(
-        label='Описание группы',
-        widget=forms.Textarea(attrs={'placeholder': 'Введите описание группы', 'class': 'form-input'})
+        label="Описание группы",
+        widget=forms.Textarea(
+            attrs={"placeholder": "Введите описание группы", "class": "form-input"}
+        ),
     )
 
     group_type = forms.ChoiceField(
-        label='Тип группы',
+        label="Тип группы",
         choices=Group.GROUP_TYPES,
-        widget=forms.Select(attrs={'class': 'form-checkbox'}),  # Чекбоксы для множественного выбора
+        widget=forms.Select(
+            attrs={"class": "form-checkbox"}
+        ),  # Чекбоксы для множественного выбора
     )
     photo = forms.ImageField(
-        label='Изображение',  # Метка для поля image
+        label="Изображение",  # Метка для поля image
     )
 
     rules = forms.CharField(
-        label='Правила группы',
-        widget=forms.Textarea(attrs={'placeholder': 'Укажите правила группы', 'class': 'form-input'})
+        label="Правила группы",
+        widget=forms.Textarea(
+            attrs={"placeholder": "Укажите правила группы", "class": "form-input"}
+        ),
     )
+
     class Meta:
         model = Group
-        fields = ['name', 'description', 'photo', 'group_type', 'rules']
+        fields = ["name", "description", "photo", "group_type", "rules"]
 
     def save(self, *args, **kwargs):
         group = super().save(commit=False)
 
         # Если изображение загружено
-        if self.cleaned_data.get('photo'):
-            image = self.cleaned_data['photo']
+        if self.cleaned_data.get("photo"):
+            image = self.cleaned_data["photo"]
             img = Image.open(image)
 
             # Приведение изображения к размеру 500x500 пикселей
@@ -341,27 +393,33 @@ class GroupCreateForm(forms.ModelForm):
 
             # Преобразование изображения обратно в файл для сохранения
             output = BytesIO()
-            img.save(output, format='JPEG', quality=90)  # Сохраняем с качеством 90%
+            img.save(output, format="JPEG", quality=90)  # Сохраняем с качеством 90%
             output.seek(0)
 
             # Создаем новое изображение для сохранения в модели
-            group.photo = InMemoryUploadedFile(output, 'ImageField', f"{image.name.split('.')[0]}.jpg", 'image/jpeg',
-                                               sys.getsizeof(output), None)
+            group.photo = InMemoryUploadedFile(
+                output,
+                "ImageField",
+                f"{image.name.split('.')[0]}.jpg",
+                "image/jpeg",
+                sys.getsizeof(output),
+                None,
+            )
 
         group.save()
         return group
 
+
 class GroupUpdateForm(forms.ModelForm):
     class Meta:
         model = Group
-        fields = ['name', 'description', 'photo', 'group_type', 'rules']
+        fields = ["name", "description", "photo", "group_type", "rules"]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
-            'rules': forms.Textarea(attrs={'rows': 3}),
+            "description": forms.Textarea(attrs={"rows": 3}),
+            "rules": forms.Textarea(attrs={"rows": 3}),
             # 'group_type': forms.Select(choices=GROUP_TYPES),
         }
 
 
-
 class GroupSearchForm(forms.Form):
-    search_term = forms.CharField(label='Поиск', required=False)
+    search_term = forms.CharField(label="Поиск", required=False)

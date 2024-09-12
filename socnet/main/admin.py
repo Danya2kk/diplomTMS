@@ -1,21 +1,30 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Mediafile, Comment, FriendshipStatus, Friendship, Group, Mail,  GroupMembership, Status
-from .models import User, Profile, News, Tag, PrivacyLevel, Interest
+
+from .models import (Comment, Friendship, FriendshipStatus, Group,
+                     GroupMembership, Interest, Mail, Mediafile, News,
+                     PrivacyLevel, Profile, Status, Tag, User)
+
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('firstname', 'lastname', )
+    list_display = (
+        "firstname",
+        "lastname",
+    )
 
 
 @admin.register(PrivacyLevel)
 class PrivacyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', )
+    list_display = (
+        "name",
+        "description",
+    )
 
 
 @admin.register(Interest)
 class InterestAdmin(admin.ModelAdmin):
-    list_display = ('name', )
+    list_display = ("name",)
 
 
 admin.site.register(User, UserAdmin)

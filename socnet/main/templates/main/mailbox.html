@@ -135,7 +135,7 @@
 
 
    document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM полностью загружен и разобран');
+
     const recipientBtn = document.querySelector('.recipient_mail');
     const senderBtn = document.querySelector('.sender_mail');
     const mailboxContent = document.getElementById('mailbox-content');
@@ -303,13 +303,13 @@ function addMailClickEvent() {
 
     // Обработчик для входящих сообщений
     recipientBtn.addEventListener('click', function() {
-        console.log("Клик на кнопку 'Входящие сообщения' сработал");
+
         updateMailboxContent("{% url 'recipient_mail' %}", false);
     });
 
     // Обработчик для отправленных сообщений
     senderBtn.addEventListener('click', function() {
-        console.log("Клик на кнопку 'Отправленные сообщения' сработал");
+
         updateMailboxContent("{% url 'sender_mail' %}", true);
     });
 

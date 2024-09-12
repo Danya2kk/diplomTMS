@@ -1,7 +1,6 @@
-# main/middleware.py
-
 from django.utils import timezone
 from .models import StatusProfile
+
 
 class UserActivityMiddleware:
     def __init__(self, get_response):
@@ -21,7 +20,7 @@ class UserActivityMiddleware:
                     is_online=True,
                     is_busy=False,
                     do_not_disturb=False,
-                    last_updated=timezone.now()
+                    last_updated=timezone.now(),
                 )
 
         response = self.get_response(request)

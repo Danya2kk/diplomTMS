@@ -6,11 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('main', '0002_alter_reaction_reaction_type'),
+        ("main", "0002_alter_reaction_reaction_type"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='Comment',
+            name="Comment",
         ),
     ]

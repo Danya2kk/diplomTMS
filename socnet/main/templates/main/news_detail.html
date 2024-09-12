@@ -101,7 +101,7 @@
 
     // Функция для переключения видимости формы добавления комментария
     window.toggleCommentForm = function(formId) {
-        console.log('toggleCommentForm called with:', formId);
+
         var form = $('#' + formId);
         if (form.length) {
             form.slideToggle();
@@ -112,7 +112,7 @@
 
     // Функция для отправки комментария
     window.submitComment = function(parentId) {
-        console.log('submitComment called with parentId:', parentId);
+
         var commentText;
         if (parentId) {
             commentText = $('#reply-text-' + parentId).val();
