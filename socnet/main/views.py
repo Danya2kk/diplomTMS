@@ -1255,8 +1255,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 class SendMailView(LoginRequiredMixin, FormView):
     form_class = MailForm
-    template_name = 'main/send_mail.html'
-    success_url = reverse_lazy('mailbox')  # перенаправление в почтовый ящик после успешной отправки
+    template_name = "main/send_mail.html"
+    success_url = reverse_lazy("mailbox")  # перенаправление в почтовый ящик после успешной отправки
 
     def form_valid(self, form):
         # привязка отправителя к текущему пользователю
@@ -1265,117 +1265,123 @@ class SendMailView(LoginRequiredMixin, FormView):
 
         # Проверяем, что отправитель и получатель не совпадают
         if mail.sender == mail.recipient:
-            form.add_error('recipient', 'Вы не можете отправить сообщение самому себе.')
+            form.add_error("recipient", "Вы не можете отправить сообщение самому себе.")
             return self.form_invalid(form)
 
         mail.save()
 
         try:
-            profile = Profile.objects.get(user=request.user)
+            profile = Profile.objects.get(user=self.request.user)
             log_user_activity(profile, ActivityLog_norest.MAIL,
-                              f"Пользователь отправил почтовое сообщение")
+                              "Пользователь отправил почтовое сообщение")
         except Exception as e:
             # Логируем ошибку
             logger.error(f"Ошибка логирования активности: {str(e)}")
-
 
         return super().form_valid(form)
 
 
 @login_required
 def UserMailView(request):
+    """Отображение почтовых сообщений, адресованных текущему пользователю"""
+
     user = User.objects.get(username=request.user.username)
     profile = Profile.objects.get(user=user)
-    mails = Mail.objects.filter(recipient=profile).select_related('sender', 'recipient')
+    mails = Mail.objects.filter(recipient=profile).select_related("sender", "recipient")
 
     mail_data = []
     for mail in mails:
         mail_data.append({
-            'id': mail.id,
-            'content': mail.content,
-            'timestamp': mail.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'recipient': {
-                'firstname': mail.recipient.firstname,
-                'lastname': mail.recipient.lastname,
+            "id": mail.id,
+            "content": mail.content,
+            "timestamp": mail.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "recipient": {
+                "firstname": mail.recipient.firstname,
+                "lastname": mail.recipient.lastname,
             },
-            'sender': {
-                'firstname': mail.sender.firstname,
-                'lastname': mail.sender.lastname,
+            "sender": {
+                "firstname": mail.sender.firstname,
+                "lastname": mail.sender.lastname,
             }
         })
 
     context = {
-        'mails': mail_data,
-        'username': request.user.username,
+        "mails": mail_data,
+        "username": request.user.username,
     }
 
-    return render(request, 'main/mailbox.html', context)
+    return render(request, "main/mailbox.html", context)
 
 
 @login_required
 def sender_mail(request):
+    """Возвращает список всех сообщений, отправленных текущим пользователем, в виде JSON-ответа"""
+
     user = request.user
     profile = Profile.objects.get(user=user)
-    mails = Mail.objects.filter(sender=profile).select_related('sender', 'recipient')
+    mails = Mail.objects.filter(sender=profile).select_related("sender", "recipient")
 
     mail_data = []
     for mail in mails:
         mail_data.append({
-            'id': mail.id,
-            'content': mail.content,
-            'timestamp': mail.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'recipient': {
-                'firstname': mail.recipient.firstname,
-                'lastname': mail.recipient.lastname,
+            "id": mail.id,
+            "content": mail.content,
+            "timestamp": mail.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "recipient": {
+                "firstname": mail.recipient.firstname,
+                "lastname": mail.recipient.lastname,
             },
-            'sender': {
-                'firstname': mail.sender.firstname,
-                'lastname': mail.sender.lastname,
+            "sender": {
+                "firstname": mail.sender.firstname,
+                "lastname": mail.sender.lastname,
             }
         })
 
+    return JsonResponse({"detail": mail_data}, status=200)
 
-
-    return JsonResponse({'detail': mail_data}, status=200)
 
 @login_required
 def recipient_mail(request):
+    """Возвращает список всех сообщений, полученных текущим пользователем, в виде JSON-ответа"""
+
     user = request.user
     profile = Profile.objects.get(user=user)
-    mails = Mail.objects.filter(recipient=profile).select_related('sender', 'recipient')
+    mails = Mail.objects.filter(recipient=profile).select_related("sender", "recipient")
 
     mail_data = []
     for mail in mails:
         mail_data.append({
-            'id': mail.id,
-            'content': mail.content,
-            'timestamp': mail.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'is_read': mail.is_read,  # Добавляем признак прочитанности
-            'has_parent': mail.parent is not None,  # Проверяем наличие родительского сообщения
-            'recipient': {
-                'firstname': mail.recipient.firstname,
-                'lastname': mail.recipient.lastname,
+            "id": mail.id,
+            "content": mail.content,
+            "timestamp": mail.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "is_read": mail.is_read,  # Добавляем признак прочитанности
+            "has_parent": mail.parent is not None,  # Проверяем наличие родительского сообщения
+            "recipient": {
+                "firstname": mail.recipient.firstname,
+                "lastname": mail.recipient.lastname,
             },
-            'sender': {
-                'firstname': mail.sender.firstname,
-                'lastname': mail.sender.lastname,
+            "sender": {
+                "firstname": mail.sender.firstname,
+                "lastname": mail.sender.lastname,
             }
         })
 
-    return JsonResponse({'detail': mail_data}, status=200)
+    return JsonResponse({"detail": mail_data}, status=200)
 
 
 @login_required
 def send_mail(request):
-    if request.method == 'POST':
+    """Отправляет почтовое сообщение другому пользователю"""
+
+    if request.method == "POST":
         try:
             data = json.loads(request.body)
-            username = data.get('username')
-            content = data.get('content')
+            username = data.get("username")
+            content = data.get("content")
 
             # Проверка наличия обязательных полей
             if not username or not content:
-                return JsonResponse({'error': 'Отсутствуют обязательные данные: username или content.'}, status=400)
+                return JsonResponse({"error": "Отсутствуют обязательные данные: username или content."}, status=400)
 
             # Проверка существования пользователя
             correct_user = User.objects.filter(username=username).exists()
@@ -1398,37 +1404,39 @@ def send_mail(request):
 
                 try:
                     log_user_activity(profile_sender, ActivityLog_norest.MAIL,
-                                      f"Пользователь отправил почтовое сообщение")
+                                      "Пользователь отправил почтовое сообщение")
                 except Exception as e:
                     # Логируем ошибку
                     logger.error(f"Ошибка логирования активности: {str(e)}")
 
-
-                return JsonResponse({'detail': 'Письмо успешно отправлено!'}, status=200)
+                return JsonResponse({"detail": "Письмо успешно отправлено!"}, status=200)
 
             else:
-                return JsonResponse({'detail': 'Такого пользователя не существует'}, status=400)
+                return JsonResponse({"detail": "Такого пользователя не существует"}, status=400)
 
         except User.DoesNotExist:
-            return JsonResponse({'error': 'Пользователь не найден.'}, status=400)
+            return JsonResponse({"error": "Пользователь не найден."}, status=400)
         except Profile.DoesNotExist:
-            return JsonResponse({'error': 'Профиль не найден.'}, status=400)
+            return JsonResponse({"error": "Профиль не найден."}, status=400)
 
-    return JsonResponse({'error': 'Неверный запрос'}, status=400)
+    return JsonResponse({"error": "Неверный запрос"}, status=400)
+
 
 @login_required
 def send_mail_parent(request):
-    if request.method == 'POST':
+    """Отправляет почтовое сообщение другому пользователю, привязывая его к родительскому сообщению"""
+
+    if request.method == "POST":
         data = json.loads(request.body)
-        parent_id = data.get('parent')  # Получаем идентификатор родительского сообщения
-        username = data.get('username')
-        content = data.get('content')
+        parent_id = data.get("parent")  # Получаем идентификатор родительского сообщения
+        username = data.get("username")
+        content = data.get("content")
 
         correct_user = User.objects.filter(username=username).exists()
 
         # Проверка наличия обязательных полей
         if not username or not content or not parent_id:
-            return JsonResponse({'error': 'Отсутствуют обязательные данные: username или content.'}, status=400)
+            return JsonResponse({"error": "Отсутствуют обязательные данные: username или content."}, status=400)
 
         if correct_user:
             user_sender = request.user
@@ -1453,21 +1461,22 @@ def send_mail_parent(request):
 
             try:
                 log_user_activity(profile_sender, ActivityLog_norest.MAIL,
-                                  f"Пользователь отправил почтовое сообщение")
+                                  "Пользователь отправил почтовое сообщение")
             except Exception as e:
                 # Логируем ошибку
                 logger.error(f"Ошибка логирования активности: {str(e)}")
 
-
-
-            return JsonResponse({'detail': 'Письмо успешно отправлено!'}, status=200)
+            return JsonResponse({"detail": "Письмо успешно отправлено!"}, status=200)
 
         else:
-            return JsonResponse({'detail': 'Такого пользователя не существует'}, status=400)
-    return JsonResponse({'error': 'Неверный запрос'}, status=400)
+            return JsonResponse({"detail": "Такого пользователя не существует"}, status=400)
+    return JsonResponse({"error": "Неверный запрос"}, status=400)
+
 
 @login_required
 def message_detail(request, mail_id):
+    """Возвращает детали конкретного почтового сообщения"""
+
     try:
         mail = Mail.objects.get(id=mail_id)
         # Обновляем статус сообщения
@@ -1475,37 +1484,37 @@ def message_detail(request, mail_id):
         mail.save()
 
         data = {
-            'id': mail.id,
-            'content': mail.content,
-            'sender': {
-                'firstname': mail.sender.user.profile.firstname,
-                'lastname': mail.sender.user.profile.lastname,
-                'username': mail.sender.user.username
+            "id": mail.id,
+            "content": mail.content,
+            "sender": {
+                "firstname": mail.sender.user.profile.firstname,
+                "lastname": mail.sender.user.profile.lastname,
+                "username": mail.sender.user.username
             },
-            'recipient': {
-                'firstname': mail.recipient.user.profile.firstname,
-                'lastname': mail.recipient.user.profile.lastname
+            "recipient": {
+                "firstname": mail.recipient.user.profile.firstname,
+                "lastname": mail.recipient.user.profile.lastname
             },
-            'parent': {
-                'content': mail.parent.content if mail.parent else None
+            "parent": {
+                "content": mail.parent.content if mail.parent else None
             } if mail.parent else None
         }
         is_sender = request.user.profile == mail.sender
-        return JsonResponse({'detail': data, 'isSender': is_sender}, status=200)
+        return JsonResponse({"detail": data, "isSender": is_sender}, status=200)
     except Mail.DoesNotExist:
-        return JsonResponse({'error': 'Сообщение не найдено'}, status=404)
-
+        return JsonResponse({"error": "Сообщение не найдено"}, status=404)
 
 
 def mark_as_read(request):
-    if request.method == 'POST':
-        mail_id = request.POST.get('mail_id')
+    """Помечает сообщение как прочитанное"""
+    if request.method == "POST":
+        mail_id = request.POST.get("mail_id")
         if mail_id:
             mail = get_object_or_404(Mail, id=mail_id, recipient=request.user.profile)
             if not mail.is_read:
                 mail.is_read = True
                 mail.save()
-    return redirect('mailbox')
+    return redirect("mailbox")
 
 
 @login_required
