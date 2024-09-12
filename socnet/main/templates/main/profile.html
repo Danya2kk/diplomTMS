@@ -19,7 +19,7 @@
             {% endif %}
         </div>
         <div class="news-container-text2">
-            <p>{{ profile.firstname }} {{ profile.lastname }}</p>
+            <p>ФИО: {{ profile.firstname }} {{ profile.lastname }}</p>
             {% if ban_exists_in %}
                  <p>Данные скрыты. Пользователь Вас заблокировал</p>
             {% else %}
@@ -78,10 +78,9 @@
                         <h2>Выберите группу для приглашения</h2>
 
                         <!-- Выбор группы -->
-                        <label for="group-select">Группа:</label>
-                        <select id="group-select">
+                        <select id="group-select" class="add-font add-bg">
                           {% for group in is_admin_groups %}
-                            <option value="{{ group.group.id }}" class="btn">{{ group.group.name }}</option>
+                            <option value="{{ group.group.id }}" class="btn add-font add-bg">{{ group.group.name }}</option>
                           {% endfor %}
                         </select>
 
@@ -125,9 +124,30 @@
                     {% if is_status.is_busy %}
                         <p>Отправка сообщений запрещена (статус "Занят")</p>
                     {% else %}
-                     <a class="btn-news add-font" href="{% url 'send_mail' %}">Отправить сообщение</a>
-                     {% endif %}
 
+
+                        <button class="send_mail add-font add-color add-bg">Отправить сообщение</button>
+
+                                <!-- Модальное окно -->
+                            <div id="sendMailModal" class="modal" style="display:none;">
+                                        <div class="modal-content">
+                                            <span class="close-send-mail">&times;</span>
+                                            <h2>Отправить сообщение</h2>
+                                            <form id="sendMailForm">
+                                                <!-- Отображение имени получателя без использования label -->
+                                                <p>Получатель: {{ username }}</p>
+
+                                                <!-- Скрытое поле для передачи получателя в запрос -->
+                                                <input type="hidden" id="recipient" name="recipient" value="{{ username }}" required>
+
+                                                <label for="content">Сообщение:</label>
+                                                <textarea id="content" name="content" required></textarea>
+
+                                                <button class="add-font add-color add-bg" type="submit">Отправить</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                     {% endif %}
             {% endif %}
         </div>
     </section>
@@ -173,34 +193,36 @@
 
     {% endif %}
  </section>
-<div class="news-detail-container">
-    <div id="friend-section">
-        <p class="btn-comment-news add-font sto add-bg">Список друзей:</p>
-        {% if friends_profiles %}
-            {% for friend in friends_profiles %}
-                <div class="friend-item">
-                    {% if friend.avatars %}
-                        <a href="{% url 'profile' friend.user.username %}">
-                            <img src="{{ friend.avatars.0.file.url }}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
-                        </a>
-                    {% else %}
-                        <a href="{% url 'profile' friend.user.username %}">
-                            <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
-                        </a>
-                    {% endif %}
-                    <a class="btn-news add-font add-bg" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
-                </div>
-            {% endfor %}
-        {% else %}
-            {% if is_owner %}
-                <p>У вас нет друзей!</p>
-            {% else %}
-                <p>Друзей нет</p>
-            {% endif %}
-        {% endif %}
-    </div>
-</div>
 
+<section class="news-detail-content2">
+     <div class="comments-wrapper2">
+            <button id="toggle-friend-btn" class="btn-comment-news add-font">Показать список друзей:</button>
+            <div id="friend-section" class="friend-section">
+                {% if friends_profiles %}
+                    {% for friend in friends_profiles %}
+                        <div class="friend-item">
+                            {% if friend.avatars %}
+                                <a href="{% url 'profile' friend.user.username %}">
+                                    <img src="{{ friend.avatars.0.file.url }}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
+                                </a>
+                            {% else %}
+                                <a href="{% url 'profile' friend.user.username %}">
+                                    <img src="{% static 'images/nophoto.jpg' %}" alt="{{ friend.firstname }} {{ friend.lastname }}" width="80">
+                                </a>
+                            {% endif %}
+                            <a class="btn-news add-font add-bg" href="{% url 'profile' friend.user.username %}">{{ friend.firstname }} {{ friend.lastname }}</a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    {% if is_owner %}
+                        <p>У вас нет друзей!</p>
+                    {% else %}
+                        <p>Друзей нет</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+         </div>
+</section>
 
 
 <section class="news-detail-content2">
@@ -232,82 +254,101 @@
 
 </section>
 <script>
-     document.addEventListener("DOMContentLoaded", function() {
-    var inviteBtn = document.getElementById("sendInviteBtn");
+    // Скрипт для аккордеона друзей
+    $(document).ready(function() {
+        var toggleFriendBtn = $('#toggle-friend-btn');
+        if (toggleFriendBtn.length) {
+            toggleFriendBtn.click(function() {
+                $('#friend-section').slideToggle(400, function() {
+                    var isVisible = $('#friend-section').is(':visible');
+                    toggleFriendBtn.text(isVisible ? 'Скрыть список друзей' : 'Показать список друзей');
+                });
+            });
+        }
+    });
 
-    if (inviteBtn) {
-        inviteBtn.addEventListener("click", function() {
-            var groupId = document.getElementById("group-select").value;
-            var username = "user";  // Передаем имя пользователя через шаблон
+    document.addEventListener("DOMContentLoaded", function() {
+        var inviteBtn = document.getElementById("sendInviteBtn");
 
-            console.log("Group ID:", groupId);
-            console.log("Username:", username);
+        if (inviteBtn) {
+            inviteBtn.addEventListener("click", function() {
+                var groupId = document.getElementById("group-select").value;
+                var username = "user";  // Передаем имя пользователя через шаблон
 
-            // Закрытие модального окна
-            var modal = document.getElementById("inviteModal");
-            if (modal) {
-                modal.style.display = "none";
-            }
+                console.log("Group ID:", groupId);
+                console.log("Username:", username);
 
-            // Отправляем POST-запрос с username и pk (id группы)
-                fetch(`/groups/invite/${username}/${groupId}/`, {
-                      method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            'X-CSRFToken': csrftoken,
-                            'Accept': 'application/json'
-                      },
-              body: JSON.stringify({
-                username: username,
-              })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000); // Задержка в 2 секунды для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
+                // Закрытие модального окна
+                var modal = document.getElementById("inviteModal");
+                if (modal) {
+                    modal.style.display = "none";
                 }
-            })
-            .catch(error => console.error('Ошибка:', error));
-        });
-    }
-    // Логика открытия/закрытия модального окна
-  var modal = document.getElementById("inviteModal");
-  var btn = document.getElementById("inviteBtn");
-  var span = document.getElementsByClassName("close")[0];
 
-  btn.onclick = function() {
-    modal.style.display = "block";
-  }
+                // Отправляем POST-запрос с username и pk (id группы)
+                fetch(`/groups/invite/${username}/${groupId}/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        'X-CSRFToken': csrftoken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.detail) {
+                        showAjaxPopup(data.detail);
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000); // Задержка в 2 секунды для отображения сообщения
+                    } else {
+                        showAjaxPopup('Неизвестная ошибка');
+                    }
+                })
+                .catch(error => console.error('Ошибка:', error));
+            });
+        }
 
-  span.onclick = function() {
-    modal.style.display = "none";
-  }
+        // Логика открытия/закрытия модального окна
+        var modal = document.getElementById("inviteModal");
+        var btn = document.getElementById("inviteBtn");
+        var span = document.getElementsByClassName("close")[0];
 
-  window.onclick = function(event) {
-    if (event.target == modal) {
-      modal.style.display = "none";
-    }
-  }
-});
+        if (modal && btn && span) {
+            btn.onclick = function() {
+                modal.style.display = "block";
+            };
 
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
 
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
+        }
+    });
 
-
-     $(document).ready(function() {
+    $(document).ready(function() {
         // Обработчик изменения чекбокса "Занят"
-        $('#is_busy_checkbox').change(function() {
-            updateStatus('is_busy', $(this).is(':checked'));
-        });
+        var busyCheckbox = $('#is_busy_checkbox');
+        if (busyCheckbox.length) {
+            busyCheckbox.change(function() {
+                updateStatus('is_busy', $(this).is(':checked'));
+            });
+        }
 
         // Обработчик изменения чекбокса "Не беспокоить"
-        $('#do_not_disturb_checkbox').change(function() {
-            updateStatus('do_not_disturb', $(this).is(':checked'));
-        });
+        var dndCheckbox = $('#do_not_disturb_checkbox');
+        if (dndCheckbox.length) {
+            dndCheckbox.change(function() {
+                updateStatus('do_not_disturb', $(this).is(':checked'));
+            });
+        }
 
         // Функция для отправки AJAX-запроса
         function updateStatus(statusType, statusValue) {
@@ -327,50 +368,116 @@
                 }
             });
         }
-    });
 
-$(document).ready(function() {
-    // Функция для установки ширины comments-wrapper и кнопки
+        // Скрипт для аккордеона запросов дружбы
+        var toggleCommentsBtn = $('#toggle-comments-btn');
+        if (toggleCommentsBtn.length) {
+            toggleCommentsBtn.click(function() {
+                $('#comments-section').slideToggle(400, function() {
+                    var isVisible = $('#comments-section').is(':visible');
+                    toggleCommentsBtn.text(isVisible ? 'Скрыть запросы дружбы' : 'Показать запросы дружбы');
+                });
+            });
+        }
 
+        // Скрипт для аккордеона групп
+        var toggleGroupBtn = $('#toggle-group-btn');
+        if (toggleGroupBtn.length) {
+            toggleGroupBtn.click(function() {
+                $('#group-section').slideToggle(400, function() {
+                    var isVisible = $('#group-section').is(':visible');
+                    toggleGroupBtn.text(isVisible ? 'Скрыть группы в которых состоит пользователь' : 'Показать группы в которых состоит пользователь');
+                });
+            });
+        }
 
-    // Скрипт для аккордеона запросов дружбы
-    $('#toggle-comments-btn').click(function() {
-        $('#comments-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
-            var isVisible = $('#comments-section').is(':visible');
-            $('#toggle-comments-btn').text(isVisible ? 'Скрыть запросы дружбы' : 'Показать запросы дружбы');
+        // Обработка отправки запроса на дружбу
+        var sendFriendRequestButton = document.getElementById('send-friend-request');
+        if (sendFriendRequestButton) {
+            sendFriendRequestButton.addEventListener('click', function() {
+                var profileId = this.getAttribute('data-profile-id');
+                var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                fetch('/friendships/send_request/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ profile_id: profileId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.detail) {
+                        showAjaxPopup(data.detail); // Отображение сообщения
+                        sendFriendRequestButton.textContent = 'Запрос отправлен';
+                        sendFriendRequestButton.disabled = true;
+                    } else {
+                        showAjaxPopup('Неизвестная ошибка');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error.message);
+                    showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
+                });
+            });
+        }
+
+        // Аналогичные проверки и обработчики для других элементов
+        document.querySelectorAll('.accept-request').forEach(button => {
+            button.addEventListener('click', function() {
+                handleRequest(this);
+            });
         });
-    });
 
-    // Скрипт для аккордеона групп
-    $('#toggle-group-btn').click(function() {
-        $('#group-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
-            var isVisible = $('#group-section').is(':visible');
-            $('#toggle-group-btn').text(isVisible ? 'Скрыть  группы в которых состоит пользователь' : 'Показать группы в которых состоит пользователь');
+        document.querySelectorAll('.block-people').forEach(button => {
+            button.addEventListener('click', function() {
+                handleRequest(this);
+            });
         });
-    });
 
-    // Обработка отправки запроса на дружбу
-    var sendFriendRequestButton = document.getElementById('send-friend-request');
-    if (sendFriendRequestButton) {
-        sendFriendRequestButton.addEventListener('click', function () {
-            var profileId = this.getAttribute('data-profile-id');
+        document.querySelectorAll('.unblock-people').forEach(button => {
+            button.addEventListener('click', function() {
+                handleRequest(this);
+            });
+        });
+
+        document.querySelectorAll('.delete-friend').forEach(button => {
+            button.addEventListener('click', function() {
+                handleRequest(this);
+            });
+        });
+
+        document.querySelectorAll('.deny-friend-request').forEach(button => {
+            button.addEventListener('click', function() {
+                handleRequest(this, true);
+            });
+        });
+
+        // Функция для обработки всех запросов
+        function handleRequest(button, removeItem = false) {
+            var url = button.getAttribute('data-url');
             var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            fetch('/friendships/send_request/', {
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrftoken,
                     'Accept': 'application/json'
-                },
-                body: JSON.stringify({ profile_id: profileId })
+                }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.detail) {
-                    showAjaxPopup(data.detail); // Отображение сообщения
-                    sendFriendRequestButton.textContent = 'Запрос отправлен';
-                    sendFriendRequestButton.disabled = true;
+                    showAjaxPopup(data.detail);
+                    if (removeItem) {
+                        button.closest('li').remove();
+                    }
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000); // Задержка в 1-2 секунды для отображения сообщения
                 } else {
                     showAjaxPopup('Неизвестная ошибка');
                 }
@@ -379,164 +486,61 @@ $(document).ready(function() {
                 console.error('Error:', error.message);
                 showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
             });
-        });
-    }
-
-    document.querySelectorAll('.accept-request').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                    location.reload();
-                }, 2000); // Задержка в 1 секунду для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
+        }
     });
 
-    document.querySelectorAll('.block-people').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+document.addEventListener('DOMContentLoaded', function() {
+    // Элементы модальных окон
+    const sendMailModal = document.getElementById('sendMailModal');
+    const closeSendMailModal = document.querySelector('.close-send-mail');
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                    location.reload();
-                }, 2000); // Задержка в 1 секунду для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
+    // Кнопка отправки сообщения
+    const sendMailBtn = document.querySelector('.send_mail');
+
+    // Открытие модального окна при клике на "Отправить сообщение"
+    sendMailBtn.addEventListener('click', function() {
+        sendMailModal.style.display = 'block';
     });
 
-
-    document.querySelectorAll('.unblock-people').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                    location.reload();
-                }, 2000); // Задержка в 1 секунду для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
+    // Закрытие модального окна при клике на крестик
+    closeSendMailModal.addEventListener('click', function() {
+        sendMailModal.style.display = 'none';
     });
 
-    document.querySelectorAll('.delete-friend').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                    location.reload();
-                }, 2000); // Задержка в 1 секунду для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
+    // Закрытие модального окна при клике вне его
+    window.addEventListener('click', function(event) {
+        if (event.target === sendMailModal) {
+            sendMailModal.style.display = 'none';
+        }
     });
 
-    // Обработка отклонения запроса
-    document.querySelectorAll('.deny-friend-request').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    // Обработка отправки сообщения через AJAX
+    const sendMailForm = document.getElementById('sendMailForm');
+    sendMailForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Останавливаем стандартное поведение формы
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
+        const recipient = document.getElementById('recipient').value;
+        const content = document.getElementById('content').value;
+
+        fetch('/mailbox/send_mail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({
+                recipient: recipient,
+                content: content
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    this.closest('li').remove();
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
-    });
-});
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Сообщение отправлено успешно!');
+            sendMailModal.style.display = 'none'; // Закрываем модальное окно после отправки
+        })
+        .catch(error => console.error('Ошибка при отправке сообщения:', error));
+    }); // Закрывающая фигурная скобка для функции обработчика submit
+}); // Закрывающая фигурная скобка для функции обработчика DOMContentLoaded
 
 </script>
 

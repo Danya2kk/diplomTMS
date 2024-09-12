@@ -47,7 +47,7 @@ urlpatterns = [
     path('groups/group_delete/<int:pk>/', views.GroupDeleteView.as_view(), name='group_delete'),
     path('reaction/toggle/', views.reaction_toggle, name='reaction_toggle'),
     path('send-message/', views.SendMailView.as_view(), name='send_message'),
-    path('mailbox/', cache_page(60*15)(views.UserMailView), name='mailbox'),
+    path('mailbox/', views.UserMailView, name='mailbox'),
     path('mailbox/sender_mail', views.sender_mail, name='sender_mail'),
     path('mailbox/recipient_mail', views.recipient_mail, name='recipient_mail'),
 

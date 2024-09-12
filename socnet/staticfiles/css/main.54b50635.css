@@ -20,7 +20,7 @@ body {
 nav a {
     background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px hsla(313, 44%, 83%, 0.702);
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     color: #ffffff;
     display: inline-block;
     margin-right: 15px;
@@ -30,14 +30,16 @@ nav a {
 }
 
 nav a:hover {
-    box-shadow: 0 0 15px 4px rgba(207, 228, 231, 0.702);
-    transform: scale(1.3)
+    box-shadow: 0 0 15px 4px #98d3ebb3;
+    transform: scale(1.3);
+    background: #ffffff;
+    color: #000;
 }
 
 .container .welcom {
     background-color: #7ca5db;
     border-radius: 10px;
-    box-shadow: 0 0 10px 2px hsla(313, 44%, 83%, 0.702);
+    box-shadow: 0 0 10px 2px #98d3ebb3;
     color: #ffffff;
     display: flex;
     justify-content: center;
@@ -49,7 +51,7 @@ nav a:hover {
 }
 
 .container .welcom:hover {
-    box-shadow: 0 0 15px 4px #e0b6dbb3
+    box-shadow: 0 0 15px 4px #86c9e4b3
 }  
 
 .container {
@@ -446,6 +448,13 @@ form input[type=file] {
     width: 100%
 }
 
+#toggle-friend-btn {
+     box-sizing: border-box;
+    display: block;
+    margin: 0 auto;
+    width: 100%
+}
+
 #comments-section {
     box-sizing: border-box;
     display: none;
@@ -681,7 +690,7 @@ form input[type=file] {
     font-size: 24px;
     font-weight: 700;
     position: absolute;
-    right: 20px;
+    right: 7px;
     top: 10px
 }
 
@@ -847,20 +856,25 @@ input[type=text_group] {
     z-index: 1
 }
 
+
 .close {
     box-shadow: 0 0 10px 2px #9dd5ebb3;
     color: #0e0d0d;
-    float: right;
-    border-radius: 5px;
-    font-size: 28px
+    font-size: 40px;
+    font-weight: 700;
+    position: absolute;
+    border-radius: 50%;
+    right: 10px;
+    top: 20px
+    transition: box-shadow .3s ease, transform .3s ease
 }
 
 .close:focus,
 .close:hover {
     box-shadow: 0 0 15px 4px #9dd5ebb3;
     color: #0e0d0d;
-    border-radius: 5px;
-    transform: scale(1.1)
+    cursor: pointer;
+    text-decoration: none
 }
 
 #group-select {
@@ -914,6 +928,13 @@ input[type=text_group] {
     width: 80%;
 }
 
+.comments-wrapper3 {
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 10px;
+    width: 100%;
+}
+
 #toggle-group-btn {
     box-sizing: border-box;
     display: block;
@@ -926,6 +947,8 @@ input[type=text_group] {
     display: none;
     width: 100%
 }
+
+
 
 .center_btn {
     margin-bottom: 20px;
@@ -981,17 +1004,21 @@ input[type=text_group] {
     width: 80%
 }
 
-.close {
+.close-send-mail {
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
     color: #0e0d0d;
     font-size: 40px;
     font-weight: 700;
     position: absolute;
-    right: 35px;
+    border-radius: 50%;
+    right: 10px;
     top: 20px
+    transition: box-shadow .3s ease, transform .3s ease
 }
 
-.close:focus,
-.close:hover {
+.close-send-mail:focus,
+.close-send-mail:hover {
+    box-shadow: 0 0 15px 4px #9dd5ebb3;
     color: #0e0d0d;
     cursor: pointer;
     text-decoration: none
@@ -1077,10 +1104,14 @@ input[type=text_group] {
 }
 
 .mail-answer {
-    align-items: center;
+    align-items: left;
     display: flex;
     flex-direction: column;
     width: 100%
+}
+
+.mail-answer button {
+    align-self: center; /* Центрирование кнопки по горизонтали */
 }
 
 .recipient_mail,
@@ -1120,6 +1151,61 @@ input[type=text_group] {
     margin: 0 auto;
     padding: 20px
 }
+/* Заголовок сообщений */
+.mail-heading {
+    width: 90%;
+    margin: 10px auto;
+    padding: 5px;
+    height: 30px;
+    line-height: 15px; /* Уменьшаем высоту строки */
+    border: 1px solid #ccc;
+    background-color: #fff;
+    text-align: center;
+    box-sizing: border-box; /* Учитываем padding */
+}
+
+/* Контейнер для сообщений */
+/* Родительский контейнер с flexbox */
+.mailbox-content-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центрирует содержимое по горизонтали */
+}
+
+/* Заголовок сообщений */
+.mail-heading {
+    width: 90%;
+    margin: 10px 0; /* Отступ сверху и снизу */
+    padding: 5px;
+    height: 30px;
+    line-height: 15px; /* Уменьшена высота строки */
+    border: 1px solid #ccc;
+    background-color: #7ca5db;
+    text-align: center;
+    box-sizing: border-box; /* Учитываем padding */
+    font-weight: bold;
+    color:#fff;
+}
+
+/* Контейнер для сообщений */
+.mail-messages {
+    width: 90%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    min-height: 100px;
+    background-color: #7ca5db;
+    box-sizing: border-box;
+    color:#fff;
+}
+
+.mail-item {
+    border-bottom: 1px solid #fff;
+}
+/* Последний элемент сообщения без нижней границы */
+.mail-item:last-child {
+    border-bottom: none;
+}
+
 
 #chat-log {
     background-color: #7ca5db;
@@ -1234,17 +1320,17 @@ button:hover {
 
 /* Колонки для друзей */
 #friend-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px; /* Пробел между элементами */
-    width: 100%;
+    box-sizing: border-box;
+    display: none;
+    width: 100%
 }
+
 
 .friend-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 80px; /* Ширина элемента с друзьями */
+    width: 80px; /* Каждый элемент имеет фиксированную ширину */
     text-align: center;
 }
 
@@ -1434,10 +1520,19 @@ input[type="file"] {
     box-sizing: border-box; /* Учитываем padding и border */
 }
 
+#message-modal .modal-content {
+    width: 50%;
+    height: 50%;
+    /* Дополнительные стили для message-modal */
+}
+
+
+
 @media (max-width: 768px) {
     .news-detail-container,
     .news-detail-container2,
     .comments-wrapper2,
+    .comments-wrapper3,
     .comments-wrapper {
         width: 90%;
     }

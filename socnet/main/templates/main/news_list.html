@@ -37,7 +37,7 @@
                     </div>
                     <!-- Правый блок с деталями профиля -->
                     <div class="profile-detail-right2 profile-detail-text add-color">
-                        <p> {{ new.content }}</p> profile
+                        <p> {{ new.content }}</p>
                         <p>Автор: {{ new.profile.firstname }} {{ new.profile.lastname }}</p>
                         <p>Тэги: {% if new.tags.all %}{{ new.tags.all|join:", " }}{% endif %}</p>
                         <p>Дата создания: {{ new.created_at }}</p>

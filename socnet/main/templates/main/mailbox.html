@@ -8,16 +8,16 @@
 
     <section class="mail-detail-content">
         <div class="mail-detail-left">
-            <button class="recipient_mail add-font" data-username="{{ username }}">Входящие сообщения</button>
-            <button class="sender_mail add-font" data-username="{{ username }}">Отправленные сообщения</button>
+            <button class="recipient_mail add-font add-color add-bg" data-username="{{ username }}">Входящие сообщения</button>
+            <button class="sender_mail add-font add-color add-bg" data-username="{{ username }}">Отправленные сообщения</button>
             <div class="separator-line"></div>
 
-            <button class="send_mail add-font">Отправить сообщение</button>
+            <button class="send_mail add-font add-color add-bg">Отправить сообщение</button>
 
             <!-- Модальное окно -->
             <div id="sendMailModal" class="modal" style="display:none;">
                 <div class="modal-content">
-                    <span class="close">&times;</span>
+                     <span class="close-send-mail">&times;</span>
                     <h2>Отправить сообщение</h2>
                     <form id="sendMailForm">
                         <label for="recipient">Получатель (username):</label>
@@ -26,13 +26,13 @@
                         <label for="content">Сообщение:</label>
                         <textarea id="content" name="content" required></textarea>
 
-                        <button class="add-font" type="submit">Отправить</button>
+                        <button class="add-font add-color add-bg" type="submit">Отправить</button>
                     </form>
                 </div>
             </div>
         </div>
         <div class="mail-detail-right mail-detail-text">
-            <div class="news-detail-text" id="mailbox-content">
+            <div id="mailbox-content" class="mailbox-content-container">
                 {% for mail in mails %}
                     <p>{{ mail.content }} от {{ mail.sender.user.username }}</p>
                 {% empty %}
@@ -48,20 +48,94 @@
                 </div>
             </div>
         </div>
-        <div id="custom-prompt-modal" style="display: none;">
-    <div class="modal-content">
-        <p>Введите текст ответа:</p>
-        <textarea id="reply-text" rows="4"></textarea>
-        <button class="add-font" id="submit-reply">Отправить</button>
-        <button class="add-font" id="cancel-reply">Отмена</button>
-    </div>
+        <div id="custom-prompt-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Введите текст ответа:</h2>
+                    <form id="sendMailFormParent">
+                              <textarea id="reply-text" rows="4"></textarea>
+                            <button class="add-font add-color add-bg" id="submit-reply">Отправить</button>
+                            <button class="add-font add-color add-bg" id="cancel-reply">Отмена</button>
+                        </form>
+                </div>
 </div>
     </section>
 </div>
 
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Элементы модальных окон
+    const sendMailModal = document.getElementById('sendMailModal');
+    const closeSendMailModal = document.querySelector('.close-send-mail');
+
+    // Кнопка отправки сообщения
+    const sendMailBtn = document.querySelector('.send_mail');
+
+    // Открытие модального окна при клике на "Отправить сообщение"
+    sendMailBtn.addEventListener('click', function() {
+        sendMailModal.style.display = 'block';
+    });
+
+    // Закрытие модального окна при клике на крестик
+    closeSendMailModal.addEventListener('click', function() {
+        sendMailModal.style.display = 'none';
+    });
+
+    // Закрытие модального окна при клике вне его
+    window.addEventListener('click', function(event) {
+        if (event.target === sendMailModal) {
+            sendMailModal.style.display = 'none';
+        }
+    });
+
+    // Обработка отправки сообщения через AJAX
+    const sendMailForm = document.getElementById('sendMailForm');
+    sendMailForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Останавливаем стандартное поведение формы
+
+        const recipient = document.getElementById('recipient').value;
+        const content = document.getElementById('content').value;
+
+        fetch('/mailbox/send_mail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                recipient: recipient,
+                content: content
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Сообщение отправлено успешно!');
+            sendMailModal.style.display = 'none'; // Закрываем модальное окно после отправки
+        })
+        .catch(error => console.error('Ошибка при отправке сообщения:', error));
+    });
+
+    // Функция получения CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+
+
    document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM полностью загружен и разобран');
     const recipientBtn = document.querySelector('.recipient_mail');
     const senderBtn = document.querySelector('.sender_mail');
     const mailboxContent = document.getElementById('mailbox-content');
@@ -71,31 +145,49 @@
     let currentUrl = "{% url 'recipient_mail' %}";  // Текущий URL
 
     // Функция для обновления содержимого почты
-    function updateMailboxContent(url, isSender) {
-        currentUrl = url; // Обновляем текущий URL для последующей перезагрузки содержимого
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                let mails = data.detail;
-                mailboxContent.innerHTML = ''; // Очищаем старое содержимое
-                if (mails.length > 0) {
-                    mails.forEach(mail => {
-                        let mailHtml;
-                        if (isSender) {
-                            mailHtml = `<p data-id="${mail.id}" class="mail-item">${mail.content} для ${mail.recipient.firstname} ${mail.recipient.lastname}</p>`;
-                        } else {
-                            let mailStyle = mail.is_read ? '' : 'font-weight: bold; color: red;';
-                            mailHtml = `<p data-id="${mail.id}" class="mail-item" style="${mailStyle}">${mail.content} от ${mail.sender.firstname} ${mail.sender.lastname}</p>`;
-                        }
-                        mailboxContent.innerHTML += mailHtml;
-                    });
-                } else {
-                    mailboxContent.innerHTML = '<p>Сообщений нет</p>';
-                }
-                addMailClickEvent();
-            })
-            .catch(error => console.error('Error fetching mails:', error));
-    }
+    // Обновляем содержимое почты с разделением на блоки
+function updateMailboxContent(url, isSender) {
+    currentUrl = url;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            mailboxContent.innerHTML = ''; // Очищаем старое содержимое
+
+            // Создаем заголовок для входящих или отправленных сообщений
+            const headingText = isSender ? 'Отправленные сообщения' : 'Входящие сообщения';
+            const headingDiv = document.createElement('div');
+            headingDiv.classList.add('mail-heading'); // Добавляем класс для стилизации
+            headingDiv.innerHTML = `<div>${headingText}</div>`;
+
+            // Создаем контейнер для основного содержимого сообщений
+            const mailsDiv = document.createElement('div');
+            mailsDiv.classList.add('mail-messages'); // Добавляем класс для стилизации
+
+            let mails = data.detail;
+            if (mails.length > 0) {
+                mails.forEach(mail => {
+                    let mailHtml;
+                    if (isSender) {
+                        mailHtml = `<p data-id="${mail.id}" class="mail-item">Кому: ${mail.recipient.firstname} ${mail.recipient.lastname}. текст сообщения: ${mail.content}</p>`;
+                    } else {
+                        let mailStyle = mail.is_read ? '' : 'font-weight: bold; color: black;';
+                        mailHtml = `<p data-id="${mail.id}" class="mail-item" style="${mailStyle}">От кого: ${mail.sender.firstname} ${mail.sender.lastname}. текст сообщения: ${mail.content} </p>`;
+                    }
+                    mailsDiv.innerHTML += mailHtml;
+                });
+            } else {
+                mailsDiv.innerHTML = '<p>Сообщений нет</p>';
+            }
+
+            // Добавляем элементы в основной контейнер в правильном порядке
+            mailboxContent.appendChild(headingDiv); // Сначала заголовок
+            mailboxContent.appendChild(mailsDiv); // Затем блок с сообщениями
+
+            // Добавляем события для кликов по сообщениям
+            addMailClickEvent();
+        })
+        .catch(error => console.error('Ошибка при получении писем:', error));
+}
 
     // Добавление событий клика на сообщения
 function addMailClickEvent() {
@@ -117,17 +209,27 @@ function addMailClickEvent() {
                         }
 
                         if (data.isSender) {
-                            modalHtml += `<div class="mail-answer">
-                                <p class="btn-news add-font">Получатель: ${mail.recipient.firstname} ${mail.recipient.lastname}</p>
-                                <p class="btn-news add-font">Сообщение: ${mail.content}</p>
-                            </div>`;
+                            modalHtml += `
+                                <form id="MailForm">
+                                <div class="mail-answer">
+                                <p class="add-font">Получатель:</p>
+                                <p class="btn-news add-font">${mail.recipient.firstname} ${mail.recipient.lastname}</p>
+                                <p class="add-font">Сообщение:</p>
+                                <p class="btn-news add-font">${mail.content}</p>
+                                 </div>
+                                 </form>
+                                 `;
                         } else {
                             modalHtml += `
+                                <form id="MailForm">
                                 <div class="mail-answer">
-                                    <p class="btn-news add-font">Отправитель: ${mail.sender.firstname} ${mail.sender.lastname}</p>
-                                    <p class="btn-news add-font">Сообщение: ${mail.content}</p>
-                                    <button id="reply-button" class="btn_mail add-font">Ответить</button>
+                                    <p class="add-font">Отправитель:</p>
+                                    <p class="btn-news add-font">${mail.sender.firstname} ${mail.sender.lastname}</p>
+                                    <p class="add-font">Сообщение:</p>
+                                    <p class="btn-news add-font">${mail.content}</p>
+                                    <button id="reply-button" class="btn_mail add-font add-color add-bg">Ответить</button>
                                 </div>
+                                </form>
                             `;
                         }
 
@@ -201,11 +303,13 @@ function addMailClickEvent() {
 
     // Обработчик для входящих сообщений
     recipientBtn.addEventListener('click', function() {
+        console.log("Клик на кнопку 'Входящие сообщения' сработал");
         updateMailboxContent("{% url 'recipient_mail' %}", false);
     });
 
     // Обработчик для отправленных сообщений
     senderBtn.addEventListener('click', function() {
+        console.log("Клик на кнопку 'Отправленные сообщения' сработал");
         updateMailboxContent("{% url 'sender_mail' %}", true);
     });
 
