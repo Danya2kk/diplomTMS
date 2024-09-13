@@ -47,7 +47,6 @@ urlpatterns = [
     path("mailbox/send_mail", views.send_mail, name="send_mail"),
     path("mailbox/send_mail_parent", views.send_mail_parent, name="send_mail_parent"),
     path("mailbox/message/<int:mail_id>/", views.message_detail, name="message_detail"),
-    path("mark-as-read/", views.mark_as_read, name="mark_as_read"),
     path("update_status/", views.update_status, name="update_status"),
     path("", include(router.urls)),
 ]

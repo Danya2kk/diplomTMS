@@ -57,6 +57,8 @@ def index(request):
 
 
 def chat(request, pk):
+    """Функция для получения и передачи id группы на шаблон"""
+
     group_id = pk
     context = {
         "is_chat_page": "true",
@@ -77,19 +79,6 @@ def chat(request, pk):
     return render(request, "main/chat.html", context)
 
 
-@login_required
-def my_profile_view(request):
-    """Просмотр своего профиля"""
-
-    profile = get_object_or_404(Profile, user=request.user)
-
-    context = {
-        "profile": profile,
-        "is_owner": True,  # Устанавливаем, что текущий пользователь — владелец профиля
-    }
-
-    return render(request, "main/chat.html", context)
-
 
 @login_required
 def profile_view(request, username):
@@ -98,10 +87,10 @@ def profile_view(request, username):
     # Получение профиля пользователя
     profile = get_object_or_404(Profile, user__username=username)
 
-    # Проверяем, является ли текущий пользователь владельцем профиля
+    # Проверяем, является ли текущий пользователь владельцем профиля (нужно для кнопки)
     is_owner = request.user.username == username
 
-    # Проверка уровня конфиденциальности профиля
+    # Проверка уровня конфиденциальности профиля (нужно для отображения)
     privacy_level = profile.privacy
 
     avatar = profile.media_files.filter(file_type="avatar").last()
@@ -115,6 +104,8 @@ def profile_view(request, username):
             profile_one=profile, profile_two__user=request.user, status__name="Друзья"
         ).exists()
     )
+
+    # Определяем всех друзей профиля
 
     friends_profiles = []
 
@@ -159,6 +150,8 @@ def profile_view(request, username):
     # Убираем дубликаты, если они есть
     friends_profiles = list(set(friends_profiles))
 
+    # Проверяемся на баны с обоих сторон (нужно для кнопок)
+
     ban_exists_out = Friendship.objects.filter(
         profile_one__user=request.user, profile_two=profile, status__name="Заблокирован"
     ).exists()
@@ -166,7 +159,7 @@ def profile_view(request, username):
         profile_one=profile, profile_two__user=request.user, status__name="Заблокирован"
     ).exists()
 
-    # Определяем, есть ли входящий запрос на дружбу
+    # Определяем, есть ли входящий запрос на дружбу (нужно для кнопок)
     incoming_friend_requests = Friendship.objects.filter(
         profile_two=request.user.profile, status__name="Отправлен запрос"
     )
@@ -188,6 +181,8 @@ def profile_view(request, username):
     is_admin_groups = GroupMembership.objects.filter(
         profile=request.user.profile, status=status_instance
     ).select_related("group")
+
+    # ищем группы в которых состоит пользователь
 
     group_list = GroupMembership.objects.filter(profile=profile).select_related("group")
 
@@ -253,10 +248,12 @@ def profile_view(request, username):
 
 
 def profile_media(request, username):
+    """Функция отображения фотографий пользователя"""
 
     is_owner = request.user.username == username
     user = User.objects.get(username=username)
 
+    # Получаем профиль получай фотки по профилю
     profile = Profile.objects.get(user=user)
     photo = Mediafile.objects.filter(profile=profile).exclude(file_type="avatar")
 
@@ -269,7 +266,9 @@ def profile_media(request, username):
 
 
 def profile_add_media(request):
+    """Функция добавления фотографий пользователя"""
 
+    # Получаем текущего пользователя
     user = User.objects.get(username=request.user.username)
 
     profile = Profile.objects.get(user=user)
@@ -280,7 +279,7 @@ def profile_add_media(request):
         form = MediaUploadForm(request.POST, request.FILES)
 
         if form.is_valid():
-            # Сохранить новый аватар
+            # Сохранить новую фотографию
             photo = form.save(commit=False)
 
             photo.profile = profile  # Устанавливаем связь с профилем
@@ -376,9 +375,13 @@ def update_profile(request):
 
 
 class RegisterUser(FormView):
+    """Функция регистрации нового пользователя"""
+
     template_name = "main/registration.html"
     form_class = RegistrationForm
     success_url = "/"
+
+    # Транзакция при регистрации т.е нужно заполнить 3 таблицы. Если чтото не прошло - все откатываем
 
     @transaction.atomic
     def form_valid(self, form):
@@ -458,22 +461,14 @@ class RegisterUser(FormView):
 @login_required
 @require_POST
 def update_status(request):
+    """Функция обновления статуса пользователя"""
+
     # Получаем данные из AJAX-запроса
     status_type = request.POST.get("status_type")
     status_value = request.POST.get("status_value") == "true"
 
-    try:
-        # Пытаемся получить статус профиля пользователя
-        status_profile = StatusProfile.objects.get(profile=request.user.profile)
-    except StatusProfile.DoesNotExist:
-        # Если статус профиля не существует, создаем его
-        status_profile = StatusProfile.objects.create(
-            profile=request.user.profile,
-            is_online=True,
-            is_busy=False,
-            do_not_disturb=False,
-            last_updated=timezone.now(),
-        )
+    status_profile = StatusProfile.objects.get(profile=request.user.profile)
+
 
     # Обновляем только измененный статус
     if status_type == "is_busy":
@@ -514,13 +509,15 @@ def update_status(request):
 
 
 class UserPasswordChange(PasswordChangeView):
+    """Функция смены пароля пользователя"""
+
     form_class = UserPasswordChangeForm
     success_url = reverse_lazy("home")
     template_name = "main/password_change_form.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Передаем username в контекст
+        # Передаем username в контекст для того чтобы на форме мы могли по кнопке вернуть в профиль (там нужен username)
         context['username'] = self.request.user.username
         return context
 
@@ -564,6 +561,8 @@ class UserPasswordChange(PasswordChangeView):
 
 
 class LoginUser(LoginView):
+    """Функция авторизации пользователя"""
+
     form_class = LoginUserForm
     template_name = "main/login.html"
     extra_context = {"title": "Авторизация"}
@@ -579,7 +578,7 @@ class LoginUser(LoginView):
 
             try:
                 create_notification(
-                    profile, Notification_norest.AUTHENTICATION, "Выход в систему!"
+                    profile, Notification_norest.AUTHENTICATION, "Вход в систему!"
                 )
             except Exception as e:
                 # Логируем ошибку
@@ -617,6 +616,8 @@ class LoginUser(LoginView):
 
 
 class LogoutUser(View):
+    """Функция деавторизации пользователя"""
+
     def get(self, request):
         # Получаем профиль текущего пользователя
         if request.user.is_authenticated:
@@ -640,6 +641,8 @@ class LogoutUser(View):
 
 
 def profile_list(request):
+    """Функция получения списка пользователей"""
+
     # Создаем экземпляр фильтра с использованием GET параметров
     profile_filter = ProfileFilter(
         request.GET,
@@ -666,16 +669,9 @@ def profile_list(request):
     return render(request, "main/profile_list.html", context)
 
 
-@login_required
-def news_list(request):
-    news_items = News.objects.all().order_by("-created_at")
-    context = {
-        "news_items": news_items,
-    }
-    return render(request, "main/news_list.html", context)
-
-
 class news_listView(LoginRequiredMixin, ListView):
+    """Функция получения списка новостей"""
+
     model = News
     template_name = "main/news_list.html"
     context_object_name = "news"
@@ -699,6 +695,8 @@ class news_listView(LoginRequiredMixin, ListView):
 @require_GET
 @login_required
 def news_list_api(request):
+    """Функция получения списка новостей по фильтру"""
+
     user = (
         request.user.profile
     )  # Получаем профиль текущего авторизованного пользователя
@@ -750,6 +748,8 @@ def news_list_api(request):
 
 @login_required
 def news_detail(request, pk):
+    """Функция получения и вывода новости по id"""
+
     news_item = get_object_or_404(News, pk=pk)
 
     # Получаем состояние реакции пользователя
@@ -759,6 +759,7 @@ def news_detail(request, pk):
         news=news_item, parent__isnull=True
     ).select_related("author")
 
+    # получение реакции
     try:
         reaction = Reaction.objects.get(
             profile=request.user.profile,
@@ -797,6 +798,8 @@ def news_detail(request, pk):
 
 @login_required
 def news_create(request):
+    """Функция создания новости"""
+
     if request.method == "POST":
         form = NewsForm(request.POST, request.FILES)
         if form.is_valid():
@@ -848,6 +851,8 @@ def news_create(request):
 
 @login_required
 def news_edit(request, pk):
+    """Функция редактирования новостей по id"""
+
     news_item = get_object_or_404(News, pk=pk)
 
     # Очистка существующих тегов перед началом редактирования
@@ -857,7 +862,6 @@ def news_edit(request, pk):
         form = NewsForm(request.POST, request.FILES, instance=news_item)
         if form.is_valid():
             form.save()
-            # form.save_m2m() больше не нужен, так как form.save() уже сохраняет m2m поля при наличии instance
 
             try:
                 profile = Profile.objects.get(user=request.user)
@@ -893,6 +897,8 @@ def news_edit(request, pk):
 
 @login_required
 def news_delete(request, pk):
+    """Функция удаления новостей по id"""
+
     news_item = News.objects.get(pk=pk)
     news_item.delete()
 
@@ -912,7 +918,11 @@ def news_delete(request, pk):
 @csrf_exempt
 @login_required
 def reaction_toggle(request):
+    """Функция переключения реакции"""
+
     if request.method == "POST":
+
+        # получаем новость, пользователя и тип реакции
         object_id = request.POST.get("object_id")
         reaction_type = request.POST.get("reaction_type")
         user = request.user
@@ -1002,6 +1012,8 @@ def reaction_toggle(request):
 
 
 def add_comment(request, news_id):
+    """Функция добавления комменатия"""
+
     if request.method == "POST":
         text = request.POST.get("text")
         parent_id = request.POST.get("parent_id")
@@ -1033,11 +1045,16 @@ def add_comment(request, news_id):
 
 
 class FriendshipViewSet(viewsets.ModelViewSet):
+    """Функция работы с дружбой(отправка приглашений, отклонения, блокировки, принятие)"""
+
     queryset = Friendship.objects.all()
     serializer_class = FriendshipSerializer
 
     @action(detail=False, methods=["post"])
     def send_request(self, request):
+        """Метод отправки приглашения"""
+
+        # получаем профили обоих пользователей
         profile_one = request.user.profile
         profile_two_id = request.data.get("profile_id")
 
@@ -1069,6 +1086,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # ищем запросы по статусу
         friendship_status = FriendshipStatus.objects.get(name="Отправлен запрос")
         friendship = Friendship.objects.create(
             profile_one=profile_one, profile_two=profile_two, status=friendship_status
@@ -1095,6 +1113,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         url_name="accept-request",
     )
     def accept_request(self, request, pk):
+        """Метод принятия приглашения"""
         try:
             friendship = get_object_or_404(Friendship, pk=pk)
 
@@ -1136,9 +1155,15 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             )
 
     @action(
-        detail=True, methods=["post"], url_path="block-people", url_name="block-people"
+        detail=True,
+        methods=["post"],
+        url_path="block-people",
+        url_name="block-people"
     )
     def block_user(self, request, pk):
+        """Метод блокировки пользователя по id"""
+
+        # получаем профили обоих пользователей
         profile_one = request.user.profile
         profile_two = Profile.objects.get(id=pk)
 
@@ -1182,6 +1207,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         url_name="unblock-people",
     )
     def unblock_user(self, request, pk):
+        """Разблокируем пользователя по id"""
+
         profile_one = request.user.profile
 
         try:
@@ -1223,9 +1250,14 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             )
 
     @action(
-        detail=True, methods=["post"], url_path="deny-request", url_name="deny-request"
+        detail=True,
+        methods=["post"],
+        url_path="deny-request",
+        url_name="deny-request"
     )
     def deny_friendship(self, request, pk=None):
+        """Метод отклонения приглашения в дружбу"""
+
         try:
             friendship = get_object_or_404(Friendship, pk=pk)
             profile = request.user.profile
@@ -1264,6 +1296,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         url_name="delete-friend",
     )
     def delete_friendship(self, request, pk):
+        """Метод удаления дружбы"""
+
         profile_2 = get_object_or_404(Profile, id=pk)
 
         # Определяем, есть ли дружба между текущим пользователем и владельцем профиля
@@ -1327,6 +1361,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         url_name="list-requests",
     )
     def list_requests(self, request):
+        """Метод вывода списка дружбы"""
+
         profile = request.user.profile
         incoming_friend_requests = Friendship.objects.filter(
             profile_two=profile, status__name="Отправлен запрос"
@@ -1338,6 +1374,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         )
 
 class SendMailView(LoginRequiredMixin, FormView):
+    """Функция отправки почты"""
+
     form_class = MailForm
     template_name = "main/send_mail.html"
     success_url = reverse_lazy(
@@ -1374,6 +1412,8 @@ class SendMailView(LoginRequiredMixin, FormView):
 
 @login_required
 def UserMailView(request):
+    """Функция вывода шаблона почты"""
+
     user = User.objects.get(username=request.user.username)
     profile = Profile.objects.get(user=user)
     mails = Mail.objects.filter(recipient=profile).select_related("sender", "recipient")
@@ -1406,6 +1446,8 @@ def UserMailView(request):
 
 @login_required
 def sender_mail(request):
+    """Функция получения отправленных писем через JS"""
+
     user = request.user
     profile = Profile.objects.get(user=user)
     mails = Mail.objects.filter(sender=profile).select_related("sender", "recipient")
@@ -1433,6 +1475,8 @@ def sender_mail(request):
 
 @login_required
 def recipient_mail(request):
+    """Функция получения полученных писем через JS"""
+
     user = request.user
     profile = Profile.objects.get(user=user)
     mails = Mail.objects.filter(recipient=profile).select_related("sender", "recipient")
@@ -1463,6 +1507,7 @@ def recipient_mail(request):
 
 @login_required
 def send_mail(request):
+    """Функция отправки почты JS"""
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -1524,6 +1569,8 @@ def send_mail(request):
 
 @login_required
 def send_mail_parent(request):
+    """Функция отправки ответа на входящее письмо"""
+
     if request.method == "POST":
         data = json.loads(request.body)
         parent_id = data.get("parent")  # Получаем идентификатор родительского сообщения
@@ -1581,6 +1628,8 @@ def send_mail_parent(request):
 
 @login_required
 def message_detail(request, mail_id):
+    """Функция получения данных письма по id"""
+
     try:
         mail = Mail.objects.get(id=mail_id)
         # Обновляем статус сообщения
@@ -1611,19 +1660,11 @@ def message_detail(request, mail_id):
         return JsonResponse({"error": "Сообщение не найдено"}, status=404)
 
 
-def mark_as_read(request):
-    if request.method == "POST":
-        mail_id = request.POST.get("mail_id")
-        if mail_id:
-            mail = get_object_or_404(Mail, id=mail_id, recipient=request.user.profile)
-            if not mail.is_read:
-                mail.is_read = True
-                mail.save()
-    return redirect("mailbox")
-
 
 @login_required
 def friends_list_api(request):
+    '''Вывод списка друзей в JSON-формате'''
+
     user_profile = request.user.profile
 
     friendships = Friendship.objects.filter(
@@ -1656,7 +1697,7 @@ def friends_list_api(request):
 
 @login_required
 def send_friend_request(request, username):
-    """Отправить запрос на дружбу"""
+    """Функция отправки запроса на дружбу"""
 
     user_profile = request.user.profile
     friend_profile = get_object_or_404(Profile, user__username=username)
@@ -1684,6 +1725,8 @@ def send_friend_request(request, username):
 
 
 class FriendshipListView(LoginRequiredMixin, ListView):
+    """Функция получения списка дружбы"""
+
     model = Friendship
     template_name = "friendship_list.html"
     context_object_name = "friendships"
@@ -1695,23 +1738,9 @@ class FriendshipListView(LoginRequiredMixin, ListView):
         ).order_by("-created_at")
 
 
-class FriendshipListView(LoginRequiredMixin, DetailView):
-    model = Friendship
-    template_name = "friendship_detail.html"
-    context_object_name = "friendship"
-
-    def get_object(self):
-        friendship = super().get_object()
-        if (
-            friendship.profile_one == self.request.user.profile
-            or friendship.profile_two == self.request.user.profile
-        ):
-            return friendship
-        else:
-            raise Http404("Друг не найден")
-
-
 class FriendshipCreateView(LoginRequiredMixin, CreateView):
+    """Функция создания  дружбы"""
+
     model = Friendship
     fields = ["profile_two", "description"]
     template_name = "friendship_form.html"
@@ -1723,6 +1752,8 @@ class FriendshipCreateView(LoginRequiredMixin, CreateView):
 
 
 class FriendshipUpdateView(LoginRequiredMixin, UpdateView, UserPassesTestMixin):
+    """Функция обновления таблицы дружбы"""
+
     model = Friendship
     fields = ["status", "description"]
     template_name = "friendship_form.html"
@@ -1736,6 +1767,8 @@ class FriendshipUpdateView(LoginRequiredMixin, UpdateView, UserPassesTestMixin):
 
 
 class FriendshipDeleteView(LoginRequiredMixin, DeleteView, UserPassesTestMixin):
+    """Функция удаления данных из таблицы дружбы"""
+
     model = Friendship
     success_url = "/friendship/"
     template_name = "friendship_confirm_delete.html"
@@ -1750,6 +1783,8 @@ class FriendshipDeleteView(LoginRequiredMixin, DeleteView, UserPassesTestMixin):
 
 @login_required
 def accept_friendship(request, pk):
+    """Функция принятия дружбы"""
+
     friendship = get_object_or_404(Friendship, pk=pk)
     if friendship.profile_two == request.user.profile:
         # friendship.status = ACCEPTED
@@ -1762,6 +1797,8 @@ def accept_friendship(request, pk):
 
 @login_required
 def reject_friendship(request, pk):
+    """Функция отклоненния дружбы"""
+
     friendship = get_object_or_404(Friendship, pk=pk)
     if friendship.profile_two == request.user.profile:
         friendship.delete()
@@ -1773,6 +1810,8 @@ def reject_friendship(request, pk):
 
 @login_required
 def block_friendship(request, pk):
+    """Функция блокировки дружбы"""
+
     friendship = get_object_or_404(Friendship, pk=pk)
     if (
         friendship.profile_one == request.user.profile
@@ -1788,6 +1827,8 @@ def block_friendship(request, pk):
 
 @login_required
 def unblock_friendship(request, pk):
+    """Функция разблокировки дружбы"""
+
     friendship = get_object_or_404(Friendship, pk=pk)
     if (
         friendship.profile_one == request.user.profile
@@ -1802,6 +1843,8 @@ def unblock_friendship(request, pk):
 
 
 class GroupListView(LoginRequiredMixin, ListView):
+    """Функция вывода списка групп"""
+
     model = Group
     template_name = "main/group_list.html"
     context_object_name = "groups"
@@ -1886,6 +1929,7 @@ def GroupDetailView(request, pk):
 
 @csrf_exempt
 def GroupInvite(request, username, pk):
+    """Функция приглашения в группу"""
 
     if request.method != "POST":
         return JsonResponse(
@@ -1945,6 +1989,7 @@ def GroupInvite(request, username, pk):
 
 @login_required
 def join_group(request, pk):
+    """Функция присоединения в группу"""
 
     group = get_object_or_404(Group, pk=pk)
     status_instance = get_object_or_404(Status, id=1)  # 1-User
@@ -1976,6 +2021,8 @@ def join_group(request, pk):
 
 @login_required
 def kik_group(request, username, pk):
+    """Функция кика из группы"""
+
     group = get_object_or_404(Group, pk=pk)
 
     user = get_object_or_404(User, username=username)
@@ -2015,6 +2062,8 @@ def kik_group(request, username, pk):
 
 @login_required
 def leave_group(request, pk):
+    """Функция выхода из группы"""
+
     group = get_object_or_404(Group, pk=pk)
     membership = GroupMembership.objects.get(profile=request.user.profile, group=group)
     if membership:
@@ -2044,6 +2093,8 @@ def leave_group(request, pk):
 
 
 class GroupCreateView(LoginRequiredMixin, CreateView):
+    """Функция создания группы"""
+
     model = Group
     form_class = GroupCreateForm
     template_name = "main/create_group.html"
@@ -2104,6 +2155,8 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
 
 
 class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Функция обновления группы"""
+
     model = Group
     form_class = GroupCreateForm
     template_name = "main/update_group.html"
@@ -2168,6 +2221,8 @@ class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 
 class GroupDeleteView(LoginRequiredMixin, DeleteView):
+    """Функция удаления группы"""
+
     model = Group
 
     def post(self, request, *args, **kwargs):
@@ -2195,6 +2250,8 @@ class GroupDeleteView(LoginRequiredMixin, DeleteView):
 
 
 def group_search(request):
+    """Функция поиска по группам"""
+
     form = GroupSearchForm(request.GET)
     if form.is_valid():
         search_term = form.cleaned_data["search_term"]
@@ -2238,6 +2295,8 @@ def accept_friend_request(request, username):
 
 
 def log_user_activity(profile, action_type, *args):
+    """Функция логирования активности пользователя"""
+
     description = " ".join(map(str, args))  # Собираем описание из переданных аргументов
     ActivityLog_norest.objects.create(
         profile=profile,
@@ -2248,6 +2307,8 @@ def log_user_activity(profile, action_type, *args):
 
 
 def create_notification(profile, notification_type, content):
+    """Функция логирования активности(автроризационно-аутентификацинной) пользователя"""
+
     Notification_norest.objects.create(
         profile=profile,
         notification_type=notification_type,

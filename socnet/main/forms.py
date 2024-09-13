@@ -84,6 +84,8 @@ class LoginForm(forms.Form):
 
 
 class UpdateUserForm(forms.ModelForm):
+    '''Смена username пользователя'''
+
     username = forms.CharField(
         required=True,
         label="Логин",
@@ -96,6 +98,8 @@ class UpdateUserForm(forms.ModelForm):
 
 
 class UpdateProfileForm(forms.ModelForm):
+    '''Форма для редактирования профиля'''
+
     firstname = forms.CharField(
         label="Имя",
         widget=forms.TextInput(
@@ -175,8 +179,10 @@ class UpdateProfileForm(forms.ModelForm):
             "interests",
         ]
 
-
 class AvatarUploadForm(forms.ModelForm):
+    '''Форма для загрузки аватара'''
+
+
     file = forms.ImageField(label="Аватар", required=False)
 
     class Meta:
@@ -218,6 +224,8 @@ class AvatarUploadForm(forms.ModelForm):
 
 
 class MediaUploadForm(forms.ModelForm):
+    '''Форма для загрузки медиафайлов'''
+
     file = forms.ImageField(
         label="Фотография",
         # required=False
@@ -229,6 +237,8 @@ class MediaUploadForm(forms.ModelForm):
 
 
 class UserPasswordChangeForm(PasswordChangeForm):
+    '''Форма для смены пароля'''
+
     old_password = forms.CharField(
         label="Старый пароль", widget=forms.PasswordInput(attrs={"class": "form-input"})
     )

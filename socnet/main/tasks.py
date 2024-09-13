@@ -6,6 +6,8 @@ from .models import ArchiveChat, ArchivedMail, Chat, Mail, StatusProfile
 
 @shared_task
 def archive_chat():
+    '''Архивация чата'''
+
     chats = Chat.objects.all()
     for chat in chats:
         ArchiveChat.objects.create(
@@ -16,6 +18,9 @@ def archive_chat():
 
 @shared_task
 def archive_mail():
+    '''Архивация почты'''
+
+
     mails = Mail.objects.all()
     for mail in mails:
         ArchivedMail.objects.create(
@@ -32,6 +37,8 @@ def archive_mail():
 
 @shared_task
 def clean_mail():
+    '''Очистка почты'''
+
     six_months_ago = timezone.now() - timedelta(days=180)
     mails_to_delete = Mail.objects.filter(timestamp__lt=six_months_ago)
     for mail in mails_to_delete:
@@ -49,6 +56,8 @@ def clean_mail():
 
 @shared_task
 def update_online_status():
+    '''Обновление статуса пользователя'''
+
     # Определяем пороговое время для определения, что пользователь неактивен
     time_threshold = timezone.now() - timedelta(minutes=5)
 
