@@ -1,11 +1,8 @@
 from datetime import timedelta
-
-from .models import ArchiveChat, ArchivedMail, Chat, Mail, StatusProfile
-
 from django.utils import timezone
 from celery import shared_task
 
-
+from .models import ArchiveChat, ArchivedMail, Chat, Mail, StatusProfile
 
 @shared_task
 def archive_chat():

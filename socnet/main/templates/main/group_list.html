@@ -9,34 +9,38 @@
     <!-- Контейнер для фильтров -->
     <div class="filters-list">
         <div class="center-text">
-            <a class="btn-news add-color" href="{% url 'group_create' %}">Создать группу</a>
+            <a class="btn-filters add-color add-bg" href="{% url 'group_create' %}">Создать группу</a>
         </div>
-        <h3 class="Auth_title">Фильтры</h3>
+         <h3 class="Auth_title">Фильтры</h3>
         <form method="get" action="{% url 'groups_list' %}" class="filter-form">
             {{ filterset.form.as_p }}
             <button type="submit" class="btn-filter-list add-font add-color">Применить фильтр</button>
-            <button class="btn-filter-list add-font"><a href="{% url 'groups_list' %}" class="no-markers add-color">Сбросить фильтры</a></button>
+            <button class="btn-filter-list add-font add-color"><a href="{% url 'groups_list' %}" class="no-markers add-color add-bg">Сбросить фильтры</a></button>
         </form>
     </div>
 
     <!-- Контейнер для списка групп -->
     <div class="profile-list-container">
-        <div class="profile-detail-content2">
+        <div class="profile-detail-content-new">
             {% for group in groups %}
-                <section class="profile-detail-content2">
+                <section class="profile-detail-section-new">
                     <!-- Левый блок с аватаром и именем -->
-                    <div class="profile-detail-left2">
-                        <a href="{% url 'group' group.id %}">
-                            <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="news-inner-image">
-                        </a>
-                        <div class="profile-detail-left2">
-                            <a class="profile-name add-color" href="{% url 'group' group.id %}">
+                    <div class="profile-detail-left-new">
+                        <div class="profile-image-container-new">
+
+                            <a href="{% url 'group' group.id %}">
+                                <img src="{{ group.photo.url }}" alt="{{ group.name }}" class="news-inner-image-new">
+                            </a>
+                             </a>
+                        </div>
+                        <div class="profile-name-container-new">
+                            <a class="profile-name-new add-color add-bg" href="{% url 'group' group.id %}">
                                 {{ group.name }}
                             </a>
-                        </div>
+                         </div>
                     </div>
                     <!-- Правый блок с деталями профиля -->
-                    <div class="profile-detail-right2 profile-detail-text add-color">
+                    <div class="profile-detail-right-new">
                         <p>Описание: {{ group.description }}</p>
                         <p>Тип группы: {{ group.get_group_type_display }}</p>
                         <p>Основатель: {{ group.creator }}</p>

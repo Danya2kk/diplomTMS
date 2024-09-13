@@ -5,7 +5,7 @@
 <h2 class="Auth_title"> Редактирование профиля </h2>
 <div class="news-container">
 
-    <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <section class="news-container-content">
 
@@ -14,12 +14,18 @@
                 <strong class="error-message">{{ value }}</strong>
             {% endfor %}
         {% endif %}
-        <!-- Содержимое профиля: изображение, описание,  -->
-        <div class="form-group">
-                <p>{{ avatar_form.file.label_tag }}</p>
-                <p>{{ avatar_form.file }}</p>
+
+        <div class="news-container-text2">
+            <p> Ваш аватар (картинки обрезаются до 300*300):</p>
+        <div class="custom-file-upload">
+            <!-- Содержимое профиля: изображение, описание,  -->
+                <label for="file-upload" class="file-upload-label">Выберите файл</label>
+                {{ avatar_form.file }}
             </div>
-        <div class="news-container-text">
+            </div>
+
+
+        <div class="news-container-text2">
              <div class="form-group">
                 <p>{{ user_form.username.label_tag }}</p>
                 <p> {{ user_form.username }}</p>
@@ -70,12 +76,12 @@
                 </div>
 
         </div>
-        <div class="news-container-text">
+        <div class="news-container-text2">
             <button class="add-font" type="submit">Сохранить изменения</button>
             <button class="add-font" type="reset">Сбросить</button>
 
             <div class="separator-line"></div>
-                     <p><a class="btb-update" href="{% url 'password_change' %}">Сменить пароль</a></p>
+                     <p><a class="btb-update add-bg" href="{% url 'password_change' %}">Сменить пароль</a></p>
             <div class="separator-line"></div>
             <button class="add-font" type="button" onclick="window.location.href='{% url 'profile' username %}'; return false;">Назад</button>
 

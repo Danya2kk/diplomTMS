@@ -4,8 +4,8 @@ from io import BytesIO
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth import authenticate, get_user_model
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from PIL import Image
 from django import forms
+from PIL import Image
 
 from .models import (Comment, Friendship, Group, Interest, Mail, Mediafile,
                      News, PrivacyLevel, Profile, Reaction, Tag, User)
@@ -265,7 +265,37 @@ class NewsForm(forms.ModelForm):
 
     class Meta:
         model = News
-        fields = ["title", "content", "image", "tags"]  # Добавьте все нужные поля
+        fields = ["title", "content", "image", "tags"]
+
+    def save(self, *args, **kwargs):
+        news = super().save(commit=False)
+
+        # Если изображение загружено
+        if self.cleaned_data.get("image"):
+            image = self.cleaned_data["image"]
+            img = Image.open(image)
+
+            # Приведение изображения к размеру
+            img = img.resize((250, 250), Image.Resampling.LANCZOS)
+
+            # Преобразование изображения обратно в файл для сохранения
+            output = BytesIO()
+            img.save(output, format="JPEG", quality=90)  # Сохраняем с качеством 90%
+            output.seek(0)
+
+            # Создаем новое изображение для сохранения в модели
+            news.image = InMemoryUploadedFile(
+                output,
+                "ImageField",
+                f"{image.name.split('.')[0]}.jpg",
+                "image/jpeg",
+                sys.getsizeof(output),
+                None,
+            )
+
+        news.save()
+        return news
+
 
 
 class CommentForm(forms.ModelForm):

@@ -3,22 +3,31 @@
 
 {% block content %}
 <h2 class="Auth_title"> Редактирование группы </h2>
-<div class="news-detail-container">
+<div class="news-container">
 
     <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <section class="news-detail-content2">
-        <div class="news-detail-text">
-             <div class="form-group">
-                <p>{{form.photo.label_tag }}</p>
-                <p>{{ form.photo }}</p>
+    <section class="news-container-content">
 
-                  <button type="submit">Сохранить изменения</button>
+        {% if user_form.errors %}
+            {% for key, value in user_form.errors.items %}
+                <strong class="error-message">{{ value }}</strong>
+            {% endfor %}
+        {% endif %}
+
+
+         <div class="news-container-text2">
+            <p> Аватар группы (картинки обрезаются до 300*300):</p>
+        <div class="custom-file-upload">
+            <!-- Содержимое профиля: изображение, описание,  -->
+                <label for="file-upload" class="file-upload-label">Выберите файл</label>
+                {{ form.photo }}
             </div>
-        </div>
+            </div>
+
        <!-- Содержимое профиля: изображение, описание,  -->
 
-        <div class="news-detail-text">
+        <div class="news-container-text2">
              <div class="form-group">
                 <p>{{ form.name.label_tag }}</p>
                 <p> {{ form.name }}</p>
@@ -39,8 +48,12 @@
             </div>
 
         </div>
-
-    </section>
-     </form>
+         <div class="news-container-text2">
+             <button class="add-font" type="submit">Сохранить изменения</button>
+            <button class="add-font" type="reset">Сбросить</button>
+             <div class="separator-line"></div>
+            <button class="add-font" type="button" onclick="window.location.href='{% url 'groups_list' %}'; return false;">Назад</button>
+         </div>
+   </section>
 </div>
 {% endblock %}

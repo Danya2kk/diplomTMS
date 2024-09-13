@@ -8,39 +8,41 @@
 <div class="news-detail-container">
 
     <div class="filters-list">
-        <h3 class="Auth_title"> Фильтры </h3>
-        <form method="get" action="{% url 'profile_list' %}" class="filter-form">
-            {{ profile_filter.form.as_p }}  <!-- Используем форму для отображения полей -->
+        <h3 class="Auth_title">Фильтры</h3>
+          <form method="get" action="{% url 'profile_list' %}" class="filter-form">
+            {{ profile_filter.form.as_p }}
             <button type="submit" class="btn-filter-list add-font add-color">Применить фильтр</button>
-            <button class="btn-filter-list add-font"> <a href="{% url 'profile_list' %}" class="no-markers add-color" >Сбросить фильтры</a></button>
+            <button class="btn-filter-list add-font add-color"><a href="{% url 'groups_list' %}" class="no-markers add-color add-bg">Сбросить фильтры</a></button>
         </form>
     </div>
 
-   <div class="profile-list-container">
-       <div class="profile-detail-content2">
+     <div class="profile-list-container">
+       <div class="profile-detail-content-new">
         {% for profile in profile_items %}
-            <section class="profile-detail-content2">
+            <section class="profile-detail-section-new">
                 <!-- Левый блок с аватаром и именем -->
-               <div class="profile-detail-left2">
+               <div class="profile-detail-left-new">
+                   <div class="profile-image-container-new">
                     {% with avatars|get_item:profile.id as avatar %}
                         {% if avatar %}
                             <a href="{% url 'profile' profile.user.username %}">
-                                <img src="{{ avatar.file.url }}" alt="Avatar of {{ profile.firstname }}" class="news-inner-image">
+                                <img src="{{ avatar.file.url }}" alt="Avatar of {{ profile.firstname }}" class="news-inner-image-new">
                             </a>
                         {% else %}
                             <a href="{% url 'profile' profile.user.username %}">
-                                <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image">
+                                <img src="{% static 'images/nophoto.jpg' %}" alt="No Avatar" class="news-inner-image-new">
                             </a>
                         {% endif %}
                     {% endwith %}
-                   <div class="profile-detail-left2">
-                        <a class="profile-name add-color add-bg" href="{% url 'profile' profile.user.username %}">
+                   </div>
+                   <div class="profile-name-container-new">
+                        <a class="profile-name-new add-color" href="{% url 'profile' profile.user.username %}">
                             {{ profile.firstname }} {{ profile.lastname }}
                         </a>
                     </div>
                 </div>
                 <!-- Правый блок с деталями профиля -->
-                <div class="profile-detail-right2 profile-detail-text add-color">
+                  <div class="profile-detail-right-new">
                      <p>Возраст: {% if profile.age %}{{ profile.age }}{% endif %}</p>
                      <p>Пол: {% if profile.gender %}{{ profile.gender }}{% endif %}</p>
                     <p>Местоположение: {% if profile.location %}{{ profile.location }}{% endif %}</p>

@@ -6,7 +6,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
+    '''
+    Функция отвечающая за выделение группы(комнаты) для чата и соединения
+    '''
     async def connect(self):
+        # Определяем комнату и устанавливаем соединение
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
 
@@ -20,12 +24,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.load_messages()
 
     async def disconnect(self, close_code):
-        print(f"Disconnected from room: {self.room_group_name}")
+        # Разъединяемся и покидаем комнату
 
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def receive(self, text_data):
-        print(f"Received message: {text_data}")
+        # Получение сообщений
 
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
@@ -48,6 +52,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
+        # Функция формирующая сообщение для отправки
         message = event["message"]
         username = event["username"]
         lastname = event["lastname"]
@@ -59,6 +64,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def load_messages(self):
+        # Функция формирующая сообщение для получения
         now = datetime.now()
         today = now.date()
 
@@ -77,7 +83,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
     def get_messages(self, room_name, today):
-        from main.models import Chat  # Импортируем модель внутри функции
+        # функция получения сообщений за сегодня (грузятся в чате при входе)
+        from main.models import Chat  # Импортируем модель внутри функции (чтобы избежать циклического импорта)
 
         return list(
             Chat.objects.filter(group_id=room_name, created_at__date=today).values(
@@ -86,6 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def save_message(self, message, user):
+        # функция сохранения сообщения в таблицу
         from main.models import Chat  # Импортируем модель внутри функции
 
         await sync_to_async(Chat.objects.create)(
@@ -93,6 +101,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def get_user_profile(self, user):
-        """Асинхронно получаем имя и фамилию пользователя."""
+        # Асинхронно получаем имя и фамилию пользователя. Но т.к Джанго не может работать с
+        # таблицами аминхронно используем sync_to_async
+
         profile = await sync_to_async(lambda: user.profile)()
         return profile.firstname, profile.lastname

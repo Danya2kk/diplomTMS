@@ -4,41 +4,42 @@ import re
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, PasswordChangeView
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import authenticate
 from django.contrib.auth import logout
 from django.contrib import messages
-from django.contrib.contenttypes.models import ContentType
 
 from django.db.models import Case, IntegerField, Prefetch, Sum, When, Q
 from django.db import transaction
 
-from django.shortcuts import get_object_or_404, redirect, render
+from django.views.generic.edit import FormView, DeleteView, UpdateView, CreateView
 from django.views.decorators.http import require_GET, require_POST
+from django.views.generic import ListView, DetailView
 from django.views.decorators.csrf import csrf_exempt
+from django.views import View
+
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import Http404, JsonResponse, request
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 
-from django.views.generic import ListView, DetailView
-from django.views import View
-
-
-from django.views.generic.edit import FormView, DeleteView, UpdateView, CreateView
-from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
+from rest_framework import status, viewsets
 
-from .filters import GroupFilter, NewsFilter, ProfileFilter
+from .models import (Profile, ActivityLog_norest, Friendship, Mediafile,
+                     StatusProfile, GroupMembership, Status, User, \
+                     Notification_norest, News, FriendshipStatus, Comment,
+                     Reaction, Mail, Group)
 from .forms import (AvatarUploadForm, GroupCreateForm, GroupSearchForm,
                     LoginUserForm, MailForm, MediaUploadForm, NewsForm,
                     RegistrationForm, UpdateProfileForm, UpdateUserForm,
                     UserPasswordChangeForm)
+from .filters import GroupFilter, NewsFilter, ProfileFilter
 
-from .models import Profile, ActivityLog_norest, Friendship, Mediafile, StatusProfile, GroupMembership, Status, User, \
-    Notification_norest, News, FriendshipStatus, Comment, Reaction, Mail, Group
 
 from api.serializers import FriendshipSerializer
 
@@ -517,6 +518,12 @@ class UserPasswordChange(PasswordChangeView):
     success_url = reverse_lazy("home")
     template_name = "main/password_change_form.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Передаем username в контекст
+        context['username'] = self.request.user.username
+        return context
+
     def form_valid(self, form):
         # Сохранение нового пароля происходит автоматически через form.save()
         user = form.save()
@@ -606,7 +613,7 @@ class LoginUser(LoginView):
 
     def get_success_url(self):
         messages.success(self.request, "Вы успешно авторизовались!")
-        return redirect("home")
+        return reverse("home")  # Используем reverse для возврата URL в виде строки
 
 
 class LogoutUser(View):

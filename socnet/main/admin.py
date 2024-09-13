@@ -1,9 +1,9 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-
 from .models import (Comment, Friendship, FriendshipStatus, Group,
                      GroupMembership, Interest, Mail, Mediafile, News,
                      PrivacyLevel, Profile, Status, Tag, User)
+
+from django.contrib.auth.admin import UserAdmin
+from django.contrib import admin
 
 
 @admin.register(Profile)

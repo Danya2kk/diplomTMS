@@ -14,13 +14,12 @@ function showAjaxPopup(message) {
                 setTimeout(() => {
                     popup.style.display = 'none'; // Прячем полностью
                 }, 500);
-            }, 8000);
+            }, 5000);
         }, 100);
     }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Получаем все сообщения из блока
     const djangoMessagesContainer = document.getElementById('django-messages');
     if (djangoMessagesContainer) {
         const messages = djangoMessagesContainer.querySelectorAll('.alert');
@@ -28,10 +27,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const message = messageElement.textContent.trim();
             if (message) {
                 showAjaxPopup(message);
+
+                // Удаляем сообщение из DOM
+                messageElement.remove();
+
                 // Сброс страницы после показа сообщения
                 setTimeout(() => {
-                    location.reload();
-                }, 8000); // Задержка в 2 секунды для отображения сообщения
+                    popup.style.display = 'none'; // Прячем полностью
+                }, 5000);
             }
         });
     }
