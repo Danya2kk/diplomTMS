@@ -17,7 +17,6 @@ urlpatterns = [
     path("logout/", views.LogoutUser.as_view(), name="logout"),
     path("group/chat/<int:pk>", views.chat, name="chat"),
     path("profile_list",views.profile_list, name="profile_list"),
-    path("profile", views.my_profile_view, name="my_profile"),
     path("profile/<str:username>", views.profile_view, name="profile"),
     path("profile/photo/<str:username>", views.profile_media, name="profile-photo"),
     path("profile/photo/add_media/", views.profile_add_media, name="profile_add_media"),

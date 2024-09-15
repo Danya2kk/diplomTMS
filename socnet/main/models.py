@@ -49,11 +49,6 @@ def get_default_privacy_level():
 class Profile(models.Model):
     firstname = models.CharField(max_length=255)
     lastname = models.TextField()
-    age = models.IntegerField(null=True, blank=True)
-    gender = models.CharField(max_length=50)
-    location = models.CharField(max_length=255)
-    link = models.TextField()
-    settings = models.CharField(max_length=255)
     age = models.IntegerField(blank=True, null=True)  # Необязательное поле
     gender = models.CharField(
         max_length=50, blank=True, null=True
