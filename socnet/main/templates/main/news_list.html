@@ -3,7 +3,7 @@
 {% load custom_filters %}
 
 {% block content %}
-<h2 class="Auth_title">Список новостей</h2>
+<h2 class="Auth_title add-size">Список новостей</h2>
 
 <div class="news-detail-container">
     <!-- Контейнер для фильтров -->
@@ -31,14 +31,15 @@
                                 <img src="{{ new.image.url }}" alt="{{ new.title }}" class="news-inner-image-new">
                             </a>
                         </div>
+
+                    </div>
+                    <!-- Правый блок с деталями профиля -->
+                    <div class="profile-detail-right-new">
                         <div class="profile-name-container-new">
                             <a class="profile-name-new add-color" href="{% url 'news_detail' new.id %}">
                                 {{ new.title }}
                             </a>
                         </div>
-                    </div>
-                    <!-- Правый блок с деталями профиля -->
-                    <div class="profile-detail-right-new">
                         <p>{{ new.content }}</p>
                         <p>Автор: {{ new.profile.firstname }} {{ new.profile.lastname }}</p>
                         <p>Тэги: {% if new.tags.all %}{{ new.tags.all|join:", " }}{% endif %}</p>

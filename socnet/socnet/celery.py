@@ -2,6 +2,8 @@ import os
 
 from celery import Celery
 
+
+# подключаем celery
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "socnet.settings")
 app = Celery("socnet")
 

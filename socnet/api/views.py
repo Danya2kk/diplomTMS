@@ -12,11 +12,14 @@ from main.models import Profile, Friendship, ActivityLog, Group, Notification, F
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
+    '''Представление для работы данными профиля '''
+
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
     @action(detail=False, methods=["get"])
     def get_online_friends(self, request):
+        # Получение данных о друзьях онлайн
         try:
             profile = request.user.profile
 
@@ -44,6 +47,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def get_reccomended_friends(self, request):
+        # Получение рекомендаций о друзьях на основании интересов
         try:
             profile = request.user.profile
             user_interests = profile.interests.values_list("id", flat=True)
@@ -64,6 +68,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
             )
 
 class ActivityLogViewSet(viewsets.ModelViewSet):
+    '''Представление для работы с таблицей активность '''
+
     queryset = ActivityLog.objects.all().order_by("-timestamp")
     serializer_class = ActivityLogSerializer
 
@@ -84,11 +90,15 @@ class ActivityLogViewSet(viewsets.ModelViewSet):
 
 
 class GroupViewSet(viewsets.ModelViewSet):
+    '''Представление для работы с группами '''
+
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
     @action(detail=True, methods=["post"])
     def invite(self, request, pk):
+        # метод для приглашения в группу
+
         group = get_object_or_404(Group, pk=pk)
         if request.user.profile != group.creator:
             return Response(
@@ -116,11 +126,15 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class FriendshipViewSet(viewsets.ModelViewSet):
+    '''Представление для работы с таблицей дружбы '''
+
     queryset = Friendship.objects.all()
     serializer_class = FriendshipSerializer
 
     @action(detail=False, methods=["post"])
     def send_request(self, request):
+        # метод для отправки запроса на дружбу
+
         profile_one = request.user.profile
         profile_two_id = request.data.get("profile_id")
 
@@ -169,6 +183,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         url_name="accept-request",
     )
     def accept_request(self, request, pk):
+        # метод для приемки запроса на дружбу
+
         try:
             friendship = get_object_or_404(Friendship, pk=pk)
 
@@ -202,6 +218,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         detail=True, methods=["post"], url_path="block-people", url_name="block-people"
     )
     def block_user(self, request, pk):
+        # метод для блокировки пользователя
+
         profile_one = request.user.profile
         profile_two = Profile.objects.get(id=pk)
 
@@ -236,6 +254,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         url_name="unblock-people",
     )
     def unblock_user(self, request, pk):
+        # метод для разблокировки пользователя
+
         profile_one = request.user.profile
 
         try:
@@ -271,6 +291,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         detail=True, methods=["post"], url_path="deny-request", url_name="deny-request"
     )
     def deny_friendship(self, request, pk=None):
+        # метод для отклонения запроса дружбы
+
         try:
             friendship = get_object_or_404(Friendship, pk=pk)
             profile = request.user.profile
@@ -301,6 +323,8 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         url_name="delete-friend",
     )
     def delete_friendship(self, request, pk):
+        # метод для удаления дружбы
+
         profile_2 = get_object_or_404(Profile, id=pk)
 
         # Определяем, есть ли дружба между текущим пользователем и владельцем профиля
@@ -349,15 +373,21 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
+    '''Представление для работы с таблицей дружбы '''
+
     queryset = Notification.objects.all().order_by("-timestamp")
     serializer_class = NotificationSerializer
 
     def get_queryset(self):
+        # корректируем метод получения данных для отбора данных по профилю
+
         profile = self.request.user.profile
         return Notification.objects.filter(profile=profile).order_by("-timestamp")
 
     @action(detail=True, methods=["post"])
     def mark_as_read(self, request, pk=None):
+        # Помечаем как прочитанное
+
         notification = get_object_or_404(Notification, pk=pk)
 
         if notification.profile != request.user.profile.id:

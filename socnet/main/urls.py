@@ -7,6 +7,7 @@ from main import views
 
 
 router = DefaultRouter()
+# этот роутер используется для работы с дружбой
 router.register(r"friendships", views.FriendshipViewSet, basename="friendship")
 
 urlpatterns = [

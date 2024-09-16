@@ -238,40 +238,46 @@ function addMailClickEvent() {
 
                         // Добавление события на кнопку ответа
                         if (!data.isSender) {
-                            document.getElementById('reply-button').addEventListener('click', function() {
-                                const modal = document.getElementById('custom-prompt-modal');
-                                modal.style.display = 'flex';
+                                document.getElementById('reply-button').addEventListener('click', function(event) {
+                                    // Предотвращаем отправку формы
+                                    event.preventDefault();
 
-                                document.getElementById('submit-reply').addEventListener('click', function() {
-                                    const replyContent = document.getElementById('reply-text').value;
-                                    if (replyContent) {
-                                        fetch('/mailbox/send_mail_parent', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'X-CSRFToken': getCookie('csrftoken')
-                                            },
-                                            body: JSON.stringify({
-                                                parent: mail.id,
-                                                username: mail.sender.username,
-                                                content: replyContent
+                                    const modal = document.getElementById('custom-prompt-modal');
+                                    modal.style.display = 'flex';
+
+                                    document.getElementById('submit-reply').addEventListener('click', function(event) {
+                                        event.preventDefault(); // Останавливаем отправку формы
+
+                                        const replyContent = document.getElementById('reply-text').value;
+                                        if (replyContent) {
+                                            fetch('/mailbox/send_mail_parent', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRFToken': getCookie('csrftoken')
+                                                },
+                                                body: JSON.stringify({
+                                                    parent: mail.id,
+                                                    username: mail.sender.username,
+                                                    content: replyContent
+                                                })
                                             })
-                                        })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            showAjaxPopup(data.detail);
-                                            modal.style.display = 'none';
-                                            updateMailboxContent(currentUrl, false); // Перезагружаем входящие сообщения
-                                        })
-                                        .catch(error => console.error('Error sending reply:', error));
-                                    }
-                                });
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                showAjaxPopup(data.detail);
+                                                modal.style.display = 'none';
+                                                updateMailboxContent(currentUrl, false); // Перезагружаем входящие сообщения
+                                            })
+                                            .catch(error => console.error('Error sending reply:', error));
+                                        }
+                                    });
 
-                                document.getElementById('cancel-reply').addEventListener('click', function() {
-                                    modal.style.display = 'none';
+                                    document.getElementById('cancel-reply').addEventListener('click', function(event) {
+                                        event.preventDefault();
+                                        modal.style.display = 'none';
+                                    });
                                 });
-                            });
-                        }
+                            }
                     })
                     .catch(error => console.error('Error fetching mail details:', error));
             } else {

@@ -43,11 +43,13 @@ from .filters import GroupFilter, NewsFilter, ProfileFilter
 
 from api.serializers import FriendshipSerializer
 
-
+# создания логгера для хранения ошибок
 logger = logging.getLogger(__name__)
 
 
 def index(request):
+    """Функция определяющая куда переадресовать пользователя"""
+
     if request.user.is_authenticated:
         # Если пользователь аутентифицирован, перенаправляем на страницу новостей
         return redirect("news")

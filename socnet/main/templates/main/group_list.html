@@ -3,7 +3,7 @@
 {% load custom_filters %}
 
 {% block content %}
-<h2 class="Auth_title">Список групп</h2>
+<h2 class="Auth_title add-size">Список групп</h2>
 
 <div class="news-detail-container">
     <!-- Контейнер для фильтров -->
@@ -33,14 +33,14 @@
                             </a>
                              </a>
                         </div>
-                        <div class="profile-name-container-new">
-                            <a class="profile-name-new add-color add-bg" href="{% url 'group' group.id %}">
-                                {{ group.name }}
-                            </a>
-                         </div>
                     </div>
                     <!-- Правый блок с деталями профиля -->
                     <div class="profile-detail-right-new">
+                        <div class="profile-name-container-new">
+                            <a class="profile-name-new add-color add-bg" href="{% url 'group' group.id %}">
+                                Группа: "{{ group.name }}"
+                            </a>
+                         </div>
                         <p>Описание: {{ group.description }}</p>
                         <p>Тип группы: {{ group.get_group_type_display }}</p>
                         <p>Основатель: {{ group.creator }}</p>

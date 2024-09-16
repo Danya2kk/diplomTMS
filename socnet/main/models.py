@@ -7,6 +7,8 @@ from django.db import models
 
 
 class User(AbstractUser):
+    ''' Добавление поля к базовой таблице User'''
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     groups = models.ManyToManyField(
@@ -19,6 +21,8 @@ class User(AbstractUser):
 
 
 class PrivacyLevel(models.Model):
+    ''' Таблица приватности'''
+
     PUBLIC = "public"
     PRIVATE = "private"
     FRIENDS_ONLY = "friends_only"
@@ -36,6 +40,8 @@ class PrivacyLevel(models.Model):
 
 
 class Interest(models.Model):
+    ''' Таблица интересы'''
+
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -47,6 +53,8 @@ def get_default_privacy_level():
 
 
 class Profile(models.Model):
+    ''' Таблица профиля'''
+
     firstname = models.CharField(max_length=255)
     lastname = models.TextField()
     age = models.IntegerField(blank=True, null=True)  # Необязательное поле
@@ -83,6 +91,8 @@ class Profile(models.Model):
 
 
 class Mediafile(models.Model):
+    ''' Таблица медиафайлов'''
+
     profile = models.ForeignKey(
         Profile, related_name="media_files", on_delete=models.CASCADE
     )
@@ -101,6 +111,8 @@ class Mediafile(models.Model):
 
 
 class FriendshipStatus(models.Model):
+    ''' Таблица статусов дружбы'''
+
     name = models.CharField(max_length=255)
     description = models.TextField()
 
@@ -109,6 +121,8 @@ class FriendshipStatus(models.Model):
 
 
 class Friendship(models.Model):
+    ''' Таблица дружбы'''
+
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.ForeignKey(FriendshipStatus, on_delete=models.CASCADE)
     description = models.TextField(blank=True, null=True)
@@ -127,6 +141,8 @@ class Friendship(models.Model):
 
 
 class Mail(models.Model):
+    ''' Таблица почты'''
+
     sender = models.ForeignKey(
         Profile, related_name="sent_messages", on_delete=models.CASCADE
     )
@@ -146,6 +162,8 @@ class Mail(models.Model):
 
 
 class Group(models.Model):
+    ''' Таблица группы'''
+
     PUBLIC = "public"
     PRIVATE = "private"
     SECRET = "secret"
@@ -163,6 +181,8 @@ class Group(models.Model):
 
 
 class Status(models.Model):
+    ''' Таблица статус'''
+
     ADMIN = "admin"
     USER = "user"
 
@@ -177,6 +197,8 @@ class Status(models.Model):
 
 
 class GroupMembership(models.Model):
+    ''' Таблица нахождения в группе'''
+
     profile = models.ForeignKey(
         Profile, related_name="group_memberships", on_delete=models.CASCADE
     )
@@ -192,6 +214,8 @@ class GroupMembership(models.Model):
 
 
 class Tag(models.Model):
+    ''' Таблица тэгов для новостей'''
+
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
@@ -199,6 +223,8 @@ class Tag(models.Model):
 
 
 class News(models.Model):
+    ''' Таблица новостей'''
+
     title = models.CharField(max_length=255)
     content = models.TextField()
     image = models.ImageField(upload_to="news_images/", blank=True, null=True)
@@ -213,6 +239,8 @@ class News(models.Model):
 
 
 class Comment(models.Model):
+    ''' Таблица комментариев'''
+
     text = models.TextField()
     author = models.ForeignKey(
         Profile, related_name="comments", on_delete=models.CASCADE
@@ -239,6 +267,8 @@ class Comment(models.Model):
 
 
 class Reaction(models.Model):
+    ''' Таблица реакций на новости'''
+
     LIKE = "like"
     DISLIKE = "dislike"
 
@@ -258,6 +288,8 @@ class Reaction(models.Model):
 
 
 class StatusProfile(models.Model):
+    ''' Таблица статусов пользователя'''
+
     profile = models.OneToOneField(Profile, on_delete=models.CASCADE)
     is_online = models.BooleanField(default=False)
     is_busy = models.BooleanField(default=False)
@@ -266,6 +298,8 @@ class StatusProfile(models.Model):
 
 
 class Chat(models.Model):
+    ''' Таблица для чата'''
+
     created_at = models.DateTimeField(auto_now_add=True)
     messages = models.TextField()
     profile = models.ForeignKey(
@@ -280,6 +314,8 @@ class Chat(models.Model):
 
 
 class Notification(models.Model):
+    ''' Таблица для нотификаций для АПИ'''
+
     FRIEND_REQUEST = "FR"
     MESSAGE = "MSG"
     MENTION = "MENT"
@@ -300,6 +336,8 @@ class Notification(models.Model):
 
 
 class ActivityLog(models.Model):
+    ''' Таблица активности для АПИ'''
+
     LOGIN = "LOGIN"
     POST = "POST"
     COMMENT = "COMMENT"
@@ -321,6 +359,8 @@ class ActivityLog(models.Model):
 
 
 class Notification_norest(models.Model):
+    ''' Таблица нотификаций (активности пользователя при регистрации/аутентификации)'''
+
     AUTHENTICATION = "AUTHENTICATION"
     OTHER = "OTHER"
 
@@ -339,6 +379,8 @@ class Notification_norest(models.Model):
 
 
 class ActivityLog_norest(models.Model):
+    ''' Таблица активности (все реакции/создании группы и т.д)'''
+
     NEWS = "NEWS"
     GROUP = "GROUP"
     PROFILE = "PROFILE"
@@ -362,6 +404,8 @@ class ActivityLog_norest(models.Model):
 
 
 class ArchivedMail(models.Model):
+    ''' Таблица для хранения не актуальных данных из почты'''
+
     sender = models.ForeignKey(
         Profile, related_name="archived_sent_messages", on_delete=models.CASCADE
     )
@@ -383,6 +427,8 @@ class ArchivedMail(models.Model):
 
 
 class ArchiveChat(models.Model):
+    ''' Таблица для хранения не актуальных данных из чата'''
+
     profile = models.ForeignKey(
         Profile, related_name="archived_chat_messages", on_delete=models.CASCADE
     )

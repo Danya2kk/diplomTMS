@@ -1,17 +1,21 @@
 import sys
+
 from io import BytesIO
+from PIL import Image
 
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth import authenticate, get_user_model
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django import forms
-from PIL import Image
+
 
 from .models import (Comment, Friendship, Group, Interest, Mail, Mediafile,
                      News, PrivacyLevel, Profile, Reaction, Tag, User)
 
 
 class RegistrationForm(forms.ModelForm):
+    ''' Форма для регистрации пользователей'''
+
     password = forms.CharField(
         label="Пароль",
         widget=forms.PasswordInput(
@@ -50,6 +54,8 @@ class RegistrationForm(forms.ModelForm):
         }
 
     def clean(self):
+
+        #Функция для проверки что пароли совпадают
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
         password_confirm = cleaned_data.get("password_confirm")
@@ -69,10 +75,15 @@ class RegistrationForm(forms.ModelForm):
 
 
 class LoginForm(forms.Form):
+    ''' Форма для авторизации пользователея'''
+
+
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
 
     def clean(self):
+        # метод для проверки пароля
+
         cleaned_data = super().clean()
         username = cleaned_data.get("username")
         password = cleaned_data.get("password")
@@ -252,6 +263,9 @@ class UserPasswordChangeForm(PasswordChangeForm):
 
 
 class NewsForm(forms.ModelForm):
+    ''' Форма для создания/редактирования новости'''
+
+
     title = forms.CharField(
         label="Название",  # Метка для поля title
         widget=forms.TextInput(attrs={"placeholder": "Введите название новости"}),
@@ -280,7 +294,7 @@ class NewsForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         news = super().save(commit=False)
 
-        # Если изображение загружено
+        # Метод для обьрезки изображения.Если изображение загружено
         if self.cleaned_data.get("image"):
             image = self.cleaned_data["image"]
             img = Image.open(image)
@@ -309,6 +323,9 @@ class NewsForm(forms.ModelForm):
 
 
 class CommentForm(forms.ModelForm):
+    ''' Форма для создания комментария'''
+
+
     class Meta:
         model = Comment
         fields = ["text", "parent"]  # Включить поле 'parent' для поддержки ответов
@@ -319,6 +336,8 @@ class CommentForm(forms.ModelForm):
 
 
 class ReactionForm(forms.ModelForm):
+    ''' Форма для отставления реакции'''
+
     class Meta:
         model = Reaction
         fields = ["reaction_type"]
@@ -328,6 +347,8 @@ class ReactionForm(forms.ModelForm):
 
 
 class LoginUserForm(AuthenticationForm):
+    ''' Форма для авторизации пользователей'''
+
     username = forms.CharField(
         label="Логин", widget=forms.TextInput(attrs={"class": "form-input"})
     )
@@ -342,6 +363,8 @@ class LoginUserForm(AuthenticationForm):
 
 
 class MailForm(forms.ModelForm):
+    ''' Форма для отправки почты'''
+
     class Meta:
         model = Mail
         fields = [
@@ -355,6 +378,8 @@ class MailForm(forms.ModelForm):
 
 
 class FriendshipCreateForm(forms.ModelForm):
+    ''' Форма для создания дружюы'''
+
     class Meta:
         model = Friendship
         fields = ["profile_two", "description"]
@@ -370,6 +395,8 @@ class FriendshipCreateForm(forms.ModelForm):
 
 
 class FriendshipUpdateForm(forms.ModelForm):
+    ''' Форма для обновления дружбы'''
+
     class Meta:
         model = Friendship
         fields = ["status", "description"]
@@ -380,10 +407,13 @@ class FriendshipUpdateForm(forms.ModelForm):
 
 
 class FriendshipSearchForm(forms.Form):
+    ''' Форма для поиска дружбы'''
+
     search_term = forms.CharField(label="Поиск", required=False)
 
 
 class GroupCreateForm(forms.ModelForm):
+    ''' Форма для создания группы'''
 
     name = forms.CharField(
         label="Название",
@@ -423,7 +453,7 @@ class GroupCreateForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         group = super().save(commit=False)
 
-        # Если изображение загружено
+        # Метод обрезки изобрадения. Если изображение загружено
         if self.cleaned_data.get("photo"):
             image = self.cleaned_data["photo"]
             img = Image.open(image)
@@ -451,6 +481,8 @@ class GroupCreateForm(forms.ModelForm):
 
 
 class GroupUpdateForm(forms.ModelForm):
+    ''' Форма для обновления группы'''
+
     class Meta:
         model = Group
         fields = ["name", "description", "photo", "group_type", "rules"]
@@ -462,4 +494,6 @@ class GroupUpdateForm(forms.ModelForm):
 
 
 class GroupSearchForm(forms.Form):
+    ''' Форма для поиска группы'''
+
     search_term = forms.CharField(label="Поиск", required=False)

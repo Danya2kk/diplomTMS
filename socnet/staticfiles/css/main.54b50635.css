@@ -749,6 +749,11 @@ form input[type=file] {
 .filters-list {
     width: 35%; /* Ширина контейнера для фильтров */
     box-shadow: 0 0 10px 1px #9dd5ebb3;
+    display: flex;
+    flex-direction: column; /* Элементы внутри будут расположены вертикально */
+    align-items: center; /* Выровнять элементы по центру горизонтально */
+    justify-content: center; /* Выровнять элементы по центру вертикально */
+
 }
 
 .profile-list-container {
@@ -1580,11 +1585,12 @@ input[type="file"] {
     justify-content: center;
 }
 
-/* Изображение в левом блоке */
+/* Изображение с фиксированным размером 200x200 пикселей */
 .news-inner-image-new {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain; /* Изображение адаптируется и не выходит за рамки */
+    width: 200px;
+    height: 200px;
+    object-fit: cover; /* Изображение обрезается, чтобы вписаться в заданные размеры */
+    border-radius: 5px; /* Добавить округление углов, если нужно */
 }
 
 /* Контейнер для названия группы */
@@ -1593,6 +1599,7 @@ input[type="file"] {
     text-align: center;
 }
 
+/* Название группы */
 .profile-name-new {
     text-decoration: none;
     font-size: 1.7vw; /* Шрифт адаптируется под ширину экрана */
@@ -1605,12 +1612,17 @@ input[type="file"] {
     box-sizing: border-box;
     text-align: center;
     transition: box-shadow 0.3s ease, transform 0.3s ease;
+    white-space: nowrap; /* Запрещает перенос строки */
+    overflow: hidden; /* Скрывает текст, выходящий за пределы контейнера */
+    text-overflow: ellipsis; /* Добавляет многоточие в конце */
 }
 
+/* Увеличение тени при наведении */
 .profile-name-container-new .profile-name-new:hover {
     transform: scale(1.1);
-    box-shadow: 0 0 10px 2px #9dd5ebb3; /* Увеличение тени при наведении */
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
 }
+
 
 /* Правый блок с информацией */
 .profile-detail-right-new {
@@ -1627,8 +1639,30 @@ input[type="file"] {
 
 /* Текст в правом блоке */
 .profile-detail-right-new p {
-    margin: 5px 0;
-    font-size: 1.7vw; /* Текст адаптируется под ширину экрана */
+    margin: 2px 0;
+    font-size: 1.5vw; /* Текст адаптируется под ширину экрана */
+    white-space: nowrap; /* Запрещает перенос строки */
+    overflow: hidden; /* Скрывает текст, выходящий за пределы контейнера */
+    text-overflow: ellipsis; /* Добавляет многоточие в конце */
+}
+
+/* Правый блок с информацией */
+.profile-detail-right-new2 {
+    width: 70%; /* Правый блок занимает 70% ширины */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    box-sizing: border-box;
+    box-shadow: 0 0 5px 1px #9dd5ebb3;
+}
+
+/* Текст в правом блоке */
+.profile-detail-right-new2 p {
+    margin: 0px 0;
+    font-size: 1.5vw; /* Текст адаптируется под ширину экрана */
 }
 
 .btn-filters {
@@ -1689,6 +1723,10 @@ input[type="file"] {
     }
 }
 
+
+.add-size {
+    font-size: 2vw;
+}
 
 
 @media (max-width: 768px) {

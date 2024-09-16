@@ -3,6 +3,8 @@ from .models import StatusProfile
 
 
 class UserActivityMiddleware:
+    ''' Класс для изменения статуса пользователя если он долго не проявля активность'''
+
     def __init__(self, get_response):
         self.get_response = get_response
 

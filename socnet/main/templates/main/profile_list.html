@@ -3,7 +3,7 @@
 {% load custom_filters %}
 
 {% block content %}
-<h2 class="Auth_title"> Список пользователей соц. сети </h2>
+<h2 class="Auth_title add-size"> Список пользователей соц. сети </h2>
 
 <div class="news-detail-container">
 
@@ -35,14 +35,15 @@
                         {% endif %}
                     {% endwith %}
                    </div>
-                   <div class="profile-name-container-new">
+
+                </div>
+                <!-- Правый блок с деталями профиля -->
+                  <div class="profile-detail-right-new2">
+                      <div class="profile-name-container-new">
                         <a class="profile-name-new add-color" href="{% url 'profile' profile.user.username %}">
                             {{ profile.firstname }} {{ profile.lastname }}
                         </a>
                     </div>
-                </div>
-                <!-- Правый блок с деталями профиля -->
-                  <div class="profile-detail-right-new">
                      <p>Возраст: {% if profile.age %}{{ profile.age }}{% endif %}</p>
                      <p>Пол: {% if profile.gender %}{{ profile.gender }}{% endif %}</p>
                     <p>Местоположение: {% if profile.location %}{{ profile.location }}{% endif %}</p>
