@@ -1730,6 +1730,9 @@ input[type="file"] {
 
 
 @media (max-width: 768px) {
+    .profile-detail-section-new {
+        height: 10vh;
+    }
     .news-detail-container,
     .news-detail-container2,
     .form-detail-container,
@@ -1743,7 +1746,42 @@ input[type="file"] {
         flex: 1 1 100%; /* При меньшем экране блоки занимают 100% ширины */
         min-width: 100%; /* Гарантирует, что блоки занимают полную ширину на маленьких экранах */
     }
+    .news-inner-image-new {
+        width: 100px; /* Уменьшаем размер изображения для маленьких экранов */
+        height: 100px;
+    }
 
+    {
+    .filters-list {
+        padding: 10px; /* Уменьшаем отступы */
+    }
+
+    .filter-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px; /* Уменьшаем промежуток между элементами формы */
+    }
+
+    .filter-form label {
+        font-size: 14px; /* Уменьшаем размер шрифта в лейблах */
+    }
+
+    .filter-form input,
+    .filter-form select,
+    .filter-form textarea {
+        font-size: 14px; /* Уменьшаем размер шрифта в элементах формы */
+        padding: 8px; /* Уменьшаем внутренние отступы */
+    }
+
+    .btn-filter-list {
+        font-size: 14px; /* Уменьшаем размер шрифта в кнопках */
+        padding: 8px 12px; /* Уменьшаем внутренние отступы в кнопках */
+        height: auto; /* Автоматическая высота кнопок */
+    }
+
+    .center-text {
+        text-align: center;
+    }
 }
 
 
