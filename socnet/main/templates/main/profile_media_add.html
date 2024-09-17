@@ -2,22 +2,26 @@
 {% load static %}
 
 {% block content %}
-
-
-<div>{{ from.non_field_errors }}</div>
-<h2 class="Auth_title"> Добавление фотографии </h2>
-<form method="post" enctype="multipart/form-data">
+ <h2 class="Auth_title">Добавление фотографии</h2>
+<div class="news-container">
+    <div id="form-errors"></div>
+    <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <div>
+    <section class="news-container-content">
+        {% if user_form.errors %}
+            {% for key, value in user_form.errors.items %}
+                <strong class="error-message">{{ value }}</strong>
+            {% endfor %}
+        {% endif %}
+        <div class="custom-file-upload">
+            <!-- Содержимое профиля: изображение, описание,  -->
+                <label for="file-upload" class="file-upload-label">Выберите фотографию</label>
+                {{ form.file }}
+         </div>
 
-        <p>{{ form.file.label_tag }}</p>
-        <p>{{ form.file }}</p>
-    </div>
-    <p><button type="submit">Добавить</button></p>
-</form>
-
-
-</form>
-
+        <button class="add-font" type="submit">Добавить фотографию в альбом</button>
+        </section>
+    </form>
+</div>
 
 {% endblock %}

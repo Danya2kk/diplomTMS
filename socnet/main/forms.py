@@ -215,6 +215,10 @@ class AvatarUploadForm(forms.ModelForm):
             # Приведение изображения к размеру 300x300 пикселей
             img = img.resize((250, 250), Image.Resampling.LANCZOS)
 
+            if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                img = img.convert("RGB")
+
+
             # Преобразование изображения обратно в файл для сохранения
             output = BytesIO()
             img.save(output, format="JPEG", quality=90)
@@ -290,23 +294,21 @@ class NewsForm(forms.ModelForm):
         model = News
         fields = ["title", "content", "image", "tags"]
 
-    def save(self, *args, **kwargs):
+    def save(self, profile=None, *args, **kwargs):
         news = super().save(commit=False)
 
-        # Метод для обьрезки изображения.Если изображение загружено
+        # Присваиваем profile текущего пользователя
+        if profile:
+            news.profile = profile
+
+        # Обработка изображения
         if self.cleaned_data.get("image"):
             image = self.cleaned_data["image"]
             img = Image.open(image)
-
-            # Приведение изображения к размеру
             img = img.resize((250, 250), Image.Resampling.LANCZOS)
-
-            # Преобразование изображения обратно в файл для сохранения
             output = BytesIO()
-            img.save(output, format="JPEG", quality=90)  # Сохраняем с качеством 90%
+            img.save(output, format="JPEG", quality=90)
             output.seek(0)
-
-            # Создаем новое изображение для сохранения в модели
             news.image = InMemoryUploadedFile(
                 output,
                 "ImageField",
@@ -459,6 +461,10 @@ class GroupCreateForm(forms.ModelForm):
 
             # Приведение изображения к размеру 500x500 пикселей
             img = img.resize((250, 250), Image.Resampling.LANCZOS)
+
+            if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                img = img.convert("RGB")
+
 
             # Преобразование изображения обратно в файл для сохранения
             output = BytesIO()
