@@ -265,7 +265,6 @@ class UserPasswordChangeForm(PasswordChangeForm):
 class NewsForm(forms.ModelForm):
     ''' Форма для создания/редактирования новости'''
 
-
     title = forms.CharField(
         label="Название",  # Метка для поля title
         widget=forms.TextInput(attrs={"placeholder": "Введите название новости"}),

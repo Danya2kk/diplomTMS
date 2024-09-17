@@ -2,31 +2,51 @@
 {% load static %}
 
 {% block content %}
-<div>
+<h2 class="Auth_title"> Редактирование новости </h2>
+<div class="news-container">
+
     <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div>
-            <h2 class="Auth_title">Редактировать Новость</h2>
-            <div>
-                <p>{{ form.title.label_tag }}</p>
-                <p>{{ form.title }}</p>
+    {% csrf_token %}
+    <section class="news-container-content">
+
+        {% if user_form.errors %}
+            {% for key, value in user_form.errors.items %}
+                <strong class="error-message">{{ value }}</strong>
+            {% endfor %}
+        {% endif %}
+
+            <div class="news-container-text2">
+                     <p> Изображение новости (картинки обрезаются до 300*300):</p>
+                    <div class="custom-file-upload">
+                        <!-- Содержимое профиля: изображение, описание,  -->
+                            <label for="file-upload" class="file-upload-label">Выберите файл</label>
+                            {{ form.image }}
+                        </div>
             </div>
-            <div>
-                <p>{{ form.content.label_tag }}</p>
-                <p>{{ form.content }}</p>
+
+             <div class="news-container-text2">
+                    <div class="form-group">
+                        <p>{{ form.title.label_tag }}</p>
+                        <p>{{ form.title }}</p>
+                    </div>
+                    <div class="form-group">
+                        <p>{{ form.content.label_tag }}</p>
+                        <p>{{ form.content }}</p>
+                    </div>
+                     <div class="form-group">
+                        <p>{{ form.tags.label_tag }}</p>
+                            <div class="tooltip">
+                                {{ form.tags }}
+                            </div>
+                     </div>
             </div>
-            <div>
-                <p>{{ form.image.label_tag }}</p>
-                <p>{{ form.image }}</p>
-            </div>
-            <div>
-                <p>{{ form.tags.label_tag }}</p>
-                <div class="tooltip">
-                    {{ form.tags }}
-                </div>
-            </div>
-            <p><button type="submit">Сохранить</button></p>
-        </div>
+                    <div class="news-container-text2">
+                         <button class="add-font" type="submit">Сохранить изменения</button>
+                        <button class="add-font" type="reset">Сбросить</button>
+                         <div class="separator-line"></div>
+                        <button class="add-font" type="button" onclick="window.location.href='{% url 'news' %}'; return false;">Назад</button>
+                     </div>
+         </section>
     </form>
 </div>
 {% endblock %}

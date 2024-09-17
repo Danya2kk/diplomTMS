@@ -14,33 +14,38 @@
                 <strong class="error-message">{{ value }}</strong>
             {% endfor %}
         {% endif %}
-        <!-- Содержимое профиля: изображение, описание,  -->
-        <div class="form-group">
-                <p>{{ form.image.label_tag }}</p>
-                <p>{{ form.image }}</p>
-            </div>
-        <div class="news-container-text">
-             <div class="form-group">
-                <p>{{ form.title.label_tag }}</p>
-                <p> {{ form.title }}</p>
-            </div>
-            <div class="form-group">
-                <p>{{ form.content.label_tag }}</p>
-                <p>{{ form.content }}</p>
+
+        <!-- Содержимое новости: изображение, описание,  -->
+       <div class="news-container-text2">
+            <p> Изображение новости (картинки обрезаются до 300*300):</p>
+                    <div class="custom-file-upload">
+                        <!-- Содержимое профиля: изображение, описание,  -->
+                            <label for="file-upload" class="file-upload-label">Выберите файл</label>
+                            {{ form.image }}
+                        </div>
             </div>
 
-            <div class="form-group">
-                <p>{{ form.tags.label_tag }}</p>
-                <p>{{ form.tags }}</p>
-            </div>
-
-
-        </div>
-        <div class="news-container-text">
-            <button class="add-font" type="submit">Добавить новость</button>
-            <button class="add-font" type="button" onclick="window.location.href='{% url 'home' %}'; return false;">Назад</button>
-
-        </div>
+            <div class="news-container-text2">
+                        <div class="form-group">
+                            <p>{{ form.title.label_tag }}</p>
+                            <p>{{ form.title }}</p>
+                        </div>
+                        <div class="form-group">
+                            <p>{{ form.content.label_tag }}</p>
+                            <p>{{ form.content }}</p>
+                        </div>
+                         <div class="form-group">
+                            <p>{{ form.tags.label_tag }}</p>
+                            <div class="tooltip">
+                                {{ form.tags }}
+                            </div>
+                         </div>
+                </div>
+                <div class="news-container-text2">
+                     <button class="add-font" type="submit">Создать новость</button>
+                     <div class="separator-line"></div>
+                    <button class="add-font" type="button" onclick="window.location.href='{% url 'news' %}'; return false;">Назад</button>
+                 </div>
     </section>
      </form>
 </div>
