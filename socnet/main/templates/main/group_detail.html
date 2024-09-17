@@ -84,9 +84,10 @@
     </section>
 </div>
 
-<div class="news-detail-container2">
+<div class="news-detail-container3">
+    <button id="btn-comment-news" class="btn-comment-news add-color add-font add-bg">Список участников группы:</button>
     <div id="friend-section">
-        <p class="btn-comment-news add-color">Список участников группы:</p>
+
                 {% if group_members %}
 
                     <div class="group-members-container">
@@ -132,203 +133,12 @@
 
 
     // Скрипт для аккордеона запросов дружбы
-    $('#toggle-comments-btn').click(function() {
-        $('#comments-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
-            var isVisible = $('#comments-section').is(':visible');
-            $('#toggle-comments-btn').text(isVisible ? 'Скрыть запросы дружбы' : 'Показать запросы дружбы');
+    $('#btn-comment-news').click(function() {
+        $('#friend-section').slideToggle(400, function() { // Указываем длительность анимации и функцию обратного вызова
+            var isVisible = $('#friend-section').is(':visible');
+            $('#btn-comment-news').text(isVisible ? 'Скрыть список участников группы' : 'Показать список участников группы');
         });
     });
-
-    // Обработка отправки запроса на дружбу
-    var sendFriendRequestButton = document.getElementById('send-friend-request');
-    if (sendFriendRequestButton) {
-        sendFriendRequestButton.addEventListener('click', function () {
-            var profileId = this.getAttribute('data-profile-id');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch('/friendships/send_request/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ profile_id: profileId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail); // Отображение сообщения
-                    sendFriendRequestButton.textContent = 'Запрос отправлен';
-                    sendFriendRequestButton.disabled = true;
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка. Проверьте консоль разработчика для подробностей.');
-            });
-        });
-    }
-
-    document.querySelectorAll('.accept-request').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                    location.reload();
-                }, 2000); // Задержка в 1 секунду для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
-    });
-
-    document.querySelectorAll('.block-people').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                    location.reload();
-                }, 2000); // Задержка в 1 секунду для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
-    });
-
-
-    document.querySelectorAll('.unblock-people').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                    location.reload();
-                }, 2000); // Задержка в 1 секунду для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
-    });
-
-    document.querySelectorAll('.delete-friend').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    setTimeout(() => {
-                    location.reload();
-                }, 2000); // Задержка в 1 секунду для отображения сообщения
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
-    });
-
-    // Обработка отклонения запроса
-    document.querySelectorAll('.deny-friend-request').forEach(button => {
-        button.addEventListener('click', function() {
-            var url = this.getAttribute('data-url');
-            var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.detail) {
-                    showAjaxPopup(data.detail);
-                    this.closest('li').remove();
-                } else {
-                    showAjaxPopup('Неизвестная ошибка');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-                showAjaxPopup('Произошла ошибка при отклонении запроса. Проверьте консоль разработчика для подробностей.');
-            });
-        });
-    });
-});
-
-
 
 
     // Обработка вступления в группу

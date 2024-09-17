@@ -426,12 +426,12 @@ form input[type=file] {
     padding: 10px 15px;
     text-decoration: none;
     transition: box-shadow .3s ease, transform .3s ease;
-    width: 100%
+    width: 100%;
 }
 
 .btn-comment-news:hover {
     box-shadow: 0 0 15px 4px #9dd5ebb3;
-    transform: scale(1.1)
+    transform: scale(1.1);
 }
 
 .comments-wrapper {
@@ -697,13 +697,22 @@ form input[type=file] {
     text-decoration: none
 }
 
-.news-detail-container2 {
+.news-detail-container3 {
     align-items: flex-start;
     display: flex;
     gap: 20px;
     width: 80%;
     margin: 0 auto; /* Центрирование по горизонтали */
     justify-content: center
+}
+
+.news-detail-container3 {
+    display: flex;
+    flex-direction: column; /* Элементы будут располагаться в столбик */
+    gap: 20px;
+    width: 80%;
+    margin: 0 auto; /* Центрирование по горизонтали */
+    justify-content: center;
 }
 
 .profile-name2 {
@@ -1337,7 +1346,7 @@ button:hover {
 #friend-section {
     box-sizing: border-box;
     display: none;
-    width: 100%
+    width: 100%; /* Занимает всю ширину контейнера */
 }
 
 
