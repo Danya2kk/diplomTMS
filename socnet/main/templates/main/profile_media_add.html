@@ -7,21 +7,30 @@
     <div id="form-errors"></div>
     <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <section class="news-container-content">
+    <section class="profile-media-conteiner-content">
         {% if user_form.errors %}
             {% for key, value in user_form.errors.items %}
                 <strong class="error-message">{{ value }}</strong>
             {% endfor %}
         {% endif %}
-        <div class="custom-file-upload">
-            <!-- Содержимое профиля: изображение, описание,  -->
-                <label for="file-upload" class="file-upload-label">Выберите фотографию</label>
-                {{ form.file }}
-         </div>
-
-        <button class="add-font" type="submit">Добавить фотографию в альбом</button>
+                <div class="custom-file-upload2">
+                        <label for="file-upload" class="file-upload-label">Выберите фотографию</label>
+                        <input id="file-upload" type="file" name="file" style="display: none;" />
+                        <span id="file-name">Файл не выбран</span>
+                    </div>
+                <div>
+                <button class="add-font" type="submit">Добавить фотографию в альбом</button>
+                    <button class="add-font" type="button" onclick="window.location.href='{% url 'profile-photo' username %}'; return false;">Назад</button>
+                 </div>
         </section>
     </form>
 </div>
+<script>
+    document.getElementById('file-upload').addEventListener('change', function() {
+    var fileName = this.files.length > 0 ? this.files[0].name : 'Файл не выбран';
+    document.getElementById('file-name').textContent = fileName;
+});
+
+</script>
 
 {% endblock %}

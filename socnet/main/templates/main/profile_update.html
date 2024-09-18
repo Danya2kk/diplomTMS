@@ -21,6 +21,7 @@
             <!-- Содержимое профиля: изображение, описание,  -->
                 <label for="file-upload" class="file-upload-label">Выберите файл</label>
                 {{ avatar_form.file }}
+                 <span id="file-name"></span>
             </div>
             </div>
 
@@ -89,4 +90,22 @@
     </section>
      </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Получаем элемент выбора файла
+        var fileInput = document.querySelector('input[type="file"][name="file"]');
+        // Получаем элемент для отображения имени файла
+        var fileNameSpan = document.getElementById('file-name');
+
+        // Обработчик события изменения выбора файла
+        fileInput.addEventListener('change', function() {
+            var file = fileInput.files[0];
+            if (file) {
+                fileNameSpan.textContent = 'Загружен: ' + file.name;
+            }
+        });
+    });
+</script>
+
 {% endblock %}

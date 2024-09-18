@@ -1386,6 +1386,14 @@ button:hover {
     width: 100%;
 }
 
+.profile-media-conteiner-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0 auto; /* Центрирование по горизонтали */
+}
+
+
 .news-container-text {
     flex: 1 1 300px; /* Задайте начальную ширину блоков, замените на подходящее значение */
     max-width: 300px; /* Установите максимальную ширину блока */
@@ -1435,6 +1443,30 @@ input[type="file"] {
     cursor: pointer;
   }
 
+.custom-file-upload2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Расположить элементы внутри блока */
+    background-color: #7ca5db;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 0 10px 2px #9dd5ebb3;
+    color: #fff;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.custom-file-upload2:hover {
+    background: #ffffff;
+    color: #000;
+    transform: scale(1.1);
+}
+.custom-file-upload2,
+button {
+    width: 100%; /* Сделать элементы одинаковой ширины */
+    box-sizing: border-box; /* Учитывать паддинги и границы в ширине */
+    margin-bottom: 10px; /* Добавить отступ между элементами */
+}
+
 .custom-file-upload {
     position: relative;
     display: inline-block;
@@ -1455,6 +1487,11 @@ input[type="file"] {
     transform: scale(1.1); /* увеличение при наведении */
 }
 
+
+#file-name {
+    margin-left: 10px;
+    color: #000;
+}
 
 .add-color {
     color: white;
@@ -1735,6 +1772,10 @@ input[type="file"] {
 
 .add-size {
     font-size: 2vw;
+}
+
+.add-width {
+    width: 20%;
 }
 
 

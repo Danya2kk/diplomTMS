@@ -5,8 +5,9 @@ class MainConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "main"
 
+    # Подключаем сигналы
     def ready(self):
-        import main.signals  # Убедитесь, что этот импорт есть
+        import main.signals
 
 
 

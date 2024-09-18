@@ -20,6 +20,7 @@
                 <p>{{ form.photo.label_tag }}</p>
                 <label for="file-upload" class="file-upload-label">Выберите файл</label>
                 {{ form.photo }}
+                  <span id="file-name">Файл не выбран</span>
             </div>
             </div>
         <div class="news-container-text2">
@@ -51,4 +52,24 @@
     </section>
      </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Получаем элемент выбора файла
+        var fileInput = document.querySelector('input[type="file"][name="photo"]');
+        // Получаем элемент для отображения имени файла
+        var fileNameSpan = document.getElementById('file-name');
+
+        // Обработчик события изменения выбора файла
+        fileInput.addEventListener('change', function() {
+            var file = fileInput.files[0];
+            if (file) {
+                fileNameSpan.textContent = 'Загружен: ' + file.name;
+            }
+        });
+    });
+</script>
+
+
+
 {% endblock %}

@@ -16,13 +16,13 @@
         {% endif %}
 
             <div class="news-container-text2">
-                     <p> Изображение новости (картинки обрезаются до 300*300):</p>
+                    <p>Изображение новости (картинки обрезаются до 300x300):</p>
                     <div class="custom-file-upload">
-                        <!-- Содержимое профиля: изображение, описание,  -->
-                            <label for="file-upload" class="file-upload-label">Выберите файл</label>
-                            {{ form.image }}
-                        </div>
-            </div>
+                        <label for="file-upload" class="file-upload-label">Выберите файл</label>
+                        {{ form.image }}
+                        <span id="file-name"></span>
+                    </div>
+                </div>
 
              <div class="news-container-text2">
                     <div class="form-group">
@@ -49,4 +49,21 @@
          </section>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Получаем элемент выбора файла
+        var fileInput = document.querySelector('input[type="file"][name="image"]');
+        // Получаем элемент для отображения имени файла
+        var fileNameSpan = document.getElementById('file-name');
+
+        // Обработчик события изменения выбора файла
+        fileInput.addEventListener('change', function() {
+            var file = fileInput.files[0];
+            if (file) {
+                fileNameSpan.textContent = 'Заменен на: ' + file.name;
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -2,6 +2,7 @@ import logging
 import json
 import re
 
+
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, PasswordChangeView
 from django.contrib.contenttypes.models import ContentType
@@ -31,6 +32,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
 
+from urllib.parse import urlencode
+
 from .models import (Profile, ActivityLog_norest, Friendship, Mediafile,
                      StatusProfile, GroupMembership, Status, User, \
                      Notification_norest, News, FriendshipStatus, Comment,
@@ -43,6 +46,8 @@ from .filters import GroupFilter, NewsFilter, ProfileFilter
 
 
 from api.serializers import FriendshipSerializer
+
+from .signals import set_cache_with_key
 
 # создания логгера для хранения ошибок
 logger = logging.getLogger(__name__)
@@ -92,7 +97,7 @@ def profile_view(request, username):
     # Получение профиля пользователя
     if not profile:
         profile = get_object_or_404(Profile, user__username=username)
-        cache.set(cache_key, profile, 60 * 10)  # Кэшируем профиль на 10 минут
+        cache.set(cache_key, profile, 86400)  # Кэшируем профиль на 10 минут
 
     # Проверяем, является ли текущий пользователь владельцем профиля (нужно для кнопки)
     is_owner = request.user.username == username
@@ -163,7 +168,7 @@ def profile_view(request, username):
             # Убираем дубликаты, если они есть
             friends_profiles = list(set(friends_profiles))
 
-        cache.set(cache_key, friends_profiles, 60 * 10)  # Кэшируем список на 10 минут
+        cache.set(cache_key, friends_profiles, 86400)  # Кэшируем список на 10 минут
 
 
     # Проверяемся на баны с обоих сторон (нужно для кнопок)
@@ -274,10 +279,9 @@ def profile_media(request, username):
 
     # Получаем профиль получай фотки по профилю
     if not photos:
-        print(f"Cache miss for key: {cache_key}")
         profile = Profile.objects.get(user__username=username)
         photos = Mediafile.objects.filter(profile=profile).exclude(file_type="avatar")
-        cache.set(cache_key, photos, 60 * 60)  # Кэшируем на 1 час
+        cache.set(cache_key, photos, 86400)  # Кэшируем на сутки
 
     context = {
         "photos": photos,
@@ -286,11 +290,39 @@ def profile_media(request, username):
     }
     return render(request, "main/media_profile.html", context)
 
+class profile_media_deleted(LoginRequiredMixin, DeleteView):
+    """Функция удаления группы"""
+
+    model = Mediafile
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.profile != request.user.profile:
+            return JsonResponse(
+                {"error": "У вас нет прав для удаления этой группы."}, status=403
+            )
+
+        # Удаление группы
+
+        self.object.delete()
+
+        try:
+            log_user_activity(
+                self.request.user.profile,
+                ActivityLog_norest.PROFILE,
+                f"Пользователь удалил фотографию",
+            )
+        except Exception as e:
+            # Логируем ошибку
+            logger.error(f"Ошибка логирования активности: {str(e)}")
+
+        return JsonResponse({"message": "Фотография успешно удалена."})
 
 def profile_add_media(request):
     """Функция добавления фотографий пользователя"""
 
-    user = User.objects.get(username=request.user.username)
+    username = request.user.username
+    user = User.objects.get(username=username)
     profile = Profile.objects.get(user=user)
 
     if request.method == "POST":
@@ -329,6 +361,7 @@ def profile_add_media(request):
 
     context = {
         "form": form,
+        "username":username,
     }
 
     return render(request, "main/profile_media_add.html", context)
@@ -665,10 +698,13 @@ class LogoutUser(View):
 
 
 def profile_list(request):
-    """Функция получения списка пользователей"""
+    """Функция получения списка пользователей с учетом фильтров"""
 
-    # Создаем кеш ключи
-    cache_key = f"profile_list_{request.GET.urlencode()}"
+    # Получаем параметры фильтра из запроса
+    query_params = request.GET.dict()
+
+    # Создаем уникальный ключ кэша на основе параметров фильтра
+    cache_key = f"profile_list_{urlencode(query_params)}"
     profile_items = cache.get(cache_key)
 
     # Создаем экземпляр фильтра
@@ -677,10 +713,12 @@ def profile_list(request):
         queryset=Profile.objects.select_related("user").prefetch_related("media_files"),
     )
 
-    # Проверяем кэш
-    if not profile_items:
+    if profile_items is None:
+        # Получаем отфильтрованный список профилей
         profile_items = profile_filter.qs
-        cache.set(cache_key, profile_items, 60 * 5)  # Кэшируем на 5 минут
+
+        # Кэшируем результат на сутки
+        set_cache_with_key(cache_key, profile_items, 86400)
 
     # Получаем аватары для отфильтрованных профилей
     avatar_items = Mediafile.objects.filter(
@@ -726,20 +764,13 @@ class NewsListView(LoginRequiredMixin, ListView):
             context["filterset"] = filterset
             context["news"] = filterset.qs
 
-            # Кэшируем результат и параметры фильтра на 5 минут (300 секунд)
-            cache.set(cache_key, {
-                "news": context["news"],
-                "filterset_params": self.request.GET
-            }, 300)
-
-            # Храним ключи кеша для последующей инвалидации
-            cache_keys = cache.get('cache_keys', [])
-            if cache_key not in cache_keys:
-                cache_keys.append(cache_key)
-                cache.set('cache_keys', cache_keys, 300)
+            # Кэшируем результат и параметры
+            set_cache_with_key(cache_key, {
+                "news": list(context["news"].values()),
+                "filterset_params": self.request.GET.dict()
+            })
 
         return context
-
 
 
 @require_GET
@@ -850,8 +881,8 @@ def news_detail(request, pk):
             "total_score": total_score,
         }
 
-        # Кэшируем результат на 5 минут (300 секунд)
-        cache.set(cache_key, context, 300)
+        # Кэшируем результат на сутки
+        cache.set(cache_key, context, 86400)
 
     return render(request, "main/news_detail.html", context)
 
@@ -1528,8 +1559,8 @@ def sender_mail(request):
                 }
             )
 
-        # Кэшируем результат на 60 секунд
-        cache.set(cache_key, mail_data, 60)
+        # Кэшируем результат на сутки
+        cache.set(cache_key, mail_data, 86400)
 
     return JsonResponse({"detail": mail_data}, status=200)
 
@@ -1569,8 +1600,8 @@ def recipient_mail(request):
                 }
             )
 
-        # Кэшируем результат на 60 секунд
-        cache.set(cache_key, mail_data, 60)
+        # Кэшируем результат на сутки
+        cache.set(cache_key, mail_data, 86400)
 
     return JsonResponse({"detail": mail_data}, status=200)
 
@@ -1612,7 +1643,7 @@ def send_mail(request):
 
 
                 try:
-                    cache.delete(f"sender_mail_{profile_sender.id}")
+
                     log_user_activity(
                         profile_sender,
                         ActivityLog_norest.MAIL,
@@ -1681,7 +1712,7 @@ def send_mail_parent(request):
             mail.save()
 
             try:
-                cache.delete(f"sender_mail_{profile_sender.id}")
+
                 log_user_activity(
                     profile_sender,
                     ActivityLog_norest.MAIL,
@@ -1704,34 +1735,46 @@ def send_mail_parent(request):
 def message_detail(request, mail_id):
     """Функция получения данных письма по id"""
 
-    try:
-        mail = Mail.objects.get(id=mail_id)
-        # Обновляем статус сообщения
-        mail.is_read = True
-        mail.save()
+    # Уникальный ключ кэша для конкретного письма
+    cache_key = f"mail_detail_{mail_id}"
 
-        data = {
-            "id": mail.id,
-            "content": mail.content,
-            "sender": {
-                "firstname": mail.sender.user.profile.firstname,
-                "lastname": mail.sender.user.profile.lastname,
-                "username": mail.sender.user.username,
-            },
-            "recipient": {
-                "firstname": mail.recipient.user.profile.firstname,
-                "lastname": mail.recipient.user.profile.lastname,
-            },
-            "parent": (
-                {"content": mail.parent.content if mail.parent else None}
-                if mail.parent
-                else None
-            ),
-        }
-        is_sender = request.user.profile == mail.sender
-        return JsonResponse({"detail": data, "isSender": is_sender}, status=200)
-    except Mail.DoesNotExist:
-        return JsonResponse({"error": "Сообщение не найдено"}, status=404)
+    # Проверяем наличие данных в кэше
+    data = cache.get(cache_key)
+
+    if data is None:
+
+        try:
+            mail = Mail.objects.get(id=mail_id)
+            # Обновляем статус сообщения
+            mail.is_read = True
+            mail.save()
+
+            data = {
+                "id": mail.id,
+                "content": mail.content,
+                "sender": {
+                    "firstname": mail.sender.user.profile.firstname,
+                    "lastname": mail.sender.user.profile.lastname,
+                    "username": mail.sender.user.username,
+                },
+                "recipient": {
+                    "firstname": mail.recipient.user.profile.firstname,
+                    "lastname": mail.recipient.user.profile.lastname,
+                },
+                "parent": (
+                    {"content": mail.parent.content if mail.parent else None}
+                    if mail.parent
+                    else None
+                ),
+            }
+            is_sender = request.user.profile == mail.sender
+
+            # Кэшируем контекст на сутки
+            cache.set(cache_key, data, 86400)
+
+            return JsonResponse({"detail": data, "isSender": is_sender}, status=200)
+        except Mail.DoesNotExist:
+            return JsonResponse({"error": "Сообщение не найдено"}, status=404)
 
 
 
@@ -1927,8 +1970,8 @@ class GroupListView(LoginRequiredMixin, ListView):
         search_term = self.request.GET.get("search_term", None)
         user_profile = self.request.user.profile
 
-        # Формируем уникальный ключ для кэша
-        cache_key = f"group_list_{search_term}_{user_profile.id}"
+        # Формируем уникальный ключ для кэша, включая фильтры
+        cache_key = f"group_list_{self.request.GET.urlencode()}"
 
         # Пытаемся получить результат из кэша
         queryset = cache.get(cache_key)
@@ -1945,8 +1988,8 @@ class GroupListView(LoginRequiredMixin, ListView):
             if search_term:
                 queryset = queryset.filter(name__icontains=search_term)
 
-            # Кэшируем результат на 60 секунд
-            cache.set(cache_key, queryset, 60)
+            # Кэшируем результат на сутки
+            set_cache_with_key(cache_key, queryset, 86400)
 
         return queryset
 
@@ -1957,12 +2000,11 @@ class GroupListView(LoginRequiredMixin, ListView):
         context["groups"] = filterset.qs
         return context
 
-
 def GroupDetailView(request, pk):
     """Просмотр профиля группы"""
 
     # Уникальный ключ кэша для конкретной группы и пользователя
-    cache_key = f"group_detail_{pk}_{request.user.id}"
+    cache_key = f"group_detail_{pk}"
 
     # Проверяем наличие данных в кэше
     context = cache.get(cache_key)
@@ -2003,8 +2045,8 @@ def GroupDetailView(request, pk):
             "secret_group": secret_group,
         }
 
-        # Кэшируем контекст на 5 минут
-        cache.set(cache_key, context, 300)
+        # Кэшируем контекст на сутки
+        cache.set(cache_key, context, 86400)
 
     return render(request, "main/group_detail.html", context)
 
@@ -2053,8 +2095,6 @@ def GroupInvite(request, username, pk):
         )
 
         try:
-            # Инвалидация кэша для детальной страницы группы
-            cache.delete(f'group_detail_{group.id}_{request.user.id}')
 
             profile2 = Profile.objects.get(request.user)
             log_user_activity(
@@ -2087,9 +2127,6 @@ def join_group(request, pk):
         )
 
         try:
-            # Инвалидация кэша для детальной страницы группы
-            cache.delete(f'group_detail_{group.id}_{request.user.id}')
-
             log_user_activity(
                 request.user.profile,
                 ActivityLog_norest.MAIL,
@@ -2127,8 +2164,6 @@ def kik_group(request, username, pk):
         membership.delete()
 
         try:
-            # Инвалидация кэша для детальной страницы группы
-            cache.delete(f'group_detail_{group.id}_{request.user.id}')
             log_user_activity(
                 request.user.profile,
                 ActivityLog_norest.MAIL,
@@ -2164,9 +2199,6 @@ def leave_group(request, pk):
         membership.delete()
 
         try:
-            # Инвалидация кэша для детальной страницы группы
-            cache.delete(f'group_detail_{group.id}_{request.user.id}')
-
             log_user_activity(
                 request.user.profile,
                 ActivityLog_norest.MAIL,
@@ -2217,7 +2249,7 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
 
 
         try:
-            cache.delete_pattern('group_list_*')
+
             log_user_activity(
                 self.request.user.profile,
                 ActivityLog_norest.GROUP,
@@ -2336,7 +2368,7 @@ class GroupDeleteView(LoginRequiredMixin, DeleteView):
         self.object.delete()
 
         try:
-            cache.delete_pattern('group_list_*')
+
             log_user_activity(
                 self.request.user.profile,
                 ActivityLog_norest.GROUP,

@@ -47,8 +47,8 @@
                         <div id="confirm-delete-modal" style="display: none;">
                             <div class="modal-content">
                                 <p>Вы уверены, что хотите удалить эту группу?</p>
-                                <button id="confirm-delete-yes">Да</button>
-                                <button id="confirm-delete-no">Нет</button>
+                                <button id="confirm-delete-yes" class="btn-news add-font add-color add-bg">Да</button>
+                                 <button id="confirm-delete-no" class="btn-news add-font add-color add-bg">Нет</button>
                             </div>
                         </div>
 
@@ -329,13 +329,19 @@
                         'Accept': 'application/json'
             }
         })
-        .then(response => {
+        .then(response => response.json()
+        .then(data => {
             if (response.ok) {
-                window.location.href = '/groups_list/';
+                // Обработка успешного удаления
+                showAjaxPopup(data.message || 'Группа успешно удалена.');
+                setTimeout(() => {
+                    window.location.reload(); // Обновляем страницу после успешного удаления
+                }, 2000); // Подождать немного перед обновлением страницы
             } else {
-                showAjaxPopup('Ошибка при удалении группы.');
+                // Обработка ошибки
+                showAjaxPopup(data.error || 'Ошибка при удалении группы.');
             }
-        })
+        }))
         .catch(error => {
             console.error('Error:', error);
             showAjaxPopup('Произошла ошибка.');

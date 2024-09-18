@@ -16,17 +16,26 @@
 
 <div class="news-detail-container">
     <section class="news-detail-content">
-        {% for media in photo %}
+        {% for media in photos %}
             <div class="media-item">
                 <img src="{{ media.file.url }}" alt="photo" class="news-inner-image clickable" data-fullscreen-src="{{ media.file.url }}">
-                <a href="{% url 'profile-photo' username %}" class="btn-news">Удалить фотографию</a>
+                 <button type="button" class="delete-photo-btn btn-news add-font" data-photo-id="{{ media.id }}">Удалить фотографию</button>
             </div>
         {% empty %}
             <p>Пользователь не загрузил ни одной фотографии</p>
         {% endfor %}
+
+        <!-- Модальное окно подтверждения удаления -->
+        <div id="confirm-delete-modal" style="display: none;">
+            <div class="modal-content">
+                <p>Вы уверены, что хотите удалить эту фотографию?</p>
+                <button id="confirm-delete-yes" class="btn-news add-font add-color add-bg">Да</button>
+                <button id="confirm-delete-no" class="btn-news add-font add-color add-bg">Нет</button>
+            </div>
+        </div>
     </section>
 
-    <!-- Модальное окно -->
+    <!-- Модальное окно просмотра фотографии -->
     <div id="modal_photo" class="modal_photo">
         <span class="close">&times;</span>
         <img class="modal_photo-content" id="modal_photo-img">
@@ -35,30 +44,81 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var modal = document.getElementById('modal_photo');
-        var modalImg = document.getElementById('modal_photo-img');
-        var closeBtn = document.getElementsByClassName('close')[0];
+    // Модальное окно для просмотра фотографии
+    var modal_photo = document.getElementById('modal_photo');
+    var modalImg = document.getElementById('modal_photo-img');
+    var closeBtn = document.getElementsByClassName('close')[0];
 
-        document.querySelectorAll('.clickable').forEach(function(img) {
-            img.addEventListener('click', function() {
-                var fullScreenSrc = img.getAttribute('data-fullscreen-src');
-                modal.style.display = 'block';
-                modalImg.src = fullScreenSrc;
-            });
+    document.querySelectorAll('.clickable').forEach(function(img) {
+        img.addEventListener('click', function() {
+            var fullScreenSrc = img.getAttribute('data-fullscreen-src');
+            modal_photo.style.display = 'block';
+            modalImg.src = fullScreenSrc;
         });
-
-        closeBtn.onclick = function() {
-            modal.style.display = 'none';
-        }
-
-        // Закрытие модального окна при клике вне его
-        window.onclick = function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        }
     });
 
-</script>
+    closeBtn.onclick = function() {
+        modal_photo.style.display = 'none';
+    };
 
+    window.onclick = function(event) {
+        if (event.target === modal_photo) {
+            modal_photo.style.display = 'none';
+        }
+    };
+
+    // Модальное окно для удаления фотографии
+    const deleteButtons = document.querySelectorAll('.delete-photo-btn'); // Изменено на правильный класс
+    const modal = document.getElementById('confirm-delete-modal');
+    const confirmYesButton = document.getElementById('confirm-delete-yes');
+    const confirmNoButton = document.getElementById('confirm-delete-no');
+    var csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    let photoIdToDelete;
+
+    // Показать модальное окно при нажатии на кнопку удаления
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            photoIdToDelete = this.getAttribute('data-photo-id');
+            modal.style.display = 'block';
+        });
+    });
+
+    // Обработчик подтверждения удаления
+    confirmYesButton.addEventListener('click', function() {
+        fetch(`/profile/photo/delete_media/${photoIdToDelete}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json()
+        .then(data => {
+            if (response.ok) {
+                // Обработка успешного удаления
+                showAjaxPopup(data.message || 'Фотография успешно удалена.');
+                setTimeout(() => {
+                    window.location.reload(); // Обновляем страницу после успешного удаления
+                }, 2000); // Подождать немного перед обновлением страницы
+            } else {
+                // Обработка ошибки
+                showAjaxPopup(data.error || 'Ошибка при удалении фотографии.');
+            }
+        }))
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxPopup('Произошла ошибка.');
+        });
+
+        modal.style.display = 'none';
+    });
+
+    // Обработчик отмены удаления
+    confirmNoButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+});
+</script>
 {% endblock %}

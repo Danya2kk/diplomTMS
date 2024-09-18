@@ -20,6 +20,7 @@ urlpatterns = [
     path("profile_list",views.profile_list, name="profile_list"),
     path("profile/<str:username>", views.profile_view, name="profile"),
     path("profile/photo/<str:username>", views.profile_media, name="profile-photo"),
+    path("profile/photo/delete_media/<int:pk>/", views.profile_media_deleted.as_view(), name="profile_media_deleted"),
     path("profile/photo/add_media/", views.profile_add_media, name="profile_add_media"),
     path("update", views.update_profile, name="update-profile"),
     path("password-change/", views.UserPasswordChange.as_view(), name="password_change"),
