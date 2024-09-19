@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.apps import AppConfig
 
 
@@ -8,6 +9,9 @@ class MainConfig(AppConfig):
     # Подключаем сигналы
     def ready(self):
         import main.signals
+
+        # чистим весь кеш при рестарте сервера
+        cache.clear()
 
 
 

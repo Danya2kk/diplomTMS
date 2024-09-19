@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import json
 import re
@@ -52,6 +53,11 @@ from .signals import set_cache_with_key
 # создания логгера для хранения ошибок
 logger = logging.getLogger(__name__)
 
+def generate_cache_key(request):
+    """Функция для генерации ключа кэша"""
+    params = request.GET.urlencode()
+    return hashlib.md5(params.encode('utf-8')).hexdigest()
+
 
 def index(request):
     """Функция определяющая куда переадресовать пользователя"""
@@ -97,7 +103,7 @@ def profile_view(request, username):
     # Получение профиля пользователя
     if not profile:
         profile = get_object_or_404(Profile, user__username=username)
-        cache.set(cache_key, profile, 86400)  # Кэшируем профиль на 10 минут
+        cache.set(cache_key, profile, 86400)  # Кэшируем профиль
 
     # Проверяем, является ли текущий пользователь владельцем профиля (нужно для кнопки)
     is_owner = request.user.username == username
@@ -447,22 +453,7 @@ class RegisterUser(FormView):
         user.set_password(form.cleaned_data["password"])
         user.save()
 
-        firstname = user.first_name
-        lastname = user.last_name
-
-        # Проверка имени
-        if not re.match("^[а-яА-Яa-zA-Z]+$", firstname):
-            message = "В Имени допустимы только буквы!"
-            messages.error(self.request, f"Ошибка:\n{message}")
-            return self.form_invalid(form)
-
-        # Проверка фамилии
-        if not re.match("^[а-яА-Яa-zA-Z-]+$", lastname):
-            message = "В Фамилии допустимы только буквы!"
-            messages.error(self.request, f"Ошибка:\n{message}")
-            return self.form_invalid(form)
-
-        # Создание профиля для нового пользователя с обязательными полями
+       # Создание профиля для нового пользователя с обязательными полями
         profile = Profile.objects.create(
             user=user,
             firstname=user.first_name,  # Из модели User
@@ -704,7 +695,7 @@ def profile_list(request):
     query_params = request.GET.dict()
 
     # Создаем уникальный ключ кэша на основе параметров фильтра
-    cache_key = f"profile_list_{urlencode(query_params)}"
+    cache_key = f"profile_list_{generate_cache_key(request)}"
     profile_items = cache.get(cache_key)
 
     # Создаем экземпляр фильтра
@@ -736,6 +727,7 @@ def profile_list(request):
 
     return render(request, "main/profile_list.html", context)
 
+
 class NewsListView(LoginRequiredMixin, ListView):
     """Функция получения списка новостей"""
 
@@ -747,26 +739,26 @@ class NewsListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         # Создаем ключ для кэша, который будет уникальным для текущего запроса (учитывая GET параметры)
-        cache_key = f"news_filter_{self.request.GET.urlencode()}"
+        cache_key = f"news_filter_{generate_cache_key(self.request)}"
 
         # Пробуем получить данные из кэша
         cached_data = cache.get(cache_key)
 
         if cached_data:
             # Если данные есть в кэше, используем их
-            context["news"] = cached_data["news"]
+            context["news"] = cached_data["news"]  # Восстанавливаем объекты новостей
             filterset_params = cached_data["filterset_params"]
             filterset = NewsFilter(filterset_params, queryset=self.get_queryset())
             context["filterset"] = filterset
+            context["news"] = filterset.qs
         else:
             # Если нет, применяем фильтр
             filterset = NewsFilter(self.request.GET, queryset=self.get_queryset())
             context["filterset"] = filterset
             context["news"] = filterset.qs
 
-            # Кэшируем результат и параметры
             set_cache_with_key(cache_key, {
-                "news": list(context["news"].values()),
+                "news": list(context["news"]),  # Кэшируем сами объекты новостей
                 "filterset_params": self.request.GET.dict()
             })
 
@@ -1970,35 +1962,49 @@ class GroupListView(LoginRequiredMixin, ListView):
         search_term = self.request.GET.get("search_term", None)
         user_profile = self.request.user.profile
 
-        # Формируем уникальный ключ для кэша, включая фильтры
-        cache_key = f"group_list_{self.request.GET.urlencode()}"
+        # Основной запрос, исключающий секретные группы, в которые пользователь не входит
+        queryset = (
+            Group.objects.all()
+            .order_by("-name")
+            .exclude(group_type=Group.SECRET, members__profile=user_profile)
+        )
 
-        # Пытаемся получить результат из кэша
-        queryset = cache.get(cache_key)
-
-        if queryset is None:
-            # Основной запрос, исключающий секретные группы, в которые пользователь не входит
-            queryset = (
-                Group.objects.all()
-                .order_by("-name")
-                .exclude(group_type=Group.SECRET, members__profile=user_profile)
-            )
-
-            # Применение фильтра по названию группы, если указан поисковый запрос
-            if search_term:
-                queryset = queryset.filter(name__icontains=search_term)
-
-            # Кэшируем результат на сутки
-            set_cache_with_key(cache_key, queryset, 86400)
+        # Применение фильтра по названию группы, если указан поисковый запрос
+        if search_term:
+            queryset = queryset.filter(name__icontains=search_term)
 
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        filterset = GroupFilter(self.request.GET, queryset=self.get_queryset())
-        context["filterset"] = filterset
-        context["groups"] = filterset.qs
+
+        # Создаем ключ для кэша, который будет уникальным для текущего запроса (учитывая GET параметры)
+        cache_key = f"group_filter_{generate_cache_key(self.request)}"
+
+        # Пробуем получить данные из кэша
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            # Если данные есть в кэше, используем их
+            context["groups"] = cached_data["groups"]
+            filterset_params = cached_data["filterset_params"]
+            filterset = GroupFilter(filterset_params, queryset=self.get_queryset())
+            context["filterset"] = filterset
+            context["groups"] = filterset.qs
+        else:
+            # Если нет, применяем фильтр
+            filterset = GroupFilter(self.request.GET, queryset=self.get_queryset())
+            context["filterset"] = filterset
+            context["groups"] = filterset.qs
+
+            # Кэшируем результат и параметры
+            set_cache_with_key(cache_key, {
+                "groups": list(context["groups"]),  # Кэшируем сами объекты групп
+                "filterset_params": self.request.GET.dict()
+            })
+
         return context
+
 
 def GroupDetailView(request, pk):
     """Просмотр профиля группы"""

@@ -12,7 +12,7 @@
           <form method="get" action="{% url 'profile_list' %}" class="filter-form">
             {{ profile_filter.form.as_p }}
             <button type="submit" class="btn-filter-list add-font add-color">Применить фильтр</button>
-            <button class="btn-filter-list add-font add-color"><a href="{% url 'groups_list' %}" class="no-markers add-color add-bg">Сбросить фильтры</a></button>
+            <button class="btn-filter-list add-font add-color"><a href="{% url 'profile_list' %}" class="no-markers add-color add-bg">Сбросить фильтры</a></button>
         </form>
     </div>
 

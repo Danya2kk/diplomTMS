@@ -704,6 +704,19 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-bmemcached"
+version = "0.3.0"
+description = "A Django cache backend to use bmemcached module which supports memcached binary protocol with authentication."
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-bmemcached-0.3.0.tar.gz", hash = "sha256:4e4b7d97216dbae331c1de10e699ca22804b94ec3a90d2762dd5d146e6986a8a"},
+]
+
+[package.dependencies]
+python-binary-memcached = "*"
+
+[[package]]
 name = "django-celery-beat"
 version = "2.6.0"
 description = "Database-backed Periodic Tasks."
@@ -1854,6 +1867,17 @@ docs = ["sphinx (>=4.5.0,<5.0.0)", "sphinx-rtd-theme", "zope.interface"]
 tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
+name = "pymemcache"
+version = "4.0.0"
+description = "A comprehensive, fast, pure Python memcached client"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pymemcache-4.0.0-py2.py3-none-any.whl", hash = "sha256:f507bc20e0dc8d562f8df9d872107a278df049fa496805c1431b926f3ddd0eab"},
+    {file = "pymemcache-4.0.0.tar.gz", hash = "sha256:27bf9bd1bbc1e20f83633208620d56de50f14185055e49504f4f5e94e94aff94"},
+]
+
+[[package]]
 name = "pyproject-hooks"
 version = "1.1.0"
 description = "Wrappers to call pyproject.toml-based build backend hooks."
@@ -1906,6 +1930,21 @@ files = [
 ]
 
 [[package]]
+name = "python-binary-memcached"
+version = "0.31.2"
+description = "A pure python module to access memcached via its binary protocol with SASL auth support"
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-binary-memcached-0.31.2.tar.gz", hash = "sha256:290f70451e277df6a39aa0eea3cb6ca2eefcf5d601f957cf2ec1d353d7676c03"},
+    {file = "python_binary_memcached-0.31.2-py3-none-any.whl", hash = "sha256:e5b93d54429e835cab7d5b33988649f9748344aa49adaed8eed94b37e714d562"},
+]
+
+[package.dependencies]
+six = "*"
+uhashring = "*"
+
+[[package]]
 name = "python-crontab"
 version = "3.2.0"
 description = "Python Crontab API"
@@ -1950,6 +1989,17 @@ files = [
 
 [package.extras]
 cli = ["click (>=5.0)"]
+
+[[package]]
+name = "python-memcached"
+version = "1.62"
+description = "Pure python memcached client"
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-memcached-1.62.tar.gz", hash = "sha256:0285470599b7f593fbf3bec084daa1f483221e68c1db2cf1d846a9f7c2655103"},
+    {file = "python_memcached-1.62-py2.py3-none-any.whl", hash = "sha256:1bdd8d2393ff53e80cd5e9442d750e658e0b35c3eebb3211af137303e3b729d1"},
+]
 
 [[package]]
 name = "python3-openid"
@@ -2484,6 +2534,17 @@ files = [
 ]
 
 [[package]]
+name = "uhashring"
+version = "2.3"
+description = "Full featured consistent hashing python library compatible with ketama."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "uhashring-2.3-py3-none-any.whl", hash = "sha256:7ee8a25ca495a97effad10bd563c83b4054a6d7606d9530757049a04edab9297"},
+    {file = "uhashring-2.3.tar.gz", hash = "sha256:9f76187e8d8e82f6e5519c995eef1f1bf44d4a5e0fc4fdd1219a044b10040612"},
+]
+
+[[package]]
 name = "uritemplate"
 version = "4.1.1"
 description = "Implementation of RFC 6570 URI Templates"
@@ -2925,4 +2986,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "c0eefa775dfee4c234e06868a1e1bad4319175b2a98d2d4c004cb0b689ce1731"
+content-hash = "94806f365ae11668f3f280207adc73651e6a08f058a69d23214a2af3091c8888"

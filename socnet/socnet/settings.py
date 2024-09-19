@@ -206,13 +206,26 @@ LOGGING = {
     },
 }
 
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+#     }
+# }
 CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    'default': {
+        # Use django-bmemcached
+        'BACKEND': 'django_bmemcached.memcached.BMemcached',
+
+        'TIMEOUT': None,
+
+        'LOCATION': 'mc2.c1.us-west-2.ec2.memcachier.com:11211',
+
+        'OPTIONS': {
+            'username': '4F80F2',
+            'password': '2FA7160EBEE8956913A213F8499D4381',
+        }
     }
 }
-
-
 
 SPECTACULAR_SETTINGS = {
 

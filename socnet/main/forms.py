@@ -1,4 +1,6 @@
 import sys
+import re
+
 
 from io import BytesIO
 from PIL import Image
@@ -64,6 +66,18 @@ class RegistrationForm(forms.ModelForm):
             self.add_error("password_confirm", "Пароли не совпадают")
         return cleaned_data
 
+    def clean_first_name(self):
+        firstname = self.cleaned_data.get("first_name")
+        if not re.match("^[а-яА-Яa-zA-Z]+$", firstname):
+            raise forms.ValidationError("В Имени допустимы только буквы!")
+        return firstname
+
+    def clean_last_name(self):
+        lastname = self.cleaned_data.get("last_name")
+        if not re.match("^[а-яА-Яa-zA-Z-]+$", lastname):
+            raise forms.ValidationError("В Фамилии допустимы только буквы!")
+        return lastname
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(
@@ -80,6 +94,8 @@ class LoginForm(forms.Form):
 
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
+
+
 
     def clean(self):
         # метод для проверки пароля
@@ -189,6 +205,26 @@ class UpdateProfileForm(forms.ModelForm):
             "privacy",
             "interests",
         ]
+
+    def clean_age(self):
+        age = self.cleaned_data.get('age')
+        if age is not None and age < 0:
+            raise forms.ValidationError("Возраст не может быть отрицательным!")
+        return age
+
+    def clean_firstname(self):
+        firstname = self.cleaned_data.get('firstname')
+        if not re.match(r"^[а-яА-Яa-zA-Z]+$", firstname):
+            raise forms.ValidationError("В Имени допустимы только буквы!")
+        return firstname
+
+    def clean_lastname(self):
+        lastname = self.cleaned_data.get('lastname')
+        if not re.match(r"^[а-яА-Яa-zA-Z-]+$", lastname):
+            raise forms.ValidationError("В Фамилии допустимы только буквы!")
+        return lastname
+
+
 
 class AvatarUploadForm(forms.ModelForm):
     '''Форма для загрузки аватара'''

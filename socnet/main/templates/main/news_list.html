@@ -12,10 +12,10 @@
             <a class="btn-filters add-color add-bg" href="{% url 'news_create' %}">Добавить новость</a>
         </div>
         <h3 class="Auth_title">Фильтры</h3>
-        <form method="get" action="{% url 'groups_list' %}" class="filter-form">
+        <form method="get" action="{% url 'news' %}" class="filter-form">
             {{ filterset.form.as_p }}
             <button type="submit" class="btn-filter-list add-font add-color">Применить фильтр</button>
-            <button class="btn-filter-list add-font add-color"><a href="{% url 'groups_list' %}" class="no-markers add-color add-bg">Сбросить фильтры</a></button>
+            <button class="btn-filter-list add-font add-color"><a href="{% url 'news' %}" class="no-markers add-color add-bg">Сбросить фильтры</a></button>
         </form>
     </div>
 
@@ -40,7 +40,7 @@
                                 {{ new.title }}
                             </a>
                         </div>
-                        <p>{{ new.content }}</p>
+                        <p>Описание: {{ new.content }}</p>
                         <p>Автор: {{ new.profile.firstname }} {{ new.profile.lastname }}</p>
                         <p>Тэги: {% if new.tags.all %}{{ new.tags.all|join:", " }}{% endif %}</p>
                         <p>Дата создания: {{ new.created_at }}</p>

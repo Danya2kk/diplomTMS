@@ -1,4 +1,5 @@
 from django.db.models.signals import post_save, post_delete, pre_delete, pre_save
+from django.contrib.auth import user_logged_in
 from django.dispatch import receiver
 from django.core.cache import cache
 
@@ -21,6 +22,7 @@ from .models import (Profile, Friendship, Mediafile, News, Comment, Reaction,
 
 """Функции для инвалидации кэша"""
 
+
 def set_cache_with_key(cache_key, data, timeout=86400):
     """Утилитарная функция для кэширования данных с сохранением ключа."""
     cache.set(cache_key, data, timeout)
@@ -28,6 +30,20 @@ def set_cache_with_key(cache_key, data, timeout=86400):
     if cache_key not in cache_keys:
         cache_keys.append(cache_key)
         cache.set('cache_keys', cache_keys, timeout)
+
+def clear_cache_with_prefix(prefix):
+    """Удаляет все ключи кэша, которые начинаются с заданного префикса."""
+    cache_keys = cache.get('cache_keys', [])
+    for key in cache_keys:
+        if key.startswith(prefix):
+            cache.delete(key)
+    # Удаляем ключи из списка
+    cache.set('cache_keys', [key for key in cache_keys if not key.startswith(prefix)], timeout=86400)
+
+@receiver(user_logged_in)
+def clear_cache_on_login(sender, user, request, **kwargs):
+    """Сбрасываем кэш при входе пользователя в систему"""
+    cache.clear()  # Очищает весь кэш
 
 @receiver(post_save, sender=Profile)
 @receiver(post_save, sender=Friendship)
@@ -58,19 +74,15 @@ def clear_media_cache(sender, instance, **kwargs):
 @receiver(pre_delete, sender=News)
 def clear_news_cache(sender, instance, **kwargs):
     """ Функция инвалидации кэша списка новостей при их удалении или добавлении"""
-    # Удаляем все ключи кэша
-    cache_keys = cache.get('cache_keys', [])
-    for key in cache_keys:
-        cache.delete(key)
-    # Очистим список ключей
-    cache.delete('cache_keys')
+    # Удаляем все ключи кэша, связанные с новостями
+    clear_cache_with_prefix("news_filter_")
 
 
 @receiver(post_save, sender=News)
 @receiver(pre_delete, sender=News)
 def clear_news_detail_cache(sender, instance, **kwargs):
     """ Функция инвалидации кэша деталей новости при их удалении или измении"""
-    news_id = instance.news.id
+    news_id = instance.id
     cache_key = f"news_detail_{news_id}"
     # Очистим список ключей
     cache.delete(cache_key)
@@ -89,19 +101,13 @@ def clear_news_detail_cache(sender, instance, **kwargs):
 def clear_group_cache(sender, instance, **kwargs):
     """ Функция инвалидации кэша списка групп при их удалении или измении"""
     # Удаляем все ключи кэша
-    cache_keys = cache.get('cache_keys', [])
-    for key in cache_keys:
-        cache.delete(key)
-    # Очистим список ключей
-    cache.delete('cache_keys')
+    clear_cache_with_prefix("group_filter_")
 
 @receiver(post_save, sender=Profile)
 @receiver(post_delete, sender=Profile)
 def clear_profile_list_cache(sender, instance, **kwargs):
     """ Функция инвалидации кэша деталей списка профилей их удалении или измении"""
-    cache_key = f"profile_list_"
-    # Удаляем конкретный ключ
-    cache.delete(cache_key)
+    clear_cache_with_prefix("profile_list_")
 
 @receiver(pre_save, sender=GroupMembership)
 @receiver(pre_delete, sender=GroupMembership)

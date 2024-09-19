@@ -99,6 +99,9 @@ black = "^24.8.0"
 isort = "^5.13.2"
 spectacular = "^0.4.0"
 swagger-ui = "^0.1.2"
+python-memcached = "^1.62"
+pymemcache = "^4.0.0"
+django-bmemcached = "^0.3.0"
 
 
 [build-system]
