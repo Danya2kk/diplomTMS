@@ -8,22 +8,23 @@ https://diplom-t24j.onrender.com/
 
 # Технологии:
 
-Языки программирования: Python v3.10, JavaScript
-Дополнительно: HTML5, CSS3
-Framework: Django, ReactJS
-Database: SQLLite
+1. Языки программирования: Python v3.10, JavaScript
+2. Дополнительно: HTML5, CSS3
+3. Framework: Django, ReactJS
+4. Database: SQLLite
 
 # Размещение:
-Сайт размещен на бесплтном хостинге Render.
+Сайт размещен на бесплатном хостинге Render.
 
 # Разработчики:
-https://github.com/ViktoriaKonoplyanik
-https://github.com/fedyaslonn
-https://github.com/Danya2kk
-https://github.com/sajicklevo
+1. https://github.com/ViktoriaKonoplyanik
+2. https://github.com/fedyaslonn
+3. https://github.com/Danya2kk
+4. https://github.com/sajicklevo
+5. https://github.com/Saatarko
 
 # Для локальной загрузки требуется:
-1.Загрузить сайт на ПК.
+1. Загрузить сайт на ПК.
 2. Установить виртуальное окружение с Python v3.10
 3. Установить библиотеки. (в проекте использовался poetry)
    Для этого Вам нужно установить poetry - pip install poetry
@@ -47,19 +48,19 @@ A social network site with profiles, groups, news, comments and internal mail an
 
 # Technologies:
 
-Programming languages: Python v3.10, JavaScript
-Additional: HTML5, CSS3
-Framework: Django, ReactJS
-Database: SQLLite
+1. Programming languages: Python v3.10, JavaScript
+2. Additional: HTML5, CSS3
+3. Framework: Django, ReactJS
+4. Database: SQLLite
 
 # Deploy:
 The site is hosted on the free Render hosting.
 
 # Developers:
-https://github.com/ViktoriaKonoplyanik
-https://github.com/fedyaslonn
-https://github.com/Danya2kk
-https://github.com/sajicklevo
+1. https://github.com/ViktoriaKonoplyanik
+2. https://github.com/fedyaslonn
+3. https://github.com/Danya2kk
+4. https://github.com/sajicklevo
 
 # For local download you need:
 1. Download the site to your PC.
